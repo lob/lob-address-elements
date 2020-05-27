@@ -2,7 +2,7 @@
 **Lob Address Elements** is a JavaScript library that adds address autocompletion and verification to a standard HTML Web form.
 
 ## Overview
-The Lob Address Elements plugin simplifies client side integration of Lob's *US Address Autocompletion* and *US Address Verification* APIs. Customers can use the plugin to enrich any standard HTML page to include both autocomplete and pre-submission verification behaviors.
+The Lob Address Elements plugin simplifies client side integration of Lob's *US Address Autocompletion* and *US Address Verification* APIs. Use the plugin to enrich any standard HTML page to include both autocompletion and pre-verification behaviors.
 
 ## Implementation
 The vanilla implementation of the plugin requires **no** JavaScript skills. As long as you have access to the HTML markup for your Web page, all plugin configuration can be achieved through markup.
@@ -72,7 +72,7 @@ Simply embed the Lob Address Elements plugin using a <script> tag and then enabl
 </body>
 </html>
 ```
-| Attribute Name       | Attribute Value(s)       | Description         |
-| :---                 |     :---              |   :---              |
+| Attribute Name               | Attribute Value(s)    | Description         |
+| :---                         |  :---                 |   :---              |
 | data-lob-validate-on-submit           | `warn`, `stop`           | Include this optional attribute to pre-verify the user's address submission with Lob. If `warn` is used as the attribute value, the user may still submit an errant form. Applying `stop` will halt all submissions that do not pass verification.         |
 | data-lob-on-submit-error             | N/A             | You must include this attribute if address verification is enabled in order to render errors and warnings to users. It is up to you how style this component. The plugin with show (`display:'inherit'`) and hide (`display:'none'`) the error message as necessary to communicate verification errors.           |
