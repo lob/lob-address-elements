@@ -1,8 +1,8 @@
 # lob-address-elements
-A JavaScript library that adds address autocompletion and verification to a standard HTML Web form.
+**Lob Address Elements** is a JavaScript library that adds address autocompletion and verification to a standard HTML Web form.
 
 ## Overview
-The US Autocomplete Elements plugin simplifies client side integration of Lob's US Address Autocomplete and US Address Verification APIs. Customers can use the plugin to enrich any standard HTML page to include both autocomplete and pre-submission verification behaviors.
+The Lob Address Elements plugin simplifies client side integration of Lob's *US Address Autocompletion* and *US Address Verification* APIs. Customers can use the plugin to enrich any standard HTML page to include both autocomplete and pre-submission verification behaviors.
 
 ## Implementation
 The vanilla implementation of the plugin requires **no** JavaScript skills. As long as you have access to the HTML markup for your Web page, all plugin configuration can be achieved through markup.
