@@ -1,0 +1,54 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato&display=swap">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+<body class="container">
+    <div class="row">
+        <form action="/api/v1/add-address" class="col-12" data-lob-validate-on-submit="warn">
+
+            <div class="alert alert-warning" role="alert" data-lob-on-submit-error></div>
+
+            <div class="form-group">
+                <label for="street1">Street 1<span class="required"></span></label>
+                <input id="street1" type="text" class="form-control" data-lob-primary data-lob-list-color="#666666"
+                    data-lob-list-background="#fefefe">
+            </div>
+            <div class="form-group">
+                <label for="street2">Street 2<span class="required"></span></label>
+                <input id="street2" type="text" class="form-control" data-lob-secondary>
+            </div>
+            <div class="form-group">
+                <label for="city">City<span class="required"></span></label>
+                <input id="city" type="text" class="form-control" data-lob-city>
+            </div>
+            <div class="form-group">
+                <label for="state">State<span class="required"></span></label>
+                <input id="state" type="text" class="form-control" data-lob-state>
+            </div>
+            <div class="form-group">
+                <label for="zip">Zip<span class="required"></span></label>
+                <input id="zip" type="text" class="form-control" data-lob-zip>
+            </div>
+            <input type="submit" value="Submit" class="btn btn-primary">
+        </form>
+    </div>
+    <script src="https//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.37.0/autocomplete.jquery.min.js"></script>
+    <script>
+        $(function() {
+            //bind an onsubmit handler to the form. This simulates what it's like to 
+            // enhance a form that already implements jQuery behavior
+            $("form").on('submit', function(e) {
+                console.log("The form can now be submitted to its final endpoint");
+                //put Ajax code here to make an XMLHTTP call and submit the form data
+                return false;
+            });
+        });
+    </script>
+    <script src="/public/js/lob-address-elements.js"></script>
+</body>
+</html>

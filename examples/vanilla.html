@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <form action="/api/v1/add-address" data-lob-validate-on-submit="warn">
+        <div data-lob-on-submit-error></div>
+        <div>
+            <label for="street1">Street 1</label>
+            <input id="street1" data-lob-primary data-lob-list-color="#666666" data-lob-list-background="#fefefe">
+        </div>
+        <div>
+            <label for="street2">Street 2</label>
+            <input id="street2" data-lob-secondary>
+        </div>
+        <div>
+            <label for="city">City</label>
+            <input id="city" data-lob-city>
+        </div>
+        <div>
+            <label for="state">State</label>
+            <input id="state" data-lob-state>
+        </div>
+        <div>
+            <label for="zip">Zip</label>
+            <input id="zip" data-lob-zip>
+        </div>
+        <input type="submit" value="Submit">
+    </form>
+    <script src="/public/js/lob-address-elements.js"></script>
+</body>
+</html>
