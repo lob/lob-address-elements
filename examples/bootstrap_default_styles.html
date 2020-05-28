@@ -6,16 +6,24 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
         integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 </head>
+
+<!--
+
+    THIS EXAMPLE DOES NOT INCLUDE ADDITIONAL 'data-lob-*' MARKUP TO ADD CUSTOM STYLING TO THE LIST OF SUGGESTIONS.
+
+    BOOTSTRAP IS USED FOR STYLING THE PAGE AND FORM ELEMENTS BUT IS NOT REQUIRED FOR THE PLUGIN TO WORK.
+    FEEL FREE TO USE WHATEVER CSS LIBRARY YOU WISH.
+
+-->
+
 <body class="container">
     <div class="row">
+        <h1 class="col-12">Lob Address Autocompletion</h1>
         <form action="/api/v1/add-address" class="col-12" data-lob-validate-on-submit="warn">
-
             <div class="alert alert-warning" role="alert" data-lob-on-submit-error></div>
-
             <div class="form-group">
                 <label for="street1">Street 1<span class="required"></span></label>
-                <input id="street1" type="text" class="form-control" data-lob-primary data-lob-list-color="#666666"
-                    data-lob-list-background="#fefefe">
+                <input id="street1" type="text" class="form-control" data-lob-primary>
             </div>
             <div class="form-group">
                 <label for="street2">Street 2<span class="required"></span></label>
@@ -36,19 +44,6 @@
             <input type="submit" value="Submit" class="btn btn-primary">
         </form>
     </div>
-    <script src="https//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.37.0/autocomplete.jquery.min.js"></script>
-    <script>
-        $(function() {
-            //bind an onsubmit handler to the form. This simulates what it's like to 
-            // enhance a form that already implements jQuery behavior
-            $("form").on('submit', function(e) {
-                console.log("The form can now be submitted to its final endpoint");
-                //put Ajax code here to make an XMLHTTP call and submit the form data
-                return false;
-            });
-        });
-    </script>
-    <script src="/public/js/lob-address-elements.js"></script>
+    <script src="/lob-address-elements.js"></script>
 </body>
 </html>

@@ -1,11 +1,19 @@
 <!DOCTYPE html>
 <html>
+
+<!--
+
+    THIS IS THE MOST BASIC FORM. IT USES NO STYLES AND ACCEPTS ALL DEFAULTS. THIS IS THE MOST BASIC IMPLEMENTATION 
+    OF THE ADDRESS AUTOCOMPLETION PLUGIN.
+
+-->
 <body>
+    <h1>Lob Address Autocompletion</h1>
     <form action="/api/v1/add-address" data-lob-validate-on-submit="warn">
         <div data-lob-on-submit-error></div>
         <div>
             <label for="street1">Street 1</label>
-            <input id="street1" data-lob-primary data-lob-list-color="#666666" data-lob-list-background="#fefefe">
+            <input id="street1" data-lob-primary>
         </div>
         <div>
             <label for="street2">Street 2</label>
@@ -25,6 +33,6 @@
         </div>
         <input type="submit" value="Submit">
     </form>
-    <script src="/public/js/lob-address-elements.js"></script>
+    <script src="/lob-address-elements.js"></script>
 </body>
 </html>

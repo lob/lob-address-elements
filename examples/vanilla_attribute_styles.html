@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: sans-serif;
+            color: #333333;
+        }
+
+        input {
+            display: block;
+            font-size: 1.05rem;
+            width: 100%;
+            padding: 10px;
+            border-radius: .25rem;
+            border: solid 1px #8c8c8c;
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-size: 1.1rem;
+            margin: 20px 0 5px 0;
+        }
+
+        input[type='submit'] {
+            background-color: #0594d8;
+            color: #ffffff;
+            border-color: #ffffff;
+            font-size: 1.1rem;
+            margin-top: 10px;
+            width: 100px;
+        }
+
+        .validation_error_message {
+            display: none;
+            padding: 12px;
+            font-size: 1.2em;
+            background-color: lightyellow;
+            border-radius: .25rem;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<!--
+
+    THIS EXAMPLE STYLES THE LIST OF ADDRESS SUGGESTIONS USING IN-LINE ATTRIBUTES. REVIEW THE MARKUP FOR STREET 1
+    BELOW FOR USAGE DETAILS. ALL INLINE STYLES ARE OPTIONAL. IF NOT PROVIDED, THE SYSTEM WILL CHOOSE A BASIC
+    BLACK-ON-WHITE THEME.
+
+    THE CSS STYLES ADDED TO THIS PAGE ARE USED FOR LAYING OUT FORM ELEMENTS AND LABELS. NONE OF THESE STYLES ARE
+    REQUIRED TO USE THE PLUGIN AND SERVE ONLY TO MAKE THE BASE FORM MORE USABLE/READABLE.
+
+-->
+
+<body>
+    <h1>Lob Address Autocompletion</h1>
+    <form action="/api/v1/add-address" data-lob-validate-on-submit="warn">
+        <div class="validation_error_message" data-lob-on-submit-error></div>
+        <div>
+            <label for="street1">Street 1</label>
+            <input id="street1" 
+                data-lob-primary 
+                data-lob-suggestion-color="#666666"
+                data-lob-suggestion-bgcolor="#fefefe" 
+                data-lob-suggestion-bordercolor="#a8a8a8"
+                data-lob-suggestion-activecolor="#117ab8" 
+                data-lob-suggestion-activebgcolor="#eeeeee">
+        </div>
+        <div>
+            <label for="street2">Street 2</label>
+            <input id="street2" data-lob-secondary>
+        </div>
+        <div>
+            <label for="city">City</label>
+            <input id="city" data-lob-city>
+        </div>
+        <div>
+            <label for="state">State</label>
+            <input id="state" data-lob-state>
+        </div>
+        <div>
+            <label for="zip">Zip</label>
+            <input id="zip" data-lob-zip>
+        </div>
+        <input type="submit" value="Submit">
+    </form>
+    <script src="/lob-address-elements.js"></script>
+</body>
+
+</html>
