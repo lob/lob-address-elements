@@ -3,7 +3,7 @@
     var DEFAULTS = {
         JQUERY: 'https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js',
         JQUERY_AC: 'https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.37.0/autocomplete.jquery.min.js',
-        API_KEY: 'live_821be82e64dfdd522271a52b7ac041edd1e:',
+        API_KEY: 'live_XXXXXXXXXXX',
         COLOR: "#666666",
         BACKGROUND: "#EEEEEE"
     }
