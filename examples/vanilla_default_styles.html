@@ -3,13 +3,15 @@
 
 <!--
 
-    THIS IS THE MOST BASIC FORM. IT USES NO STYLES AND ACCEPTS ALL DEFAULTS. THIS IS THE MOST BASIC IMPLEMENTATION 
-    OF THE ADDRESS AUTOCOMPLETION PLUGIN.
+    THIS IS THE MOST BASIC IMPLEMENTATION OF THE ADDRESS AUTOCOMPLETION PLUGIN. 
+    IT USES ALL DEFAULT LAYOUTS AND BEHAVIORS.
 
 -->
 <body>
     <h1>Lob Address Autocompletion</h1>
-    <form action="/api/v1/add-address" data-lob-validate-on-submit="warn">
+    <form action="/api/v1/add-address" 
+        data-lob-validate-on-submit="warn" 
+        data-lob-key="live_pub_xxxxxxxxxxxxxx">
         <div data-lob-on-submit-error></div>
         <div>
             <label for="street1">Street 1</label>
