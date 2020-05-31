@@ -59,9 +59,9 @@
 <body>
     <h1>Lob Address Autocompletion</h1>
     <form action="/api/v1/add-address" 
-        data-lob-validate-on-submit="warn" 
+        data-lob-verify 
         data-lob-key="live_pub_xxxxxxxxxxxxxx">
-        <div class="validation_error_message" data-lob-on-submit-error></div>
+        <div class="validation_error_message" data-lob-verify-message></div>
         <div>
             <label for="street1">Street 1</label>
             <input id="street1" 

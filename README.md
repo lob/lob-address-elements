@@ -2,12 +2,12 @@
 **Lob Address Elements** is a JavaScript library that adds address autocompletion and verification to a standard HTML Web form.
 
 ## Overview
-The Lob Address Elements plugin simplifies client side integration of Lob's *US Address Autocompletion* and *US Address Verification* APIs. Use the plugin to enrich any standard HTML page to include both autocompletion and pre-verification behaviors.
+The Lob Address Elements library simplifies client side integration of Lob's *US Address Autocompletion* and *US Address Verification* APIs. Use it to enrich any standard HTML page to include both autocompletion and pre-verification behaviors.
 
 ## Implementation
-The vanilla implementation of the plugin requires **no** JavaScript skills. As long as you have access to the HTML markup for your Web page, all plugin configuration can be achieved through markup.
+The vanilla implementation of the plugin requires **no** JavaScript skills, as all plugin configuration can be achieved through markup.
 
-Consider the following HTML form that collects a US Address and submits to an endpoint.
+Start with a standard HTML form that collects a US Address.
 ```
 <!DOCTYPE html>
 <html>
@@ -39,16 +39,16 @@ Consider the following HTML form that collects a US Address and submits to an en
 </body>
 </html>
 ```
-Embed the Lob Address Elements plugin using a <script> tag and then enable it by decorating relevant HTML elements with `data-lob-*` attributes. For example:
+Embed the Lob Address Elements library using a &lt;script&gt; tag and then enable autocompletion and verification behaviors by decorating relevant HTML elements with `data-lob-*` attributes. For example:
 ```
 <!DOCTYPE html>
 <html>
 <body>
     <form action="/some/url" 
-        data-lob-validate-on-submit="warn" 
+        data-lob-verify 
         data-lob-key="live_pub_xxxxxx">
 
-        <div data-lob-on-submit-error></div>
+        <div data-lob-verify-message></div>
         <div>
             <label for="street1">Street 1</label>
             <input id="street1" data-lob-primary>
@@ -71,16 +71,16 @@ Embed the Lob Address Elements plugin using a <script> tag and then enable it by
         </div>
         <input type="submit" value="Submit">
     </form>
-    <script src="/public/js/lob-address-elements.js"></script>
+    <script src="/lob-address-elements.js"></script>
 </body>
 </html>
 ```
 
 | Attribute Name               | Attribute Value(s)    | Description         |
 | :---                         |  :---                 |   :---              |
-| data-lob-validate-on-submit           | `warn`, `stop`           | Include this optional attribute to pre-verify the user's address submission with Lob. If `warn` is used as the attribute value, the user may still submit an errant form. Applying `stop` will halt all submissions that do not pass verification.         |
+| data-lob-verify           | N/A           | Include this attribute on the HTML form element in order to pre-verify the user's address submission with Lob. You must include a corresponding attribute (`data-lob-verify-message`) to identify where potential verification error messages can be displayed to users.        |
 | data-lob-key          | `YOUR LOB KEY`           | Include your Lob live public key as the attribute value.         |
-| data-lob-on-submit-error             | N/A             | You must include this attribute if address verification is enabled in order to render errors and warnings to users. It is up to you how style this component. The plugin with show (`display:'inherit'`) and hide (`display:'none'`) the error message as necessary to communicate verification errors.           |
+| data-lob-verify-message             | N/A             | Include this attribute if address verification is desired in order to render errors and warnings to users. You are responsible for styling this component. The address elements library will *show* and *hide* this element as necessary to communicate verification issues.           |
 | data-lob-primary          | N/A           | Identify the primary address field. This should be an input text box.         |
 | data-lob-secondary        | N/A           | Identify the secondary address field.      |
 | data-lob-city             | N/A           | Identify the city.      |
@@ -88,19 +88,22 @@ Embed the Lob Address Elements plugin using a <script> tag and then enable it by
 | data-lob-zip              | N/A           | Identify the zip code.         |
 
 You may customize the color scheme for the address suggestion list.
-Two approaches are supported. In this example, the colors are declared in-ine, which means
-the address elements plugin will automatically inject the stylesheet. 
-Both hex and named colors are supported.
+Two approaches are supported. 
+
+## In-line Style Declarations
+In this example, the colors are declared in-ine, which means
+the address elements library will automatically inject a stylesheet with all CSS styles necessary to style the suggestion list. 
+Hex, RGB and named color values are supported when declaring styles in-line.
 
 ```
 <!DOCTYPE html>
 <html>
 <body>
     <form action="/some/url" 
-        data-lob-validate-on-submit="warn" 
+        data-lob-verify 
         data-lob-key="live_pub_xxxxxx">
 
-        <div data-lob-on-submit-error></div>
+        <div data-lob-verify-message></div>
         <div>
             <label for="street1">Street 1</label>
             <input id="street1" 
@@ -129,23 +132,24 @@ Both hex and named colors are supported.
         </div>
         <input type="submit" value="Submit">
     </form>
-    <script src="/public/js/lob-address-elements.js"></script>
+    <script src="/lob-address-elements.js"></script>
 </body>
 </html>
 
 ```
-| Attribute Name               | Attribute Value(s)    | Description         |
-| :---                         |  :---                 |   :---              |
-| data-lob-suggestion-color    | N/A           | The text color for an item in the suggestion list.       |
-| data-lob-suggestion-bgcolor        | N/A           | The background color for an item in the suggestion list.     |
-| data-lob-suggestion-bordercolor             | N/A           | The border color for the suggestion list.      |
-| data-lob-suggestion-activecolor            | N/A           | The text color for an item in the suggestion list when actively hovered over or when traversed via the keyboard.         |
-| data-lob-suggestion-activebgcolor              | N/A           | The background color for an item in the suggestion list when actively hovered over or when traversed via the keyboard.      |
+| Attribute Name                    | Attribute Value(s)    | Description         |
+| :---                              |  :---                 |   :---              |
+| data-lob-suggestion-color         | N/A           | The text color for an item in the suggestion list.       |
+| data-lob-suggestion-bgcolor       | N/A           | The background color for an item in the suggestion list.     |
+| data-lob-suggestion-bordercolor   | N/A           | The border color for the suggestion list.      |
+| data-lob-suggestion-activecolor   | N/A           | The text color for an item in the suggestion list when actively hovered over or when traversed via the keyboard.         |
+| data-lob-suggestion-activebgcolor | N/A           | The background color for an item in the suggestion list when actively hovered over or when traversed via the keyboard.    |
 
+## Stylesheet Declarations
 
-In this example, all styles for the address suggestion list are declared as CSS styles. When using this approach, it
-is useful to also include the `data-lob-suggestion-stylesheet` attribute to stop the address elements plugin from 
-loading the default stylesheet.
+In this example, all styles for the address suggestion list are declared using a CSS stylesheet. When using this approach, it
+is useful to also include the `data-lob-suggestion-stylesheet` attribute to stop the address elements library from 
+loading its default stylesheet.
 
 ```
 <!DOCTYPE html>
@@ -233,10 +237,10 @@ loading the default stylesheet.
 <body>
     <h1>Lob Address Autocompletion</h1>
     <form action="/api/v1/add-address" 
-        data-lob-validate-on-submit="warn" 
+        data-lob-verify 
         data-lob-key="live_pub_xxxxxxxxxxxxxx">
 
-        <div class="validation_error_message" data-lob-on-submit-error></div>
+        <div class="validation_error_message" data-lob-verify-message></div>
         <div>
             <label for="street1">Street 1</label>
             <input id="street1" 
@@ -265,4 +269,55 @@ loading the default stylesheet.
 </body>
 
 </html>
+```
+# Localization
+It is possible to localize and customize verification messages returned by Lob's verification API. This customization requires a JavaScript configuration file be declared alongside the Lob &lt;script&gt; tag. Customize the value for any message to override.
+
+```
+
+<!DOCTYPE html>
+<html>
+<body>
+    <form action="/some/url" 
+        data-lob-verify 
+        data-lob-key="live_pub_xxxxxx">
+
+        <div data-lob-verify-message></div>
+        <div>
+            <label for="street1">Street 1</label>
+            <input id="street1" data-lob-primary>
+        </div>
+        <div>
+            <label for="street2">Street 2</label>
+            <input id="street2" data-lob-secondary>
+        </div>
+        <div>
+            <label for="city">City</label>
+            <input id="city" data-lob-city>
+        </div>
+        <div>
+            <label for="state">State</label>
+            <input id="state" data-lob-state>
+        </div>
+        <div>
+            <label for="zip">Zip</label>
+            <input id="zip" data-lob-zip>
+        </div>
+        <input type="submit" value="Submit">
+    </form>
+    <script>
+        var LobAddressElementsConfig = {
+            messages: {
+                'primary_line is required or address is required': 'The primary street address is required.',
+                'zip_code is required or both city and state are required': 'You must provide a Zip Code or a valid City and State.',
+                undeliverable: 'The address could not be verified. Please reconfirm your input.',
+                deliverable_missing_unit: 'The address should include additional information such as a SUITE or UNIT number. Please update and then resubmit.',
+                DEFAULT: 'Unknown Error. The address could not be verified.'
+            }
+        };
+    </script>
+    <script src="/lob-address-elements.js"></script>
+</body>
+</html>
+
 ```

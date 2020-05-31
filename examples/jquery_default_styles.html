@@ -22,10 +22,10 @@
         <h1 class="col-12">Lob Address Autocompletion</h1>
 
         <form action="/api/v1/add-address" class="col-12" 
-            data-lob-validate-on-submit="warn" 
+            data-lob-verify 
             data-lob-key="live_pub_xxxxxxxxxxxxxx">
 
-            <div class="alert alert-warning" role="alert" data-lob-on-submit-error></div>
+            <div class="alert alert-warning" role="alert" data-lob-verify-message></div>
 
             <div class="form-group">
                 <label for="street1">Street 1<span class="required"></span></label>
@@ -58,7 +58,6 @@
             // enhance a form that already implements jQuery behavior
             $("form").on('submit', function(e) {
                 console.log("The form can now be submitted to its final endpoint");
-                //TODO: put your Ajax code here to make an XMLHTTP call; 
                 // (for now, just redirect to simulate submission; replace the following with your ajax call)
                 window.location.href = '/api/v1/add-address';
             });

@@ -19,13 +19,13 @@
             activecolor: cfg.activecolor || '#117ab8',
             activebgcolor: cfg.activebgcolor || '#eeeeee',
             elements: {
-                form: $('form[data-lob-validate-on-submit]'),
+                form: $('form[data-lob-verify]'),
                 primary: $('input[data-lob-primary]'),
                 secondary: $('input[data-lob-secondary]'),
                 city: $('input[data-lob-city]'),
                 state: $('*[data-lob-state]'),
                 zip: $('input[data-lob-zip]'),
-                err: $('*[data-lob-on-submit-error]').hide() //initialize in hidden state
+                message: $('*[data-lob-verify-message]').hide() //initialize in hidden state
             },
             messages: cfg.messages || {
                 'primary_line is required or address is required': 'The primary street address is required.',
@@ -37,8 +37,8 @@
         };
 
         /**
-         * jquery event handlers are bound in source order. This prioritizes the most-recently-added 
-         * handler as the first one, allowing Lob to first verify the address when the form is submitted.
+         * jquery event handlers fired in the order they are bound. This prioritizes the most-recently-added 
+         * handler as the first one, allowing Lob to first verify an address when the form is submitted.
          * 
          * @param {object} jqElm 
          * @param {*} event_type 
@@ -176,9 +176,9 @@
 
         /**
          * Enable pre-submission address verification if the user added the
-         * `data-lob-validate-on-submit` and `data-lob-on-submit-error` attribute tags
+         * `data-lob-verify` and `data-lob-verify-message` attribute tags
          */
-        if (config.elements.form.length && config.elements.err.length) {
+        if (config.elements.form.length && config.elements.message.length) {
             function verify_us_address(cb) {
                 var xhr = new XMLHttpRequest();
                 xhr.open('POST', 'https://api.lob.com/v1/us_verifications', true);
@@ -188,7 +188,6 @@
                     if (this.readyState === XMLHttpRequest.DONE) {
                         if (this.status === 200) {
                             try {
-                                //display validation errors
                                 var data = JSON.parse(xhr.responseText);
                                 if (data.deliverability === 'deliverable') {
                                     cb(null, true);
@@ -221,18 +220,18 @@
                 }));
                 return false;
             }
-            //bind the Lob preflight handler function to verify the submission
+            //bind the Lob preflight handler function to verify the address before allowing submission
             config.elements.form.on('submit', function preFlight(e) {
                 e.stopImmediatePropagation();
                 e.preventDefault();
-                config.elements.err.hide();
+                config.elements.message.hide();
                 return verify_us_address(function (err_message, success) {
                     if (success) {
                         //remove the pre-flight handler function and submit
                         config.elements.form.off('submit', preFlight);
                         config.elements.form.submit();
                     } else {
-                        config.elements.err.text(err_message).show('slow');
+                        config.elements.message.text(err_message).show('slow');
                     }
                 });
             });
