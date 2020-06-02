@@ -13,11 +13,15 @@
         //merge user configuration to create the baseline configuration
         var config = {
             api_key: $('*[data-lob-key]').attr('data-lob-key') || cfg.api_key,
-            color: cfg.color || '#666666',
-            bgcolor: cfg.bgcolor || '#fefefe',
-            bordercolor: cfg.bordercolor || '#a8a8a8',
-            activecolor: cfg.activecolor || '#117ab8',
-            activebgcolor: cfg.activebgcolor || '#eeeeee',
+            strict: $('form[data-lob-verify]').attr('data-lob-verify') === 'strict',
+            styles: {
+                color: cfg.color || '#666666',
+                bgcolor: cfg.bgcolor || '#fefefe',
+                bordercolor: cfg.bordercolor || '#a8a8a8',
+                activecolor: cfg.activecolor || '#117ab8',
+                activebgcolor: cfg.activebgcolor || '#eeeeee',
+                stylesheet: $('*[data-lob-suggestion-stylesheet]')
+            },
             elements: {
                 form: $('form[data-lob-verify]'),
                 primary: $('input[data-lob-primary]'),
@@ -27,17 +31,18 @@
                 zip: $('input[data-lob-zip]'),
                 message: $('*[data-lob-verify-message]').hide() //initialize in hidden state
             },
-            messages: cfg.messages || {
-                'primary_line is required or address is required': 'The primary street address is required.',
-                'zip_code is required or both city and state are required': 'You must provide a Zip Code or a valid City and State.',
-                'undeliverable': 'The address could not be verified. Please reconfirm your input.',
-                'deliverable_missing_unit': 'The address should include additional information such as a SUITE or UNIT number. Please update and then resubmit.',
-                'DEFAULT': 'Unknown Error. The address could not be verified.'
+            messages: {
+                primary_line: 'The primary street address is required.',
+                city_state_zip: 'You must provide a Zip Code or a valid City and State.',
+                undeliverable: 'The address could not be verified. Please reconfirm your input.',
+                deliverable_missing_unit: 'The address should include additional information such as a SUITE or UNIT number. Please update and then resubmit.',
+                confirm: 'Your address was updated during verification. Please verify our changes and resubmit.',
+                DEFAULT: 'Unknown Error. The address could not be verified.'
             }
         };
 
         /**
-         * jquery event handlers fired in the order they are bound. This prioritizes the most-recently-added 
+         * jquery event handlers execute in the order they are bound. This prioritizes the most-recently-added 
          * handler as the first one, allowing Lob to first verify an address when the form is submitted.
          * 
          * @param {object} jqElm 
@@ -49,20 +54,39 @@
         }
 
         /**
-         * returns a configuration value, prioritizing any value set using the data-lob-suggestion-* attribute
+         * returns a CSS color for the suggestion list, prioritizing any value set using 
+         * the data-lob-suggestion-* attribute
          * 
          * @param {object} config - configuration settings object
          * @param {string} type - the type of configuration
          */
-        function resolveConfig(config, type) {
-            return $('*[data-lob-suggestion-' + type + ']').attr('data-lob-suggestion-' + type) || config[type];
+        function resolveInlineStyle(config, type) {
+            return $('*[data-lob-suggestion-' + type + ']').attr('data-lob-suggestion-' + type) || config.styles[type];
+        }
+
+        /**
+         * not every error returned from Lob.com's endpoints is a defined type. This method, converts these instances for
+         * easier localization of the message strings.
+         * 
+         * @param {string} message - response message
+         */
+        function resolveMessageType(message) {
+            if (message === 'primary_line is required or address is required') {
+                return 'primary_line';
+            } else if (message === 'zip_code is required or both city and state are required') {
+                return 'city_state_zip';
+            } else if (message === 'undeliverable' || message === 'deliverable_missing_unit') {
+                return message
+            } else {
+                return 'DEFAULT';
+            }
         }
 
         /**
          * Inject the CSS for styling the autocomplete's suggestion list (The default behavior) 
          * if the user did NOT choose to implement their own custom stylesheet
          */
-        if (!$('*[data-lob-suggestion-stylesheet]').length) {
+        if (!config.styles.stylesheet.length) {
             $('<style>')
                 .prop('type', 'text/css')
                 .html('\
@@ -71,9 +95,9 @@
                 }\
                 .aa-dropdown-menu {\
                     width: 100%;\
-                    border: 1px solid ' + resolveConfig(config, 'bordercolor') + ';\
+                    border: 1px solid ' + resolveInlineStyle(config, 'bordercolor') + ';\
                     border-top: 0;\
-                    background-color: ' + resolveConfig(config, 'bgcolor') + ';\
+                    background-color: ' + resolveInlineStyle(config, 'bgcolor') + ';\
                     overflow: hidden;\
                     border-radius: 0 0 .25rem .25rem;\
                     margin-top:-5px;\
@@ -81,13 +105,13 @@
                 .aa-suggestion {\
                     cursor: pointer;\
                     padding: 6px 12px;\
-                    color: ' + resolveConfig(config, 'color') + ';\
+                    color: ' + resolveInlineStyle(config, 'color') + ';\
                 }\
                 .aa-suggestion:hover,\
                 .aa-suggestion:active,\
                 .aa-suggestion.aa-cursor  {\
-                    color: ' + resolveConfig(config, 'activecolor') + ';\
-                    background-color: ' + resolveConfig(config, 'activebgcolor') + ';\
+                    color: ' + resolveInlineStyle(config, 'activecolor') + ';\
+                    background-color: ' + resolveInlineStyle(config, 'activebgcolor') + ';\
                 }\
                 .aa-suggestion div {\
                     white-space: nowrap !important;\
@@ -179,35 +203,93 @@
          * `data-lob-verify` and `data-lob-verify-message` attribute tags
          */
         if (config.elements.form.length && config.elements.message.length) {
+
+            /**
+             * Called after Lob verifies the address. Improves/updates user input with values from Lob.
+             * 
+             * @param {object} address - verified address object returned from Lob's verification API
+             * @param {boolean} strict - if true, the form is in strict mode and will NOT allow submission unless perfect
+             */
+            function applyTweaks(data, strict) {
+                var unchanged;
+                var address = {
+                    primary: data.primary_line || '',
+                    secondary: data.secondary_line || '',
+                    city: data.components && data.components.city || '',
+                    state: data.components && data.components.state || '',
+                    zip: data.components && data.components.zip_code || ''
+                }
+                for (var p in address) {
+                    if (address.hasOwnProperty(p)) {
+                        if (strict && config.elements[p].val().toUpperCase() !== address[p].toUpperCase()) {
+                            unchanged = true;
+                        }
+                        config.elements[p].val(address[p]);
+                    }
+                }
+                config.address = address;
+                return unchanged;
+            }
+
+            /**
+             * Checks if the user made any changes to their form since the last time they 
+             * submitted for verification; this is useful when warning a user when address verification fails. 
+             * (Each time the user modifies their form, reset their `warned` state to `false`, 
+             * so they are warned at least once before normal submission is allowed.)
+             */
+            function resetWarnedState() {
+                for (var p in config.address) {
+                    if (config.address.hasOwnProperty(p)) {
+                        if (config.elements[p].val().toUpperCase() !== config.address[p].toUpperCase()) {
+                            config.warned = false;
+                        }
+                    }
+                }
+            }
+
+            /**
+             * Safe JSON parser
+             * 
+             * @param {string} s - string to parse
+             */
+            function parseJSON(s) {
+                try {
+                    return JSON.parse(s);
+                } catch (e) {
+                    console.log('ERR', e);
+                    return { error: { message: 'DEFAULT' } };
+                }
+            }
+
+            /**
+             * Calls the Lob.com US Verification API. If successful, the user's form will be submitted by 
+             * the cb handler to its original endpoint. If unsuccessful, an error message will be shown.
+             * 
+             * @param {function} cb - process the response (submit the form or show an error message)
+             */
             function verify_us_address(cb) {
+                resetWarnedState();
                 var xhr = new XMLHttpRequest();
                 xhr.open('POST', 'https://api.lob.com/v1/us_verifications', true);
                 xhr.setRequestHeader('Content-Type', 'application/json');
                 xhr.setRequestHeader('Authorization', 'Basic ' + btoa(config.api_key + ':'));
                 xhr.onreadystatechange = function () {
                     if (this.readyState === XMLHttpRequest.DONE) {
+                        var data = parseJSON(xhr.responseText);
                         if (this.status === 200) {
-                            try {
-                                var data = JSON.parse(xhr.responseText);
-                                if (data.deliverability === 'deliverable') {
-                                    cb(null, true);
-                                } else if (data.deliverability === 'undeliverable') {
-                                    cb(config.messages[data.deliverability]);
-                                } else if (data.deliverability === 'deliverable_missing_unit') {
-                                    cb(config.messages[data.deliverability]);
-                                } else {
-                                    cb('Unknown state: ' + data.deliverability);
-                                }
-                            } catch (e) {
-                                cb(config.messages['DEFAULT']);
+                            if (data.deliverability === 'deliverable') {
+                                //SUCCESS
+                                cb(null, data);
+                            } else if (data.deliverability === 'deliverable_missing_unit' || data.deliverability === 'undeliverable') {
+                                //KNOWN verification error (e.g., undeliverable)
+                                cb({ message: config.messages[resolveMessageType(data.deliverability)] }, data);
+                            } else {
+                                //UN-KNOWN verification error (possible network error)
+                                cb({ message: config.messages['DEFAULT'] }, data);
                             }
                         } else {
-                            try {
-                                var data = JSON.parse(xhr.responseText);
-                                cb(config.messages[data.error.message] || data.error.message);
-                            } catch (e) {
-                                cb(config.messages['DEFAULT']);
-                            }
+                            //KNOWN system error (e.g., rate limit exceeded, primary line missing)
+                            cb({ message: config.messages[resolveMessageType(data.error.message)] }, data);
                         }
                     }
                 }
@@ -225,18 +307,43 @@
                 e.stopImmediatePropagation();
                 e.preventDefault();
                 config.elements.message.hide();
-                return verify_us_address(function (err_message, success) {
-                    if (success) {
-                        //remove the pre-flight handler function and submit
+                return verify_us_address(function (err, data) {
+                    if (!err) {
+                        if (!applyTweaks(data, config.strict)) {
+                            //verification succeeded and NO improvements were made; SUBMIT FORM
+                            config.elements.form.off('submit', preFlight);
+                            config.elements.form.submit();
+                        } else {
+                            //verification succeeded BUT improvements were made; ASK USER RESUBMIT
+                            config.elements.message.text(config.messages.confirm).show('slow');
+                        }
+                    } else if (data.deliverability === 'deliverable_missing_unit') {
+                        if (config.strict) {
+                            //unit is missing and strict mode is active; SHOW ERROR
+                            config.elements.message.text(err.message).show('slow');
+                        } else if (config.warned && !applyTweaks(data, true)) {
+                            //unit is missing, BUT user was already warned; SUBMIT FORM
+                            config.elements.form.off('submit', preFlight);
+                            config.elements.form.submit();
+                        } else {
+                            //unit is missing; user has NOT been warned; ASK USER RESUBMIT
+                            config.elements.message.text(err.message).show('slow');
+                            config.warned = true;
+                        }
+                    } else if (!config.strict && config.warned) {
+                        //verification failed BUT user was already warned; SUBMIT FORM
                         config.elements.form.off('submit', preFlight);
                         config.elements.form.submit();
                     } else {
-                        config.elements.message.text(err_message).show('slow');
+                        //verification failed; user has NOT been warned; ASK USER RESUBMIT
+                        applyTweaks(data, true);
+                        config.elements.message.text(err.message).show('slow');
+                        config.warned = true;
                     }
                 });
             });
             prioritizeHandler(config.elements.form, 'submit');
-        } 
+        }
     }
 
     /**

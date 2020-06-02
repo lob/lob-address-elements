@@ -1,5 +1,4 @@
 # lob-address-elements
-**Lob Address Elements** is a JavaScript library that adds address autocompletion and verification to a standard HTML Web form.
 
 ## Overview
 The Lob Address Elements library simplifies client side integration of Lob's *US Address Autocompletion* and *US Address Verification* APIs. Use it to enrich any standard HTML page to include both autocompletion and pre-verification behaviors.
@@ -45,7 +44,7 @@ Embed the Lob Address Elements library using a &lt;script&gt; tag and then enabl
 <html>
 <body>
     <form action="/some/url" 
-        data-lob-verify 
+        data-lob-verify="warn" 
         data-lob-key="live_pub_xxxxxx">
 
         <div data-lob-verify-message></div>
@@ -78,8 +77,8 @@ Embed the Lob Address Elements library using a &lt;script&gt; tag and then enabl
 
 | Attribute Name               | Attribute Value(s)    | Description         |
 | :---                         |  :---                 |   :---              |
-| data-lob-verify           | N/A           | Include this attribute on the HTML form element in order to pre-verify the user's address submission with Lob. You must include a corresponding attribute (`data-lob-verify-message`) to identify where potential verification error messages can be displayed to users.        |
 | data-lob-key          | `YOUR LOB KEY`           | Include your Lob live public key as the attribute value.         |
+| data-lob-verify           | `warn`, `strict`          | Include this attribute on the HTML form element in order to pre-verify the user's address submission with Lob.  Choose `warn` as the attribute value, if you wish to allow users to submit an errant from once they have been warned. Choose `strict` to halt any submission that does not pass verification. *NOTE: If you choose to verify form submissions, you must include the `data-lob-verify-message` attribute to identify where  verification error messages can be displayed to users.* |
 | data-lob-verify-message             | N/A             | Include this attribute if address verification is desired in order to render errors and warnings to users. You are responsible for styling this component. The address elements library will *show* and *hide* this element as necessary to communicate verification issues.           |
 | data-lob-primary          | N/A           | Identify the primary address field. This should be an input text box.         |
 | data-lob-secondary        | N/A           | Identify the secondary address field.      |
@@ -87,10 +86,11 @@ Embed the Lob Address Elements library using a &lt;script&gt; tag and then enabl
 | data-lob-state            | N/A           | Identify the state.         |
 | data-lob-zip              | N/A           | Identify the zip code.         |
 
-You may customize the color scheme for the address suggestion list.
+## Component Styles
+You may customize the color and style for the address suggestion list.
 Two approaches are supported. 
 
-## In-line Style Declarations
+### In-line Color Declarations
 In this example, the colors are declared in-ine, which means
 the address elements library will automatically inject a stylesheet with all CSS styles necessary to style the suggestion list. 
 Hex, RGB and named color values are supported when declaring styles in-line.
@@ -100,7 +100,7 @@ Hex, RGB and named color values are supported when declaring styles in-line.
 <html>
 <body>
     <form action="/some/url" 
-        data-lob-verify 
+        data-lob-verify="warn"
         data-lob-key="live_pub_xxxxxx">
 
         <div data-lob-verify-message></div>
@@ -145,10 +145,9 @@ Hex, RGB and named color values are supported when declaring styles in-line.
 | data-lob-suggestion-activecolor   | N/A           | The text color for an item in the suggestion list when actively hovered over or when traversed via the keyboard.         |
 | data-lob-suggestion-activebgcolor | N/A           | The background color for an item in the suggestion list when actively hovered over or when traversed via the keyboard.    |
 
-## Stylesheet Declarations
+### Rule-based Stylesheet Declarations
 
-In this example, all styles for the address suggestion list are declared using a CSS stylesheet. When using this approach, it
-is useful to also include the `data-lob-suggestion-stylesheet` attribute to stop the address elements library from 
+In this example, all styles for the address suggestion list are declared using a CSS stylesheet. When using this approach, it is useful to also include the `data-lob-suggestion-stylesheet` attribute to stop the address elements library from 
 loading its default stylesheet.
 
 ```
@@ -237,7 +236,7 @@ loading its default stylesheet.
 <body>
     <h1>Lob Address Autocompletion</h1>
     <form action="/api/v1/add-address" 
-        data-lob-verify 
+        data-lob-verify="warn"
         data-lob-key="live_pub_xxxxxxxxxxxxxx">
 
         <div class="validation_error_message" data-lob-verify-message></div>
@@ -279,7 +278,7 @@ It is possible to localize and customize verification messages returned by Lob's
 <html>
 <body>
     <form action="/some/url" 
-        data-lob-verify 
+        data-lob-verify="warn" 
         data-lob-key="live_pub_xxxxxx">
 
         <div data-lob-verify-message></div>
@@ -308,10 +307,11 @@ It is possible to localize and customize verification messages returned by Lob's
     <script>
         var LobAddressElementsConfig = {
             messages: {
-                'primary_line is required or address is required': 'The primary street address is required.',
-                'zip_code is required or both city and state are required': 'You must provide a Zip Code or a valid City and State.',
+                primary_line: 'The primary street address is required.',
+                city_state_zip: 'You must provide a Zip Code or a valid City and State.',
                 undeliverable: 'The address could not be verified. Please reconfirm your input.',
                 deliverable_missing_unit: 'The address should include additional information such as a SUITE or UNIT number. Please update and then resubmit.',
+                confirm: 'Your address was updated during verification. Please verify our changes and resubmit.',
                 DEFAULT: 'Unknown Error. The address could not be verified.'
             }
         };
