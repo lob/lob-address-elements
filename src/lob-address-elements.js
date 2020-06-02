@@ -1,16 +1,13 @@
 (function () {
 
-
     /**
      * Enriches a standard HTML form by adding two address-related behaviors to the form:
      * 1) US Address autocompletion
      * 2) US Address verification
-     * 
      * @param {object} $ - jQuery
      * @param {object} cfg - user configuration passed as a JSON file (optional)
      */
     function LobAddressElements($, cfg) {
-        //merge user configuration to create the baseline configuration
         var config = {
             api_key: $('*[data-lob-key]').attr('data-lob-key') || cfg.api_key,
             strict: $('form[data-lob-verify]').attr('data-lob-verify') === 'strict',
@@ -24,27 +21,31 @@
             },
             elements: {
                 form: $('form[data-lob-verify]'),
+                message: $('*[data-lob-verify-message]').hide(),
                 primary: $('input[data-lob-primary]'),
+                primaryMsg: $('*[data-lob-primary-message]').hide(),
                 secondary: $('input[data-lob-secondary]'),
+                secondaryMsg: $('*[data-lob-secondary-message]').hide(),
                 city: $('input[data-lob-city]'),
+                cityMsg: $('*[data-lob-city-message]').hide(),
                 state: $('*[data-lob-state]'),
+                stateMsg: $('*[data-lob-state-message]').hide(),
                 zip: $('input[data-lob-zip]'),
-                message: $('*[data-lob-verify-message]').hide() //initialize in hidden state
+                zipMsg: $('*[data-lob-zip-message]').hide()
             },
             messages: {
-                primary_line: 'The primary street address is required.',
-                city_state_zip: 'You must provide a Zip Code or a valid City and State.',
+                primary_line: 'Please provide a primary street address.',
+                city_state_zip: 'Please provide a Zip Code or a valid City and State.',
                 undeliverable: 'The address could not be verified. Please reconfirm your input.',
-                deliverable_missing_unit: 'The address should include additional information such as a SUITE or UNIT number. Please update and then resubmit.',
-                confirm: 'Your address was updated during verification. Please verify our changes and resubmit.',
+                deliverable_missing_unit: 'Please provide a Suite or Unit number.',
+                confirm: 'Your address was standardized during verification. Please confirm the changes and resubmit.',
                 DEFAULT: 'Unknown Error. The address could not be verified.'
             }
         };
 
         /**
-         * jquery event handlers execute in the order they are bound. This prioritizes the most-recently-added 
+         * jQuery event handlers execute in the order they are bound. This prioritizes the most-recently-added 
          * handler as the first one, allowing Lob to first verify an address when the form is submitted.
-         * 
          * @param {object} jqElm 
          * @param {*} event_type 
          */
@@ -56,7 +57,6 @@
         /**
          * returns a CSS color for the suggestion list, prioritizing any value set using 
          * the data-lob-suggestion-* attribute
-         * 
          * @param {object} config - configuration settings object
          * @param {string} type - the type of configuration
          */
@@ -65,9 +65,8 @@
         }
 
         /**
-         * not every error returned from Lob.com's endpoints is a defined type. This method, converts these instances for
+         * Not every error returned from Lob.com's endpoints is a defined type. This method, converts these instances for
          * easier localization of the message strings.
-         * 
          * @param {string} message - response message
          */
         function resolveMessageType(message) {
@@ -131,8 +130,7 @@
         if (config.elements.primary.length) {
 
             /**
-             * on-key-press handler function (queries the Lob us_autocompletions API for possible matches)
-             * 
+             * The on-key-press handler function (queries the Lob us_autocompletions API for possible matches)
              * @param {string} query - what the user just keyed into the autocomplete input
              * @param {function} cb - the callback function that will process the server response
              */
@@ -207,7 +205,6 @@
             /**
              * Called after Lob verifies the address. Improves/updates user 
              * input with verified values from Lob and caches.
-             * 
              * @param {object} data - verified address object returned from Lob
              */
             function improveAndCache(data) {
@@ -255,7 +252,6 @@
             /**
              * Returns true if the verification check with Lob has succeeded.
              * NOTE: If the Lob API server is unavailable (status 0), success if returned.
-             * 
              * @param {object} data - Lob API server response
              * @param {object} config - Address Element configuration
              * @param {number} status - HTTP status code
@@ -270,7 +266,6 @@
 
             /**
              * Safe JSON parser
-             * 
              * @param {string} s - string to parse
              */
             function parseJSON(s) {
@@ -283,9 +278,50 @@
             }
 
             /**
+             * hide error message fields in the UI
+             */
+            function hideMessages() {
+                config.elements.message.hide();
+                config.elements.primaryMsg.hide();
+                config.elements.secondaryMsg.hide();
+                config.elements.cityMsg.hide();
+                config.elements.stateMsg.hide();
+                config.elements.zipMsg.hide();
+            }
+
+            /**
+             * Show form- and field-level error messages as cofigured. Verification did NOT succeed.
+             * @param {object} err - Verification error object representing a Lob error type
+             * @param {string} err.msg - Top-level message to show for the form
+             * @param {string} err.type - Specific error type to apply at field level if relevant
+             */
+            function showMessages(err) {
+                config.elements.message.text(err.msg).show('slow');
+                console.log(err.type);
+                messageTypes[err.type] && messageTypes[err.type](config.messages[err.type]);
+            }
+
+            /**
+             * Shows a field-level error message if tagged by the user
+             */
+            var messageTypes = {
+                primary_line: function(msg) {
+                    console.log('primary', msg)
+                    config.elements.primaryMsg.text(msg).show('slow');
+                },
+                city_state_zip: function(msg) {
+                    config.elements.cityMsg.text(msg).show('slow');
+                    config.elements.stateMsg.text(msg).show('slow');
+                    config.elements.zipMsg.text(msg).show('slow');
+                },
+                deliverable_missing_unit: function(msg) {
+                    config.elements.secondaryMsg.text(msg).show('slow');
+                }
+            }
+
+            /**
              * Calls the Lob.com US Verification API. If successful, the user's form will be submitted by 
              * the cb handler to its original endpoint. If unsuccessful, an error message will be shown.
-             * 
              * @param {function} cb - process the response (submit the form or show an error message)
              */
             function verify_us_address(cb) {
@@ -303,14 +339,16 @@
                                 cb(null, true);
                             } else if (data.deliverability === 'deliverable') {
                                 //IMPROVEMENT (ask user to confirm Lob's improvements)
-                                cb({ msg: config.messages.confirm });
+                                cb({ msg: config.messages.confirm, type: 'confirm' });
                             } else {
                                 //KNOWN VERIFICATION ERROR (e.g., undeliverable)
-                                cb({ msg: config.messages[resolveMessageType(data.deliverability)] });
+                                var type = resolveMessageType(data.deliverability);
+                                cb({ msg: config.messages[type], type: type });
                             }
                         } else {
                             //KNOWN SYSTEM ERROR (e.g., rate limit exceeded, primary line missing)
-                            cb({ msg: config.messages[resolveMessageType(data.error.message)] });
+                            var type = resolveMessageType(data.error.message);
+                            cb({ msg: config.messages[type] , type: type});
                         }
                     }
                 }
@@ -323,19 +361,17 @@
                 }));
                 return false;
             }
-            //bind the Lob preflight handler function to verify the address before allowing submission
+
             config.elements.form.on('submit', function preFlight(e) {
                 e.stopImmediatePropagation();
                 e.preventDefault();
-                config.elements.message.hide();
+                hideMessages();
                 return verify_us_address(function (err, success) {
                     if (success) {
-                        //verification succeeded and NO improvements were made; SUBMIT FORM
                         config.elements.form.off('submit', preFlight);
                         config.elements.form.submit();
                     } else {
-                        //verification failed; user has NOT confirmed; ASK TO RESUBMIT
-                        config.elements.message.text(err.msg).show('slow');
+                        showMessages(err);
                     }
                 });
             });

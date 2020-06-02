@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "build": "node ./dev/minify.js"
+  },
+  "devDependencies": {
+    "@node-minify/core": "^5.3.0",
+    "@node-minify/uglify-js": "^5.3.0"
+  }
+}
