@@ -1,12 +1,24 @@
 # lob-address-elements
-
-## Overview
 The Lob Address Elements library simplifies client side integration of Lob's *US Address Autocompletion* and *US Address Verification* APIs. Use it to enrich any standard HTML page to include both autocompletion and pre-verification behaviors.
 
-## Implementation
-The vanilla implementation of the plugin requires **no** JavaScript skills, as all plugin configuration can be achieved through markup.
+## Table of Contents
+- [Registration](#registration)
+- [Usage](#usage)
+- [Component Styles](#component-styles)
+  - [In-line Declarations](#in-line-declarations)
+  - [Stylesheet Declarations](#stylesheet-declarations)
+- [Localization](#localization)
+- [Examples](#examples)
+- [Contributing](#contributing)
+- [Building](#building)
 
-Start with a standard HTML form that collects a US Address.
+## Registration
+First, you will need to first create an account at [Lob.com](https://dashboard.lob.com/#/register) and obtain your **Live API Key**.
+
+Once you have created an account, you can access your API Keys from the [Settings Panel](https://dashboard.lob.com/#/settings).
+
+## Usage
+The vanilla implementation of the library can be fully configured by adding markup. Start with a standard HTML form that collects a US Address.
 ```
 <!DOCTYPE html>
 <html>
@@ -38,7 +50,7 @@ Start with a standard HTML form that collects a US Address.
 </body>
 </html>
 ```
-Embed the Lob Address Elements library using a &lt;script&gt; tag and then enable autocompletion and verification behaviors by decorating relevant HTML elements with `data-lob-*` attributes. For example:
+Embed the Lob Address Elements library using a &lt;script&gt; tag and then enable autocompletion and verification behaviors by decorating relevant HTML elements with `data-lob-*` attributes. For your convenience, we host a minified version of the library at `https://birdeau.s3.amazonaws.com/lob/lob-address-elements-0.1.0.min.js`. For example:
 ```
 <!DOCTYPE html>
 <html>
@@ -70,27 +82,27 @@ Embed the Lob Address Elements library using a &lt;script&gt; tag and then enabl
         </div>
         <input type="submit" value="Submit">
     </form>
-    <script src="/lob-address-elements.js"></script>
+    <script src="https://birdeau.s3.amazonaws.com/lob/lob-address-elements-0.1.0.min.js"></script>
 </body>
 </html>
 ```
 
 | Attribute Name               | Attribute Value(s)    | Description         |
 | :---                         |  :---                 |   :---              |
-| data-lob-key          | `YOUR LOB KEY`           | Include your Lob live public key as the attribute value.         |
-| data-lob-verify           | `warn`, `strict`          | Include this attribute on the HTML form element in order to pre-verify the user's address submission with Lob.  Choose `warn` as the attribute value, if you wish to allow users to submit an errant from once they have been warned. Choose `strict` to halt any submission that does not pass verification. *NOTE: If you choose to verify form submissions, you must include the `data-lob-verify-message` attribute to identify where  verification error messages can be displayed to users.* |
-| data-lob-verify-message             | N/A             | Include this attribute if address verification is desired in order to render errors and warnings to users. You are responsible for styling this component. The address elements library will *show* and *hide* this element as necessary to communicate verification issues.           |
-| data-lob-primary          | N/A           | Identify the primary address field. This should be an input text box.         |
-| data-lob-secondary        | N/A           | Identify the secondary address field.      |
-| data-lob-city             | N/A           | Identify the city.      |
-| data-lob-state            | N/A           | Identify the state.         |
-| data-lob-zip              | N/A           | Identify the zip code.         |
+| data-lob-key          | `<YOUR_LOB_KEY>`           | Include your Lob live public key as the attribute value. It will use the format `live_pub_*` and is available via the [Lob Dashboard](https://dashboard.lob.com/#/settings).        |
+| data-lob-verify           | `warn`, `strict`          | Include this attribute on the HTML &lt;form&gt; element to pre-verify the user's address submission with Lob.  Choose `warn` as the attribute value, if you wish to allow users to submit an errant form once they have been warned. Their resubmission of an unchanged form will be used to indicate their preference to override and submit. Choose `strict` to halt any submission that does not pass verification. *NOTE: If you choose to verify form submissions, you must include the `data-lob-verify-message` attribute to identify where  verification error messages can be displayed to users.* |
+| data-lob-verify-message             | N/A             | This attribute identifies the HTML element where all verification errors will be rendered. You are responsible for styling this component. The Address Elements library will *show* and *hide* this element as necessary to communicate verification issues.           |
+| data-lob-primary          | N/A           | This attribute identifies the primary address field. This should be an HTML text input.         |
+| data-lob-secondary        | N/A           | This attribute identifies the secondary address field.      |
+| data-lob-city             | N/A           | This attribute identifies the city.      |
+| data-lob-state            | N/A           | This attribute identifies the state.         |
+| data-lob-zip              | N/A           | This attribute identifies the zip code.         |
 
 ## Component Styles
 You may customize the color and style for the address suggestion list.
 Two approaches are supported. 
 
-### In-line Color Declarations
+### In-line Declarations
 In this example, the colors are declared in-ine, which means
 the address elements library will automatically inject a stylesheet with all CSS styles necessary to style the suggestion list. 
 Hex, RGB and named color values are supported when declaring styles in-line.
@@ -145,10 +157,9 @@ Hex, RGB and named color values are supported when declaring styles in-line.
 | data-lob-suggestion-activecolor   | N/A           | The text color for an item in the suggestion list when actively hovered over or when traversed via the keyboard.         |
 | data-lob-suggestion-activebgcolor | N/A           | The background color for an item in the suggestion list when actively hovered over or when traversed via the keyboard.    |
 
-### Rule-based Stylesheet Declarations
+### Stylesheet Declarations
 
-In this example, all styles for the address suggestion list are declared using a CSS stylesheet. When using this approach, it is useful to also include the `data-lob-suggestion-stylesheet` attribute to stop the address elements library from 
-loading its default stylesheet.
+In this example, all styles for the address suggestion list are declared using a CSS stylesheet. When using this approach, it is useful to also include the `data-lob-suggestion-stylesheet` attribute to stop the Address Elements library from loading its default stylesheet.
 
 ```
 <!DOCTYPE html>
@@ -269,6 +280,11 @@ loading its default stylesheet.
 
 </html>
 ```
+
+| Attribute Name                 | Attribute Value(s)  | Description         |
+| :---                              |  :---                 |   :---              |
+| data-lob-suggestion-stylesheet | N/A                 | Use this flag to stop the Address Elements library from loading its default stylesheet. You will be responsible for all styles and colors using a stylesheet under your control.    |
+
 # Localization
 It is possible to localize and customize verification messages returned by Lob's verification API. This customization requires a JavaScript configuration file be declared alongside the Lob &lt;script&gt; tag. Customize the value for any message to override.
 
@@ -307,11 +323,11 @@ It is possible to localize and customize verification messages returned by Lob's
     <script>
         var LobAddressElementsConfig = {
             messages: {
-                primary_line: 'The primary street address is required.',
-                city_state_zip: 'You must provide a Zip Code or a valid City and State.',
+                primary_line: 'Please provide a primary street address.',
+                city_state_zip: 'Please provide a Zip Code or a valid City and State.',
                 undeliverable: 'The address could not be verified. Please reconfirm your input.',
-                deliverable_missing_unit: 'The address should include additional information such as a SUITE or UNIT number. Please update and then resubmit.',
-                confirm: 'Your address was updated during verification. Please verify our changes and resubmit.',
+                deliverable_missing_unit: 'Please provide a Suite or Unit number.',
+                confirm: 'Your address was standardized during verification. Please confirm the changes and resubmit.',
                 DEFAULT: 'Unknown Error. The address could not be verified.'
             }
         };
@@ -321,3 +337,27 @@ It is possible to localize and customize verification messages returned by Lob's
 </html>
 
 ```
+
+## Examples
+
+We've provided various examples for you to try out [here](https://github.com/lob/lob-address-elements/tree/master/examples).
+
+These represent a range of HTML forms and environments you may find similar to your own. Review each for relevant examples for how to use and configure Address Elements.
+
+## Contributing
+
+To contribute, please see the [CONTRIBUTING.md](https://github.com/lob/lob-node/blob/master/CONTRIBUTING.md) file.
+
+## Building
+
+The minified version of the Address Elements library is available for download from MaxCDN. You do not need to clone the Github repo to use in your Website. But if you do decide to fork and build your own instance of Address Elements, we have provided build tools for minifying your source. Execute via the CLI (NOTE: Replace `1.1.1` with the version number you wish to bind to the minified file name.
+```
+npm run build 1.1.1
+```
+
+
+----------
+
+Copyright &copy; 2020 Lob.com
+
+Released under the MIT License, which can be found in the repository in `LICENSE.txt`.
