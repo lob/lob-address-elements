@@ -205,46 +205,67 @@
         if (config.elements.form.length && config.elements.message.length) {
 
             /**
-             * Called after Lob verifies the address. Improves/updates user input with values from Lob.
+             * Called after Lob verifies the address. Improves/updates user 
+             * input with verified values from Lob and caches.
              * 
-             * @param {object} address - verified address object returned from Lob's verification API
-             * @param {boolean} strict - if true, the form is in strict mode and will NOT allow submission unless perfect
+             * @param {object} data - verified address object returned from Lob
              */
-            function applyTweaks(data, strict) {
-                var unchanged;
-                var address = {
-                    primary: data.primary_line || '',
-                    secondary: data.secondary_line || '',
+            function improveAndCache(data) {
+                var did_improve;
+                var sd = data.components && data.components.secondary_designator || '';
+                var parts = (data.primary_line || '').split(' ' + sd + ' ');
+                var address = config.address = {
+                    primary: sd ? parts[0] : data.primary_line || '',
+                    secondary: sd ? (sd + ' ' + parts[1]) : '',
                     city: data.components && data.components.city || '',
                     state: data.components && data.components.state || '',
                     zip: data.components && data.components.zip_code || ''
                 }
                 for (var p in address) {
                     if (address.hasOwnProperty(p)) {
-                        if (strict && config.elements[p].val().toUpperCase() !== address[p].toUpperCase()) {
-                            unchanged = true;
+                        if (address[p]) {
+                            if (address[p].toUpperCase() != config.elements[p].val().toUpperCase()) {
+                                did_improve = true;
+                            }
+                            config.elements[p].val(address[p]);
                         }
-                        config.elements[p].val(address[p]);
                     }
                 }
-                config.address = address;
-                return unchanged;
+                return did_improve;
             }
 
             /**
-             * Checks if the user made any changes to their form since the last time they 
-             * submitted for verification; this is useful when warning a user when address verification fails. 
-             * (Each time the user modifies their form, reset their `warned` state to `false`, 
-             * so they are warned at least once before normal submission is allowed.)
+             * An errant submission is assumed to be 'confirmed' 
+             * and overridden when the user submits the same form values 
+             * twice in a row and their form is NOT in strict mode.
              */
-            function resetWarnedState() {
-                for (var p in config.address) {
-                    if (config.address.hasOwnProperty(p)) {
-                        if (config.elements[p].val().toUpperCase() !== config.address[p].toUpperCase()) {
-                            config.warned = false;
+            function isConfirmation() {
+                if (config.address) {
+                    for (var p in config.address) {
+                        if (config.address.hasOwnProperty(p)) {
+                            if (config.elements[p].val().toUpperCase() !== config.address[p].toUpperCase()) {
+                                return false;
+                            }
                         }
                     }
+                    return true;
                 }
+            }
+
+            /**
+             * Returns true if the verification check with Lob has succeeded.
+             * NOTE: If the Lob API server is unavailable (status 0), success if returned.
+             * 
+             * @param {object} data - Lob API server response
+             * @param {object} config - Address Element configuration
+             * @param {number} status - HTTP status code
+             */
+            function isVerified(data, config, status) {
+                var didImprove = improveAndCache(data);
+                return !status ||
+                (data.deliverability === 'deliverable' && !didImprove) ||
+                (data.deliverability === 'undeliverable' && config.confirmed && !config.strict) ||
+                (data.deliverability === 'deliverable_missing_unit' && config.confirmed && !config.strict)
             }
 
             /**
@@ -268,7 +289,7 @@
              * @param {function} cb - process the response (submit the form or show an error message)
              */
             function verify_us_address(cb) {
-                resetWarnedState();
+                config.confirmed = isConfirmation();
                 var xhr = new XMLHttpRequest();
                 xhr.open('POST', 'https://api.lob.com/v1/us_verifications', true);
                 xhr.setRequestHeader('Content-Type', 'application/json');
@@ -276,20 +297,20 @@
                 xhr.onreadystatechange = function () {
                     if (this.readyState === XMLHttpRequest.DONE) {
                         var data = parseJSON(xhr.responseText);
-                        if (this.status === 200) {
-                            if (data.deliverability === 'deliverable') {
-                                //SUCCESS
-                                cb(null, data);
-                            } else if (data.deliverability === 'deliverable_missing_unit' || data.deliverability === 'undeliverable') {
-                                //KNOWN verification error (e.g., undeliverable)
-                                cb({ message: config.messages[resolveMessageType(data.deliverability)] }, data);
+                        if (!this.status || this.status === 200) {
+                            if (isVerified(data, config, this.status)) {
+                                //SUCCESS (time for final submit)
+                                cb(null, true);
+                            } else if (data.deliverability === 'deliverable') {
+                                //IMPROVEMENT (ask user to confirm Lob's improvements)
+                                cb({ msg: config.messages.confirm });
                             } else {
-                                //UN-KNOWN verification error (possible network error)
-                                cb({ message: config.messages['DEFAULT'] }, data);
+                                //KNOWN VERIFICATION ERROR (e.g., undeliverable)
+                                cb({ msg: config.messages[resolveMessageType(data.deliverability)] });
                             }
                         } else {
-                            //KNOWN system error (e.g., rate limit exceeded, primary line missing)
-                            cb({ message: config.messages[resolveMessageType(data.error.message)] }, data);
+                            //KNOWN SYSTEM ERROR (e.g., rate limit exceeded, primary line missing)
+                            cb({ msg: config.messages[resolveMessageType(data.error.message)] });
                         }
                     }
                 }
@@ -307,38 +328,14 @@
                 e.stopImmediatePropagation();
                 e.preventDefault();
                 config.elements.message.hide();
-                return verify_us_address(function (err, data) {
-                    if (!err) {
-                        if (!applyTweaks(data, config.strict)) {
-                            //verification succeeded and NO improvements were made; SUBMIT FORM
-                            config.elements.form.off('submit', preFlight);
-                            config.elements.form.submit();
-                        } else {
-                            //verification succeeded BUT improvements were made; ASK USER RESUBMIT
-                            config.elements.message.text(config.messages.confirm).show('slow');
-                        }
-                    } else if (data.deliverability === 'deliverable_missing_unit') {
-                        if (config.strict) {
-                            //unit is missing and strict mode is active; SHOW ERROR
-                            config.elements.message.text(err.message).show('slow');
-                        } else if (config.warned && !applyTweaks(data, true)) {
-                            //unit is missing, BUT user was already warned; SUBMIT FORM
-                            config.elements.form.off('submit', preFlight);
-                            config.elements.form.submit();
-                        } else {
-                            //unit is missing; user has NOT been warned; ASK USER RESUBMIT
-                            config.elements.message.text(err.message).show('slow');
-                            config.warned = true;
-                        }
-                    } else if (!config.strict && config.warned) {
-                        //verification failed BUT user was already warned; SUBMIT FORM
+                return verify_us_address(function (err, success) {
+                    if (success) {
+                        //verification succeeded and NO improvements were made; SUBMIT FORM
                         config.elements.form.off('submit', preFlight);
                         config.elements.form.submit();
                     } else {
-                        //verification failed; user has NOT been warned; ASK USER RESUBMIT
-                        applyTweaks(data, true);
-                        config.elements.message.text(err.message).show('slow');
-                        config.warned = true;
+                        //verification failed; user has NOT confirmed; ASK TO RESUBMIT
+                        config.elements.message.text(err.msg).show('slow');
                     }
                 });
             });
