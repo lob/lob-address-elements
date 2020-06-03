@@ -103,9 +103,9 @@ Embed the Lob Address Elements library using a &lt;script&gt; tag and then enabl
 | data-lob-zip              | N/A           | This attribute identifies the zip code.         |
 | data-lob-primary-message  | N/A           | This optional attribute identifies where to display field-level error messages that affect the primary address field.           |
 | data-lob-secondary-message | N/A          | This optional attribute identifies where to display field-level error messages that affect the secondary address field.         |
-| data-lob-city-message      | N/A          | This opitonal attribute identifies where to display field-level error messages that affect the primary address field.           |
-| data-lob-state-message     | N/A          | This optional attribute identifies where to display field-level error messages that affect the primary address field.           |
-| data-lob-zip-message       | N/A          | This optional attribute identifies where to display field-level error messages that affect the primary address field.           |
+| data-lob-city-message      | N/A          | This opitonal attribute identifies where to display field-level error messages that affect the city field.           |
+| data-lob-state-message     | N/A          | This optional attribute identifies where to display field-level error messages that affect the state field.           |
+| data-lob-zip-message       | N/A          | This optional attribute identifies where to display field-level error messages that affect the zip code field.           |
 
 ## Component Styles
 You may customize the color and style for the address suggestion list.
