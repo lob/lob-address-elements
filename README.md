@@ -13,7 +13,7 @@ The Lob Address Elements library simplifies client side integration of Lob's *US
 - [Building](#building)
 
 ## Registration
-First, you will need to first create an account at [Lob.com](https://dashboard.lob.com/#/register) and obtain your **Live API Key**.
+First, you will need to create an account at [Lob.com](https://dashboard.lob.com/#/register) and obtain your **Live API Key**.
 
 Once you have created an account, you can access your API Keys from the [Settings Panel](https://dashboard.lob.com/#/settings).
 
@@ -24,7 +24,6 @@ The vanilla implementation of the library can be fully configured by adding mark
 <html>
 <body>
     <form action="/api/v1/add-address">
- 
         <div>
             <label for="street1">Street 1</label>
             <input id="street1">
@@ -50,7 +49,7 @@ The vanilla implementation of the library can be fully configured by adding mark
 </body>
 </html>
 ```
-Embed the Lob Address Elements library using a &lt;script&gt; tag and then enable autocompletion and verification behaviors by decorating relevant HTML elements with `data-lob-*` attributes. For your convenience, we host a minified version of the library at `https://birdeau.s3.amazonaws.com/lob/lob-address-elements-0.1.0.min.js`. For example:
+Embed the Lob Address Elements library using a &lt;script&gt; tag and then enable autocompletion and verification behaviors by decorating relevant HTML elements with `data-lob-*` attributes. For your convenience, we host a minified version of the library at `https://CDNHOST.COM/lob-address-elements-0.1.0.min.js`. For example:
 ```
 <!DOCTYPE html>
 <html>
@@ -63,26 +62,31 @@ Embed the Lob Address Elements library using a &lt;script&gt; tag and then enabl
         <div>
             <label for="street1">Street 1</label>
             <input id="street1" data-lob-primary>
+            <small data-lob-primary-message></small>
         </div>
         <div>
             <label for="street2">Street 2</label>
             <input id="street2" data-lob-secondary>
+            <small data-lob-secondary-message></small>
         </div>
         <div>
             <label for="city">City</label>
             <input id="city" data-lob-city>
+            <small data-lob-city-message></small>
         </div>
         <div>
             <label for="state">State</label>
             <input id="state" data-lob-state>
+            <small data-lob-state-message></small>
         </div>
         <div>
             <label for="zip">Zip</label>
             <input id="zip" data-lob-zip>
+            <small data-lob-zip-message></small>
         </div>
         <input type="submit" value="Submit">
     </form>
-    <script src="https://birdeau.s3.amazonaws.com/lob/lob-address-elements-0.1.0.min.js"></script>
+    <script src="https://CDNHOST.COM/lob-address-elements-0.1.0.min.js"></script>
 </body>
 </html>
 ```
@@ -97,6 +101,11 @@ Embed the Lob Address Elements library using a &lt;script&gt; tag and then enabl
 | data-lob-city             | N/A           | This attribute identifies the city.      |
 | data-lob-state            | N/A           | This attribute identifies the state.         |
 | data-lob-zip              | N/A           | This attribute identifies the zip code.         |
+| data-lob-primary-message  | N/A           | This optional attribute identifies where to display field-level error messages that affect the primary address field.           |
+| data-lob-secondary-message | N/A          | This optional attribute identifies where to display field-level error messages that affect the secondary address field.         |
+| data-lob-city-message      | N/A          | This opitonal attribute identifies where to display field-level error messages that affect the primary address field.           |
+| data-lob-state-message     | N/A          | This optional attribute identifies where to display field-level error messages that affect the primary address field.           |
+| data-lob-zip-message       | N/A          | This optional attribute identifies where to display field-level error messages that affect the primary address field.           |
 
 ## Component Styles
 You may customize the color and style for the address suggestion list.
@@ -144,7 +153,7 @@ Hex, RGB and named color values are supported when declaring styles in-line.
         </div>
         <input type="submit" value="Submit">
     </form>
-    <script src="/lob-address-elements.js"></script>
+    <script src="https://CDNHOST.COM/lob-address-elements-0.1.0.min.js"></script>
 </body>
 </html>
 
@@ -275,7 +284,7 @@ In this example, all styles for the address suggestion list are declared using a
         </div>
         <input type="submit" value="Submit">
     </form>
-    <script src="/lob-address-elements.js"></script>
+    <script src="https://CDNHOST.COM/lob-address-elements-0.1.0.min.js"></script>
 </body>
 
 </html>
@@ -350,7 +359,7 @@ To contribute, please see the [CONTRIBUTING.md](https://github.com/lob/lob-node/
 
 ## Building
 
-The minified version of the Address Elements library is available for download from MaxCDN. You do not need to clone the Github repo to use in your Website. But if you do decide to fork and build your own instance of Address Elements, we have provided build tools for minifying your source. Execute via the CLI (NOTE: Replace `1.1.1` with the version number you wish to bind to the minified file name.
+The minified version of the Address Elements library is available for download from [CDN HOST NAME]. You do not need to clone the Github repo to use in your Website. But if you do decide to fork and build your own instance of Address Elements, we have provided build tools for minifying your source. Execute via the CLI (NOTE: Replace `1.1.1` with the version number you wish to bind to the minified file name.
 ```
 npm run build 1.1.1
 ```
