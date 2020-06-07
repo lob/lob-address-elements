@@ -9,17 +9,17 @@
      */
     function LobAddressElements($, cfg) {
         var config = {
-            api_key: $('*[data-lob-key]').attr('data-lob-key') || cfg.api_key,
-            strict: $('form[data-lob-verify]').attr('data-lob-verify') === 'strict',
-            styles: {
-                color: cfg.color || '#666666',
-                bgcolor: cfg.bgcolor || '#fefefe',
-                bordercolor: cfg.bordercolor || '#a8a8a8',
-                activecolor: cfg.activecolor || '#117ab8',
-                activebgcolor: cfg.activebgcolor || '#eeeeee',
-                stylesheet: $('*[data-lob-suggestion-stylesheet]')
+            api_key: cfg.api_key || $('*[data-lob-key]').attr('data-lob-key'),
+            strict: typeof (cfg.strict) != undefined ? cfg.strict : $('form[data-lob-verify]').attr('data-lob-verify') === 'strict',
+            stylesheet: typeof (cfg.stylesheet) != undefined ? cfg.stylesheet : $('*[data-lob-suggestion-stylesheet]').length > 0,
+            styles: cfg.styles || {
+                color: '#666666',
+                bgcolor: '#fefefe',
+                bordercolor: '#a8a8a8',
+                activecolor: '#117ab8',
+                activebgcolor: '#eeeeee'
             },
-            elements: {
+            elements: cfg.elements || {
                 form: $('form[data-lob-verify]'),
                 message: $('*[data-lob-verify-message]').hide(),
                 primary: $('input[data-lob-primary]'),
@@ -33,14 +33,15 @@
                 zip: $('input[data-lob-zip]'),
                 zipMsg: $('*[data-lob-zip-message]').hide()
             },
-            messages: {
+            messages: cfg.messages || {
                 primary_line: 'Please provide a primary street address.',
                 city_state_zip: 'Please provide a Zip Code or a valid City and State.',
                 undeliverable: 'The address could not be verified. Please reconfirm your input.',
-                deliverable_missing_unit: 'Please provide a Suite or Unit number.',
+                deliverable_missing_unit: 'Please provide a Suite or Unit.',
                 confirm: 'Your address was standardized during verification. Please confirm the changes and resubmit.',
                 DEFAULT: 'Unknown Error. The address could not be verified.'
-            }
+            },
+            do: {}
         };
 
         /**
@@ -82,10 +83,9 @@
         }
 
         /**
-         * Inject the CSS for styling the autocomplete's suggestion list (The default behavior) 
-         * if the user did NOT choose to implement their own custom stylesheet
+         * Inject the CSS for styling the dropdown if not overridden
          */
-        if (!config.styles.stylesheet.length) {
+        if (!config.stylesheet) {
             $('<style>')
                 .prop('type', 'text/css')
                 .html('\
@@ -164,6 +164,20 @@
                 }
                 return false;
             }
+            config.do.autocomplete = getAutocompleteSuggestions;
+
+            /**
+             * Project a suggested address into the UI
+             * @param {object} suggestion - as returned from the Lob API
+             */
+            function applySelected(suggestion) {
+                config.elements.primary.autocomplete('val', suggestion.primary_line);
+                config.elements.secondary.val('');
+                config.elements.city.val(suggestion.city);
+                config.elements.state.val(suggestion.state);
+                config.elements.zip.val(suggestion.zip_code);
+            }
+            config.do.apply = applySelected;
 
             /**
              * configure the Algolia Autocomplete plugin; this plugin turns a standard
@@ -171,8 +185,7 @@
              */
             config.elements.primary.autocomplete(
                 {
-                    hint: false,
-                    delay: 400
+                    hint: false
                 },
                 {
                     source: getAutocompleteSuggestions,
@@ -188,11 +201,7 @@
                     },
                     cache: false
                 }).on('autocomplete:selected', function (event, suggestion) {
-                    config.elements.primary.autocomplete('val', suggestion.primary_line);
-                    config.elements.secondary.val('');
-                    config.elements.city.val(suggestion.city);
-                    config.elements.state.val(suggestion.state);
-                    config.elements.zip.val(suggestion.zip_code);
+                    applySelected(suggestion);
                 });
         }
 
@@ -207,8 +216,8 @@
              * input with verified values from Lob and caches.
              * @param {object} data - verified address object returned from Lob
              */
-            function improveAndCache(data) {
-                var did_improve;
+            function fixAndSave(data) {
+                var didFix;
                 var sd = data.components && data.components.secondary_designator || '';
                 var parts = (data.primary_line || '').split(' ' + sd + ' ');
                 var address = config.address = {
@@ -222,13 +231,13 @@
                     if (address.hasOwnProperty(p)) {
                         if (address[p]) {
                             if (address[p].toUpperCase() != config.elements[p].val().toUpperCase()) {
-                                did_improve = true;
+                                didFix = true;
                             }
                             config.elements[p].val(address[p]);
                         }
                     }
                 }
-                return did_improve;
+                return didFix;
             }
 
             /**
@@ -239,14 +248,15 @@
             function isConfirmation() {
                 if (config.address) {
                     for (var p in config.address) {
-                        if (config.address.hasOwnProperty(p)) {
-                            if (config.elements[p].val().toUpperCase() !== config.address[p].toUpperCase()) {
-                                return false;
-                            }
+                        if (config.address.hasOwnProperty(p) &&
+                            config.elements[p].val().toUpperCase() !== config.address[p].toUpperCase()) {
+                            return false;
+
                         }
                     }
                     return true;
                 }
+                return false;
             }
 
             /**
@@ -257,11 +267,11 @@
              * @param {number} status - HTTP status code
              */
             function isVerified(data, config, status) {
-                var didImprove = improveAndCache(data);
+                var didImprove = fixAndSave(data);
                 return !status ||
-                (data.deliverability === 'deliverable' && !didImprove) ||
-                (data.deliverability === 'undeliverable' && config.confirmed && !config.strict) ||
-                (data.deliverability === 'deliverable_missing_unit' && config.confirmed && !config.strict)
+                    (data.deliverability === 'deliverable' && !didImprove) ||
+                    (data.deliverability === 'undeliverable' && config.confirmed && !config.strict) ||
+                    (data.deliverability === 'deliverable_missing_unit' && config.confirmed && !config.strict)
             }
 
             /**
@@ -297,24 +307,23 @@
              */
             function showMessages(err) {
                 config.elements.message.text(err.msg).show('slow');
-                console.log(err.type);
                 messageTypes[err.type] && messageTypes[err.type](config.messages[err.type]);
             }
+            config.do.message = showMessages;
 
             /**
              * Shows a field-level error message if tagged by the user
              */
             var messageTypes = {
-                primary_line: function(msg) {
-                    console.log('primary', msg)
+                primary_line: function (msg) {
                     config.elements.primaryMsg.text(msg).show('slow');
                 },
-                city_state_zip: function(msg) {
+                city_state_zip: function (msg) {
                     config.elements.cityMsg.text(msg).show('slow');
                     config.elements.stateMsg.text(msg).show('slow');
                     config.elements.zipMsg.text(msg).show('slow');
                 },
-                deliverable_missing_unit: function(msg) {
+                deliverable_missing_unit: function (msg) {
                     config.elements.secondaryMsg.text(msg).show('slow');
                 }
             }
@@ -324,7 +333,7 @@
              * the cb handler to its original endpoint. If unsuccessful, an error message will be shown.
              * @param {function} cb - process the response (submit the form or show an error message)
              */
-            function verify_us_address(cb) {
+            function verifyAddress(cb) {
                 config.confirmed = isConfirmation();
                 var xhr = new XMLHttpRequest();
                 xhr.open('POST', 'https://api.lob.com/v1/us_verifications', true);
@@ -348,7 +357,7 @@
                         } else {
                             //KNOWN SYSTEM ERROR (e.g., rate limit exceeded, primary line missing)
                             var type = resolveMessageType(data.error.message);
-                            cb({ msg: config.messages[type] , type: type});
+                            cb({ msg: config.messages[type], type: type });
                         }
                     }
                 }
@@ -361,12 +370,13 @@
                 }));
                 return false;
             }
+            config.do.verify = verifyAddress;
 
             config.elements.form.on('submit', function preFlight(e) {
                 e.stopImmediatePropagation();
                 e.preventDefault();
                 hideMessages();
-                return verify_us_address(function (err, success) {
+                return verifyAddress(function (err, success) {
                     if (success) {
                         config.elements.form.off('submit', preFlight);
                         config.elements.form.submit();
@@ -377,6 +387,7 @@
             });
             prioritizeHandler(config.elements.form, 'submit');
         }
+        return config;
     }
 
     /**
@@ -410,7 +421,7 @@
             }
         },
         jquery_autocomplete: function () {
-            if (!$.fn.autocomplete) {
+            if (!window.jQuery.fn.autocomplete) {
                 var jqac = document.createElement('script');
                 var args = arguments;
                 jqac.onload = function () {
@@ -425,7 +436,7 @@
         address_elements: function () {
             if (!window.LobAddressElements) {
                 var config = window.LobAddressElementsConfig || {};
-                window.LobAddressElements = new LobAddressElements(jQuery, config);
+                window.LobAddressElements = new LobAddressElements(window.jQuery, config);
                 BootStrapper.load(arguments);
             } else {
                 BootStrapper.load(arguments);
