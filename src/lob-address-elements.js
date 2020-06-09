@@ -38,6 +38,7 @@
                 city_state_zip: 'Please provide a Zip Code or a valid City and State.',
                 undeliverable: 'The address could not be verified. Please reconfirm your input.',
                 deliverable_missing_unit: 'Please provide a Suite or Unit.',
+                deliverable_unnecessary_unit: 'The provided Suite or Unit is unnecessary.',
                 confirm: 'Your address was standardized during verification. Please confirm the changes and resubmit.',
                 DEFAULT: 'Unknown Error. The address could not be verified.'
             },
@@ -75,7 +76,7 @@
                 return 'primary_line';
             } else if (message === 'zip_code is required or both city and state are required') {
                 return 'city_state_zip';
-            } else if (message === 'undeliverable' || message === 'deliverable_missing_unit') {
+            } else if (message in config.messages) {
                 return message
             } else {
                 return 'DEFAULT';
@@ -212,29 +213,53 @@
         if (config.elements.form.length && config.elements.message.length) {
 
             /**
+             * compose a address line from component parts
+             * @param {string[]} parts 
+             */
+            function fromParts(parts) {
+                return parts.filter(function (part) {
+                    return part !== "" && part !== null && part !== undefined;
+                }).join(" ");
+            }
+
+            /**
+             * determine which component parts to use based upon the record type
+             * @param {object} c 
+             * @param {string} type 
+             * @param {string} line 
+             */
+            function partsForType(c, type, line) {
+                if (line === 'primary') {
+                    if (type === 'po_box') {
+                        return fromParts([c.street_name, c.primary_number]);
+                    } else {
+                        return fromParts([c.primary_number, c.street_predirection, c.street_name, c.street_suffix, c.street_postdirection]);
+                    }
+                } else {
+                    return fromParts([c.secondary_designator, c.secondary_number, c.pmb_designator, c.pmb_number, c.extra_secondary_designator, c.extra_secondary_number]);
+                }
+            }
+
+            /**
              * Called after Lob verifies the address. Improves/updates user 
              * input with verified values from Lob and caches.
              * @param {object} data - verified address object returned from Lob
              */
             function fixAndSave(data) {
                 var didFix;
-                var sd = data.components && data.components.secondary_designator || '';
-                var parts = (data.primary_line || '').split(' ' + sd + ' ');
                 var address = config.address = {
-                    primary: sd ? parts[0] : data.primary_line || '',
-                    secondary: sd ? (sd + ' ' + parts[1]) : '',
+                    primary: partsForType(data.components, data.components.record_type, 'primary'),
+                    secondary: partsForType(data.components, data.components.record_type, 'secondary'),
                     city: data.components && data.components.city || '',
                     state: data.components && data.components.state || '',
                     zip: data.components && data.components.zip_code || ''
                 }
                 for (var p in address) {
                     if (address.hasOwnProperty(p)) {
-                        if (address[p]) {
-                            if (address[p].toUpperCase() != config.elements[p].val().toUpperCase()) {
-                                didFix = true;
-                            }
-                            config.elements[p].val(address[p]);
+                        if (address[p].toUpperCase() != config.elements[p].val().toUpperCase()) {
+                            didFix = true;
                         }
+                        config.elements[p].val(address[p]);
                     }
                 }
                 return didFix;
@@ -271,7 +296,8 @@
                 return !status ||
                     (data.deliverability === 'deliverable' && !didImprove) ||
                     (data.deliverability === 'undeliverable' && config.confirmed && !config.strict) ||
-                    (data.deliverability === 'deliverable_missing_unit' && config.confirmed && !config.strict)
+                    (data.deliverability === 'deliverable_missing_unit' && config.confirmed && !config.strict) ||
+                    (data.deliverability === 'deliverable_unnecessary_unit' && config.confirmed && !config.strict)
             }
 
             /**
@@ -324,6 +350,9 @@
                     config.elements.zipMsg.text(msg).show('slow');
                 },
                 deliverable_missing_unit: function (msg) {
+                    config.elements.secondaryMsg.text(msg).show('slow');
+                },
+                deliverable_unnecessary_unit: function (msg) {
                     config.elements.secondaryMsg.text(msg).show('slow');
                 }
             }

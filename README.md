@@ -49,7 +49,7 @@ The vanilla implementation of the library can be fully configured by adding mark
 </body>
 </html>
 ```
-Embed the Lob Address Elements library using a &lt;script&gt; tag and then enable autocompletion and verification behaviors by decorating relevant HTML elements with `data-lob-*` attributes. For your convenience, we host a minified version of the library at `https://CDNHOST.COM/lob-address-elements-0.1.0.min.js`. For example:
+Embed the Lob Address Elements library using a &lt;script&gt; tag and then enable autocompletion and verification behaviors by decorating relevant HTML elements with `data-lob-*` attributes. For your convenience, we host a minified version of the library at `https://d3hldpif1b1xsf.cloudfront.net/lob-address-elements-0.1.0.min.js`. For example:
 ```
 <!DOCTYPE html>
 <html>
@@ -86,7 +86,7 @@ Embed the Lob Address Elements library using a &lt;script&gt; tag and then enabl
         </div>
         <input type="submit" value="Submit">
     </form>
-    <script src="https://CDNHOST.COM/lob-address-elements-0.1.0.min.js"></script>
+    <script src="https://d3hldpif1b1xsf.cloudfront.net/lob-address-elements-0.1.0.min.js"></script>
 </body>
 </html>
 ```
@@ -153,7 +153,7 @@ Hex, RGB and named color values are supported when declaring styles in-line.
         </div>
         <input type="submit" value="Submit">
     </form>
-    <script src="https://CDNHOST.COM/lob-address-elements-0.1.0.min.js"></script>
+    <script src="https://d3hldpif1b1xsf.cloudfront.net/lob-address-elements-0.1.0.min.js"></script>
 </body>
 </html>
 
@@ -284,7 +284,7 @@ In this example, all styles for the address suggestion list are declared using a
         </div>
         <input type="submit" value="Submit">
     </form>
-    <script src="https://CDNHOST.COM/lob-address-elements-0.1.0.min.js"></script>
+    <script src="https://d3hldpif1b1xsf.cloudfront.net/lob-address-elements-0.1.0.min.js"></script>
 </body>
 
 </html>
@@ -359,9 +359,9 @@ To contribute, please see the [CONTRIBUTING.md](https://github.com/lob/lob-node/
 
 ## Building
 
-The minified version of the Address Elements library is available for download from [CDN HOST NAME]. You do not need to clone the Github repo to use in your Website. But if you do decide to fork and build your own instance of Address Elements, we have provided build tools for minifying your source. Execute via the CLI (NOTE: Replace `1.1.1` with the version number you wish to bind to the minified file name.
+The minified version of the Address Elements library is available for download from the Lob CDN. You do not need to clone the Github repo to use in your Website. But if you do decide to fork and build your own instance of Address Elements, we have provided build tools for minifying your source. Execute via the CLI (NOTE: Replace `0.1.0` with the version number you wish to bind to the minified file name.
 ```
-npm run build 1.1.1
+npm run build 0.1.0
 ```
 
 
