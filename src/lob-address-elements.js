@@ -10,8 +10,8 @@
     function LobAddressElements($, cfg) {
         var config = {
             api_key: cfg.api_key || $('*[data-lob-key]').attr('data-lob-key'),
-            strict: typeof (cfg.strict) != undefined ? cfg.strict : $('form[data-lob-verify]').attr('data-lob-verify') === 'strict',
-            stylesheet: typeof (cfg.stylesheet) != undefined ? cfg.stylesheet : $('*[data-lob-suggestion-stylesheet]').length > 0,
+            strict: typeof (cfg.strict) !== 'undefined' ? cfg.strict : $('form[data-lob-verify]').attr('data-lob-verify') === 'strict',
+            stylesheet: typeof (cfg.stylesheet) !== 'undefined' ? cfg.stylesheet : $('*[data-lob-suggestion-stylesheet]').length > 0,
             styles: cfg.styles || {
                 color: '#666666',
                 bgcolor: '#fefefe',
@@ -39,6 +39,7 @@
                 undeliverable: 'The address could not be verified. Please reconfirm your input.',
                 deliverable_missing_unit: 'Please provide a Suite or Unit.',
                 deliverable_unnecessary_unit: 'The provided Suite or Unit is unnecessary.',
+                deliverable_incorrect_unit: 'The Unit appears to be incorrect. Please confirm and resubmit.',
                 confirm: 'Your address was standardized during verification. Please confirm the changes and resubmit.',
                 DEFAULT: 'Unknown Error. The address could not be verified.'
             },
@@ -297,7 +298,8 @@
                     (data.deliverability === 'deliverable' && !didImprove) ||
                     (data.deliverability === 'undeliverable' && config.confirmed && !config.strict) ||
                     (data.deliverability === 'deliverable_missing_unit' && config.confirmed && !config.strict) ||
-                    (data.deliverability === 'deliverable_unnecessary_unit' && config.confirmed && !config.strict)
+                    (data.deliverability === 'deliverable_unnecessary_unit' && config.confirmed && !config.strict) ||
+                    (data.deliverability === 'deliverable_incorrect_unit' && config.confirmed && !config.strict)
             }
 
             /**
@@ -353,6 +355,9 @@
                     config.elements.secondaryMsg.text(msg).show('slow');
                 },
                 deliverable_unnecessary_unit: function (msg) {
+                    config.elements.secondaryMsg.text(msg).show('slow');
+                },
+                deliverable_incorrect_unit: function (msg) {
                     config.elements.secondaryMsg.text(msg).show('slow');
                 }
             }

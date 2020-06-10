@@ -49,7 +49,7 @@ The vanilla implementation of the library can be fully configured by adding mark
 </body>
 </html>
 ```
-Embed the Lob Address Elements library using a &lt;script&gt; tag and then enable autocompletion and verification behaviors by decorating relevant HTML elements with `data-lob-*` attributes. For your convenience, we host a minified version of the library at `https://d3hldpif1b1xsf.cloudfront.net/lob-address-elements-0.1.0.min.js`. For example:
+Embed the Lob Address Elements library using a &lt;script&gt; tag and then enable autocompletion and verification behaviors by decorating relevant HTML elements with `data-lob-*` attributes. For your convenience, we host a minified version of the library at `https://cdn.lob.com/lob-address-elements/0.1.0/lib/lob-address-elements.min.js`. For example:
 ```
 <!DOCTYPE html>
 <html>
@@ -86,7 +86,7 @@ Embed the Lob Address Elements library using a &lt;script&gt; tag and then enabl
         </div>
         <input type="submit" value="Submit">
     </form>
-    <script src="https://d3hldpif1b1xsf.cloudfront.net/lob-address-elements-0.1.0.min.js"></script>
+    <script src="https://cdn.lob.com/lob-address-elements/0.1.0/lib/lob-address-elements.min.js"></script>
 </body>
 </html>
 ```
@@ -153,7 +153,7 @@ Hex, RGB and named color values are supported when declaring styles in-line.
         </div>
         <input type="submit" value="Submit">
     </form>
-    <script src="https://d3hldpif1b1xsf.cloudfront.net/lob-address-elements-0.1.0.min.js"></script>
+    <script src="https://cdn.lob.com/lob-address-elements/0.1.0/lib/lob-address-elements.min.js"></script>
 </body>
 </html>
 
@@ -284,7 +284,7 @@ In this example, all styles for the address suggestion list are declared using a
         </div>
         <input type="submit" value="Submit">
     </form>
-    <script src="https://d3hldpif1b1xsf.cloudfront.net/lob-address-elements-0.1.0.min.js"></script>
+    <script src="https://cdn.lob.com/lob-address-elements/0.1.0/lib/lob-address-elements.min.js"></script>
 </body>
 
 </html>
@@ -335,7 +335,9 @@ It is possible to localize and customize verification messages returned by Lob's
                 primary_line: 'Please provide a primary street address.',
                 city_state_zip: 'Please provide a Zip Code or a valid City and State.',
                 undeliverable: 'The address could not be verified. Please reconfirm your input.',
-                deliverable_missing_unit: 'Please provide a Suite or Unit number.',
+                deliverable_missing_unit: 'Please provide a Suite or Unit.',
+                deliverable_unnecessary_unit: 'The provided Suite or Unit is unnecessary.',
+                deliverable_incorrect_unit: 'The Unit appears to be incorrect. Please confirm and resubmit.',
                 confirm: 'Your address was standardized during verification. Please confirm the changes and resubmit.',
                 DEFAULT: 'Unknown Error. The address could not be verified.'
             }
