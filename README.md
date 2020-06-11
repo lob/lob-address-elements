@@ -55,7 +55,7 @@ Embed the Lob Address Elements library using a &lt;script&gt; tag and then enabl
 <html>
 <body>
     <form action="/some/url" 
-        data-lob-verify="warn" 
+        data-lob-verify="relaxed" 
         data-lob-key="live_pub_xxxxxx">
 
         <div data-lob-verify-message></div>
@@ -94,7 +94,7 @@ Embed the Lob Address Elements library using a &lt;script&gt; tag and then enabl
 | Attribute Name               | Attribute Value(s)    | Description         |
 | :---                         |  :---                 |   :---              |
 | data-lob-key          | `<YOUR_LOB_KEY>`           | Include your Lob live public key as the attribute value. It will use the format `live_pub_*` and is available via the [Lob Dashboard](https://dashboard.lob.com/#/settings).        |
-| data-lob-verify           | `warn`, `strict`          | Include this attribute on the HTML &lt;form&gt; element to pre-verify the user's address submission with Lob.  Choose `warn` as the attribute value, if you wish to allow users to submit an errant form once they have been warned. Their resubmission of an unchanged form will be used to indicate their preference to override and submit. Choose `strict` to halt any submission that does not pass verification. *NOTE: If you choose to verify form submissions, you must include the `data-lob-verify-message` attribute to identify where  verification error messages can be displayed to users.* |
+| data-lob-verify           | `strict`, `normal`, `relaxed`          | Include this attribute on the HTML &lt;form&gt; element to pre-verify the user's address submission with Lob.  Choose `relaxed` as the attribute value, if you wish to allow users to submit an errant form once they have been warned. Their resubmission of an unchanged form will be used to indicate their preference to override and submit. Choose `normal` (the default) to halt any submissions that Lob deems undeliverable, while still allowing all other inconsistencies to be submitted once the user has confirmed their choice. Choose `strict` to halt any submission that does not pass verification, including minor errors like missing or unnecessary units. *NOTE: If you choose to verify form submissions, you must include the `data-lob-verify-message` attribute to identify where  verification error messages can be displayed to users.* |
 | data-lob-verify-message             | N/A             | This attribute identifies the HTML element where all verification errors will be rendered. You are responsible for styling this component. The Address Elements library will *show* and *hide* this element as necessary to communicate verification issues.           |
 | data-lob-primary          | N/A           | This attribute identifies the primary address field. This should be an HTML text input.         |
 | data-lob-secondary        | N/A           | This attribute identifies the secondary address field.      |
@@ -121,7 +121,7 @@ Hex, RGB and named color values are supported when declaring styles in-line.
 <html>
 <body>
     <form action="/some/url" 
-        data-lob-verify="warn"
+        data-lob-verify="relaxed"
         data-lob-key="live_pub_xxxxxx">
 
         <div data-lob-verify-message></div>
@@ -256,7 +256,7 @@ In this example, all styles for the address suggestion list are declared using a
 <body>
     <h1>Lob Address Autocompletion</h1>
     <form action="/api/v1/add-address" 
-        data-lob-verify="warn"
+        data-lob-verify="relaxed"
         data-lob-key="live_pub_xxxxxxxxxxxxxx">
 
         <div class="validation_error_message" data-lob-verify-message></div>
@@ -303,7 +303,7 @@ It is possible to localize and customize verification messages returned by Lob's
 <html>
 <body>
     <form action="/some/url" 
-        data-lob-verify="warn" 
+        data-lob-verify="relaxed" 
         data-lob-key="live_pub_xxxxxx">
 
         <div data-lob-verify-message></div>
@@ -334,6 +334,7 @@ It is possible to localize and customize verification messages returned by Lob's
             messages: {
                 primary_line: 'Please provide a primary street address.',
                 city_state_zip: 'Please provide a Zip Code or a valid City and State.',
+                zip:'The Zip Code must be in a valid zip or zip+4 format.',
                 undeliverable: 'The address could not be verified. Please reconfirm your input.',
                 deliverable_missing_unit: 'Please provide a Suite or Unit.',
                 deliverable_unnecessary_unit: 'The provided Suite or Unit is unnecessary.',
