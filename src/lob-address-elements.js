@@ -10,8 +10,8 @@
     function LobAddressElements($, cfg) {
         var config = {
             api_key: cfg.api_key || $('*[data-lob-key]').attr('data-lob-key'),
-            strict: typeof (cfg.strict) !== 'undefined' ? cfg.strict : $('form[data-lob-verify]').attr('data-lob-verify') === 'strict',
-            stylesheet: typeof (cfg.stylesheet) !== 'undefined' ? cfg.stylesheet : $('*[data-lob-suggestion-stylesheet]').length > 0,
+            strictness: resolveStrictness(cfg.strictness),
+            stylesheet: resolveStyleStrategy(cfg.stylesheet),
             styles: cfg.styles || {
                 color: '#666666',
                 bgcolor: '#fefefe',
@@ -36,6 +36,7 @@
             messages: cfg.messages || {
                 primary_line: 'Please provide a primary street address.',
                 city_state_zip: 'Please provide a Zip Code or a valid City and State.',
+                zip: 'The Zip Code must be in a valid zip or zip+4 format.',
                 undeliverable: 'The address could not be verified. Please reconfirm your input.',
                 deliverable_missing_unit: 'Please provide a Suite or Unit.',
                 deliverable_unnecessary_unit: 'The provided Suite or Unit is unnecessary.',
@@ -46,42 +47,47 @@
             do: {}
         };
 
+        function resolveStrictness(cfg) {
+            var values = ['strict', 'normal', 'relaxed'];
+            if (cfg && values.indexOf(cfg) > -1) {
+                return cfg;
+            } else {
+                var attr = $('form[data-lob-verify]').attr('data-lob-verify');
+                return attr && values.indexOf(attr) > -1 ? attr : 'normal';
+            }
+        }
+
+        function resolveStyleStrategy(cfg) {
+            return typeof (cfg) !== 'undefined' ?
+                !!cfg : $('*[data-lob-suggestion-stylesheet]').length > 0
+        }
+
+        function resolveInlineStyle(config, type) {
+            return $('*[data-lob-suggestion-' + type + ']').attr('data-lob-suggestion-' + type) || config.styles[type];
+        }
+
+        function resolveErrorType(message) {
+            if (message === 'primary_line is required or address is required') {
+                return 'primary_line';
+            } else if (message === 'zip_code is required or both city and state are required') {
+                return 'city_state_zip';
+            } else if (message === 'zip_code must be in a valid zip or zip+4 format') {
+                return 'zip';
+            } else if (message in config.messages) {
+                return message
+            } else {
+                return 'DEFAULT';
+            }
+        }
+
         /**
-         * jQuery event handlers execute in the order they are bound. This prioritizes the most-recently-added 
-         * handler as the first one, allowing Lob to first verify an address when the form is submitted.
+         * jQuery event handlers execute in binding order. This prioritizes the most-recent 
          * @param {object} jqElm 
          * @param {*} event_type 
          */
         function prioritizeHandler(jqElm, event_type) {
             var eventList = $._data(jqElm[0], 'events');
             eventList[event_type].unshift(eventList[event_type].pop());
-        }
-
-        /**
-         * returns a CSS color for the suggestion list, prioritizing any value set using 
-         * the data-lob-suggestion-* attribute
-         * @param {object} config - configuration settings object
-         * @param {string} type - the type of configuration
-         */
-        function resolveInlineStyle(config, type) {
-            return $('*[data-lob-suggestion-' + type + ']').attr('data-lob-suggestion-' + type) || config.styles[type];
-        }
-
-        /**
-         * Not every error returned from Lob.com's endpoints is a defined type. This method, converts these instances for
-         * easier localization of the message strings.
-         * @param {string} message - response message
-         */
-        function resolveMessageType(message) {
-            if (message === 'primary_line is required or address is required') {
-                return 'primary_line';
-            } else if (message === 'zip_code is required or both city and state are required') {
-                return 'city_state_zip';
-            } else if (message in config.messages) {
-                return message
-            } else {
-                return 'DEFAULT';
-            }
         }
 
         /**
@@ -126,15 +132,15 @@
         }
 
         /**
-         * Enable address autocompletion if the user added the 
-         * `data-lob-primary` attribute tag
+         * Enable address autocompletion
          */
-        if (config.elements.primary.length) {
+        if (config.elements.primary.length &&
+            config.elements.primary.attr('data-lob-primary') !== 'false') {
 
             /**
-             * The on-key-press handler function (queries the Lob us_autocompletions API for possible matches)
+             * query Lob for autocomplete suggestions
              * @param {string} query - what the user just keyed into the autocomplete input
-             * @param {function} cb - the callback function that will process the server response
+             * @param {function} cb - callback
              */
             function getAutocompleteSuggestions(query, cb) {
                 if (query.match(/[A-Za-z0-9]/)) {
@@ -169,7 +175,7 @@
             config.do.autocomplete = getAutocompleteSuggestions;
 
             /**
-             * Project a suggested address into the UI
+             * Project the chosen suggested address into the UI
              * @param {object} suggestion - as returned from the Lob API
              */
             function applySelected(suggestion) {
@@ -182,8 +188,7 @@
             config.do.apply = applySelected;
 
             /**
-             * configure the Algolia Autocomplete plugin; this plugin turns a standard
-             * HTML input field into an autocomplete widget with Ajax capabilities.
+             * configure the Algolia Autocomplete plugin
              */
             config.elements.primary.autocomplete(
                 {
@@ -208,56 +213,38 @@
         }
 
         /**
-         * Enable pre-submission address verification if the user added the
-         * `data-lob-verify` and `data-lob-verify-message` attribute tags
+         * Enable pre-submission address verification
          */
         if (config.elements.form.length && config.elements.message.length) {
 
-            /**
-             * compose a address line from component parts
-             * @param {string[]} parts 
-             */
-            function fromParts(parts) {
-                return parts.filter(function (part) {
-                    return part !== "" && part !== null && part !== undefined;
-                }).join(" ");
-            }
-
-            /**
-             * determine which component parts to use based upon the record type
-             * @param {object} c 
-             * @param {string} type 
-             * @param {string} line 
-             */
-            function partsForType(c, type, line) {
-                if (line === 'primary') {
-                    if (type === 'po_box') {
-                        return fromParts([c.street_name, c.primary_number]);
-                    } else {
-                        return fromParts([c.primary_number, c.street_predirection, c.street_name, c.street_suffix, c.street_postdirection]);
-                    }
-                } else {
-                    return fromParts([c.secondary_designator, c.secondary_number, c.pmb_designator, c.pmb_number, c.extra_secondary_designator, c.extra_secondary_number]);
+            function plus4(components) {
+                var parts = [];
+                if (components.zip_code) {
+                    parts.push(components.zip_code);
                 }
+                if (components.zip_code_plus_4) {
+                    parts.push(components.zip_code_plus_4);
+                }
+                return parts.length ? parts.join("-") : '';
             }
 
             /**
-             * Called after Lob verifies the address. Improves/updates user 
-             * input with verified values from Lob and caches.
+             * Called after Lob verifies an address. Improves/updates and caches
              * @param {object} data - verified address object returned from Lob
              */
             function fixAndSave(data) {
                 var didFix;
                 var address = config.address = {
-                    primary: partsForType(data.components, data.components.record_type, 'primary'),
-                    secondary: partsForType(data.components, data.components.record_type, 'secondary'),
+                    primary: data.primary_line,
+                    secondary: data.secondary_line,
                     city: data.components && data.components.city || '',
                     state: data.components && data.components.state || '',
-                    zip: data.components && data.components.zip_code || ''
+                    zip: plus4(data.components)
                 }
                 for (var p in address) {
                     if (address.hasOwnProperty(p)) {
-                        if (address[p].toUpperCase() != config.elements[p].val().toUpperCase()) {
+                        if (address[p].toUpperCase() != config.elements[p].val().toUpperCase() &&
+                            !(p === 'zip' && config.elements[p].val().length === 5 && address[p].indexOf(config.elements[p].val()) == 0)) {
                             didFix = true;
                         }
                         config.elements[p].val(address[p]);
@@ -267,9 +254,8 @@
             }
 
             /**
-             * An errant submission is assumed to be 'confirmed' 
-             * and overridden when the user submits the same form values 
-             * twice in a row and their form is NOT in strict mode.
+             * A user is assumed to have 'confirmed' an errant submission
+             * when they submit the same form values twice in a row.
              */
             function isConfirmation() {
                 if (config.address) {
@@ -277,7 +263,6 @@
                         if (config.address.hasOwnProperty(p) &&
                             config.elements[p].val().toUpperCase() !== config.address[p].toUpperCase()) {
                             return false;
-
                         }
                     }
                     return true;
@@ -287,7 +272,7 @@
 
             /**
              * Returns true if the verification check with Lob has succeeded.
-             * NOTE: If the Lob API server is unavailable (status 0), success if returned.
+             * NOTE: If the API endpoint is unavailable (status 0), return success.
              * @param {object} data - Lob API server response
              * @param {object} config - Address Element configuration
              * @param {number} status - HTTP status code
@@ -296,16 +281,12 @@
                 var didImprove = fixAndSave(data);
                 return !status ||
                     (data.deliverability === 'deliverable' && !didImprove) ||
-                    (data.deliverability === 'undeliverable' && config.confirmed && !config.strict) ||
-                    (data.deliverability === 'deliverable_missing_unit' && config.confirmed && !config.strict) ||
-                    (data.deliverability === 'deliverable_unnecessary_unit' && config.confirmed && !config.strict) ||
-                    (data.deliverability === 'deliverable_incorrect_unit' && config.confirmed && !config.strict)
+                    (data.deliverability === 'undeliverable' && config.confirmed && config.strictness === 'relaxed') ||
+                    (data.deliverability === 'deliverable_missing_unit' && config.confirmed && config.strictness !== 'strict') ||
+                    (data.deliverability === 'deliverable_unnecessary_unit' && config.confirmed && config.strictness !== 'strict') ||
+                    (data.deliverability === 'deliverable_incorrect_unit' && config.confirmed && config.strictness !== 'strict')
             }
 
-            /**
-             * Safe JSON parser
-             * @param {string} s - string to parse
-             */
             function parseJSON(s) {
                 try {
                     return JSON.parse(s);
@@ -315,9 +296,6 @@
                 }
             }
 
-            /**
-             * hide error message fields in the UI
-             */
             function hideMessages() {
                 config.elements.message.hide();
                 config.elements.primaryMsg.hide();
@@ -339,9 +317,6 @@
             }
             config.do.message = showMessages;
 
-            /**
-             * Shows a field-level error message if tagged by the user
-             */
             var messageTypes = {
                 primary_line: function (msg) {
                     config.elements.primaryMsg.text(msg).show('slow');
@@ -351,16 +326,19 @@
                     config.elements.stateMsg.text(msg).show('slow');
                     config.elements.zipMsg.text(msg).show('slow');
                 },
+                zip: function (msg) {
+                    config.elements.zipMsg.text(msg).show('slow');
+                },
                 deliverable_missing_unit: function (msg) {
-                    config.elements.secondaryMsg.text(msg).show('slow');
+                    config.elements.primaryMsg.text(msg).show('slow');
                 },
                 deliverable_unnecessary_unit: function (msg) {
-                    config.elements.secondaryMsg.text(msg).show('slow');
+                    config.elements.primaryMsg.text(msg).show('slow');
                 },
                 deliverable_incorrect_unit: function (msg) {
-                    config.elements.secondaryMsg.text(msg).show('slow');
+                    config.elements.primaryMsg.text(msg).show('slow');
                 }
-            }
+            };
 
             /**
              * Calls the Lob.com US Verification API. If successful, the user's form will be submitted by 
@@ -385,12 +363,12 @@
                                 cb({ msg: config.messages.confirm, type: 'confirm' });
                             } else {
                                 //KNOWN VERIFICATION ERROR (e.g., undeliverable)
-                                var type = resolveMessageType(data.deliverability);
+                                var type = resolveErrorType(data.deliverability);
                                 cb({ msg: config.messages[type], type: type });
                             }
                         } else {
                             //KNOWN SYSTEM ERROR (e.g., rate limit exceeded, primary line missing)
-                            var type = resolveMessageType(data.error.message);
+                            var type = resolveErrorType(data.error.message);
                             cb({ msg: config.messages[type], type: type });
                         }
                     }
