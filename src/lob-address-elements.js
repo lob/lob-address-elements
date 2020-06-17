@@ -34,13 +34,13 @@
                 zipMsg: $('*[data-lob-zip-message]').hide()
             },
             messages: cfg.messages || {
-                primary_line: 'Please provide a primary street address.',
-                city_state_zip: 'Please provide a Zip Code or a valid City and State.',
-                zip: 'Please provide a valid Zip Code.',
-                undeliverable: 'The address could not be verified. Please reconfirm your input.',
-                deliverable_missing_unit: 'Please provide a Suite or Unit.',
-                deliverable_unnecessary_unit: 'The provided Suite or Unit is unnecessary.',
-                deliverable_incorrect_unit: 'The Unit appears to be incorrect. Please confirm and resubmit.',
+                primary_line: 'Enter the Primary address.',
+                city_state_zip: 'Enter City and State (or Zip).',
+                zip: 'Enter a valid Zip.',
+                undeliverable: 'The address could not be verified.',
+                deliverable_missing_unit: 'Enter a Suite or Unit.',
+                deliverable_unnecessary_unit: 'Suite or Unit unnecessary.',
+                deliverable_incorrect_unit: 'Incorrect Unit. Please confirm.',
                 notify: 'The address has been standardized.',
                 confirm: 'The address has been standardized. Please confirm and resubmit.',
                 DEFAULT: 'Unknown Error. The address could not be verified.'
