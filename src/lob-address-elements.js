@@ -36,19 +36,20 @@
             messages: cfg.messages || {
                 primary_line: 'Please provide a primary street address.',
                 city_state_zip: 'Please provide a Zip Code or a valid City and State.',
-                zip: 'The Zip Code must be in a valid zip or zip+4 format.',
+                zip: 'Please provide a valid Zip Code.',
                 undeliverable: 'The address could not be verified. Please reconfirm your input.',
                 deliverable_missing_unit: 'Please provide a Suite or Unit.',
                 deliverable_unnecessary_unit: 'The provided Suite or Unit is unnecessary.',
                 deliverable_incorrect_unit: 'The Unit appears to be incorrect. Please confirm and resubmit.',
-                confirm: 'Your address was standardized during verification. Please confirm the changes and resubmit.',
+                notify: 'The address has been standardized.',
+                confirm: 'The address has been standardized. Please confirm and resubmit.',
                 DEFAULT: 'Unknown Error. The address could not be verified.'
             },
             do: {}
         };
 
         function resolveStrictness(cfg) {
-            var values = ['strict', 'normal', 'relaxed'];
+            var values = ['strict', 'normal', 'relaxed', 'passthrough'];
             if (cfg && values.indexOf(cfg) > -1) {
                 return cfg;
             } else {
@@ -142,7 +143,7 @@
              * @param {string} query - what the user just keyed into the autocomplete input
              * @param {function} cb - callback
              */
-            function getAutocompleteSuggestions(query, cb) {
+            config.do.autocomplete = function (query, cb) {
                 if (query.match(/[A-Za-z0-9]/)) {
                     var xhr = new XMLHttpRequest();
                     xhr.open('POST', 'https://api.lob.com/v1/us_autocompletions', true);
@@ -172,20 +173,18 @@
                 }
                 return false;
             }
-            config.do.autocomplete = getAutocompleteSuggestions;
 
             /**
              * Project the chosen suggested address into the UI
              * @param {object} suggestion - as returned from the Lob API
              */
-            function applySelected(suggestion) {
+            config.do.apply = function (suggestion) {
                 config.elements.primary.autocomplete('val', suggestion.primary_line);
                 config.elements.secondary.val('');
                 config.elements.city.val(suggestion.city);
                 config.elements.state.val(suggestion.state);
                 config.elements.zip.val(suggestion.zip_code);
             }
-            config.do.apply = applySelected;
 
             /**
              * configure the Algolia Autocomplete plugin
@@ -195,7 +194,7 @@
                     hint: false
                 },
                 {
-                    source: getAutocompleteSuggestions,
+                    source: config.do.autocomplete,
                     templates: {
                         suggestion: function (suggestion) {
                             var suggestionElement = $('<div></div>');
@@ -208,7 +207,7 @@
                     },
                     cache: false
                 }).on('autocomplete:selected', function (event, suggestion) {
-                    applySelected(suggestion);
+                    config.do.apply(suggestion);
                 });
         }
 
@@ -255,10 +254,11 @@
 
             /**
              * A user is assumed to have 'confirmed' an errant submission
-             * when they submit the same form values twice in a row.
+             * when they submit the same form values twice in a row. If
+             * passthrough mode, confirmation is unnecessary
              */
             function isConfirmation() {
-                if (config.address) {
+                if (config.strictness !== 'passthrough' && config.address) {
                     for (var p in config.address) {
                         if (config.address.hasOwnProperty(p) &&
                             config.elements[p].val().toUpperCase() !== config.address[p].toUpperCase()) {
@@ -311,11 +311,12 @@
              * @param {string} err.msg - Top-level message to show for the form
              * @param {string} err.type - Specific error type to apply at field level if relevant
              */
-            function showMessages(err) {
-                config.elements.message.text(err.msg).show('slow');
-                messageTypes[err.type] && messageTypes[err.type](config.messages[err.type]);
+            config.do.message = function (err) {
+                if (err) {
+                    config.elements.message.text(err.msg).show('slow');
+                    messageTypes[err.type] && messageTypes[err.type](config.messages[err.type]);
+                }
             }
-            config.do.message = showMessages;
 
             var messageTypes = {
                 primary_line: function (msg) {
@@ -345,7 +346,8 @@
              * the cb handler to its original endpoint. If unsuccessful, an error message will be shown.
              * @param {function} cb - process the response (submit the form or show an error message)
              */
-            function verifyAddress(cb) {
+            config.do.verify = function (cb) {
+                config.submit = config.strictness === 'passthrough';
                 config.confirmed = isConfirmation();
                 var xhr = new XMLHttpRequest();
                 xhr.open('POST', 'https://api.lob.com/v1/us_verifications', true);
@@ -358,6 +360,9 @@
                             if (isVerified(data, config, this.status)) {
                                 //SUCCESS (time for final submit)
                                 cb(null, true);
+                            } else if (data.deliverability === 'deliverable' && config.strictness === 'passthrough') {
+                                //IMPROVEMENT (notify user of Lob's improvements)
+                                cb({ msg: config.messages.notify, type: 'notify' });
                             } else if (data.deliverability === 'deliverable') {
                                 //IMPROVEMENT (ask user to confirm Lob's improvements)
                                 cb({ msg: config.messages.confirm, type: 'confirm' });
@@ -382,18 +387,26 @@
                 }));
                 return false;
             }
-            config.do.verify = verifyAddress;
 
             config.elements.form.on('submit', function preFlight(e) {
                 e.stopImmediatePropagation();
                 e.preventDefault();
                 hideMessages();
-                return verifyAddress(function (err, success) {
-                    if (success) {
+                return config.do.verify(function (err, success) {
+                    if (config.submit) {
+                        config.do.message(err);
                         config.elements.form.off('submit', preFlight);
+                        config.submitted = true;
                         config.elements.form.submit();
+                        config.elements.form.on('submit', preFlight);
+                        prioritizeHandler(config.elements.form, 'submit');
                     } else {
-                        showMessages(err);
+                        if (success) {
+                            config.elements.form.off('submit', preFlight);
+                            config.elements.form.submit();
+                        } else {
+                            config.do.message(err);
+                        }
                     }
                 });
             });
