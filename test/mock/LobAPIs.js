@@ -259,6 +259,70 @@ var APIMock = module.exports = {
         },
         "object": "us_verification"
     },
+    deliverable_proxied: {
+        "body": {
+            "id": "us_ver_5764796aabca4d888da7",
+            "recipient": "",
+            "primary_line": "210 KING ST",
+            "secondary_line": "",
+            "urbanization": "",
+            "last_line": "SAN FRANCISCO CA 94107-1702",
+            "deliverability": "deliverable",
+            "components": {
+                "primary_number": "210",
+                "street_predirection": "",
+                "street_name": "KING",
+                "street_suffix": "ST",
+                "street_postdirection": "",
+                "secondary_designator": "",
+                "secondary_number": "",
+                "pmb_designator": "",
+                "pmb_number": "",
+                "extra_secondary_designator": "",
+                "extra_secondary_number": "",
+                "city": "SAN FRANCISCO",
+                "state": "CA",
+                "zip_code": "94107",
+                "zip_code_plus_4": "1702",
+                "zip_code_type": "standard",
+                "delivery_point_barcode": "941071702108",
+                "address_type": "commercial",
+                "record_type": "street",
+                "default_building_address": false,
+                "county": "SAN FRANCISCO",
+                "county_fips": "06075",
+                "carrier_route": "C032",
+                "carrier_route_type": "city_delivery",
+                "latitude": 37.777456,
+                "longitude": -122.393039
+            },
+            "deliverability_analysis": {
+                "dpv_confirmation": "Y",
+                "dpv_cmra": "N",
+                "dpv_vacant": "N",
+                "dpv_active": "Y",
+                "dpv_footnotes": [
+                    "AA",
+                    "BB"
+                ],
+                "ews_match": false,
+                "lacs_indicator": "",
+                "lacs_return_code": "",
+                "suite_return_code": ""
+            },
+            "object": "us_verification"
+        },
+        "statusCode": 200
+    },
+    invalid_proxied: {
+        "body": {
+            "error": {
+                "message": "zip_code is required or both city and state are required",
+                "status_code": 422
+            }
+        },
+        "statusCode": 422
+    },
     suggestions: {
         suggestions: [
             {

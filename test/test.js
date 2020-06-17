@@ -645,4 +645,45 @@ describe('Address Elements', function () {
             });
         });
     });
+
+
+    describe('#US Verification | Lob.com Proxy', function () {
+
+        it('should parse a successful response when proxied through Lob.com', function () {
+            var xhr_config = { responseText: JSON.stringify(APIMock.deliverable_proxied) };
+            global.XMLHttpRequest = XHRMock(xhr_config);
+            LobAddressElements.strictness = 'strict';
+            LobAddressElements.elements.primary.val('210 KING ST');
+            LobAddressElements.elements.secondary.val('');
+            LobAddressElements.elements.city.val('SAN FRANCISCO');
+            LobAddressElements.elements.state.val('CA');
+            LobAddressElements.elements.zip.val('94107-1702');
+            //verify
+            LobAddressElements.do.verify(function (err, success) {
+                assert.equal(success, true);
+                assert.equal(err, null);
+            });
+        });
+
+        it('should parse an unsuccessful response when proxied through Lob.com', function () {
+            //the proxy always returns a 200 status error code
+            var xhr_config = { responseText: JSON.stringify(APIMock.invalid_proxied) };
+            global.XMLHttpRequest = XHRMock(xhr_config);
+            LobAddressElements.strictness = 'passthrough';
+            //configure a deliverable address with a missing unit
+            LobAddressElements.elements.primary.val('185 Berry St');
+            LobAddressElements.elements.secondary.val('');
+            LobAddressElements.elements.city.val('');
+            LobAddressElements.elements.state.val('');
+            LobAddressElements.elements.zip.val('');
+            //verify
+            LobAddressElements.do.verify(function (err, success) {
+                assert.equal(success, undefined);
+                assert.equal(err.type, 'city_state_zip');
+                //warn
+                LobAddressElements.do.message(err);
+                assert.equal(LobAddressElements.elements.message.text(), 'city_state_zip');
+            });
+        });
+    });
 });
