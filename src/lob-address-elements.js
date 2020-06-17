@@ -45,6 +45,10 @@
                 confirm: 'The address has been standardized. Please confirm and resubmit.',
                 DEFAULT: 'Unknown Error. The address could not be verified.'
             },
+            apis: cfg.apis || {
+                verify: 'https://api.lob.com/v1/us_verifications',
+                autocomplete: 'https://api.lob.com/v1/us_autocompletions'
+            },
             do: {}
         };
 
@@ -146,9 +150,11 @@
             config.do.autocomplete = function (query, cb) {
                 if (query.match(/[A-Za-z0-9]/)) {
                     var xhr = new XMLHttpRequest();
-                    xhr.open('POST', 'https://api.lob.com/v1/us_autocompletions', true);
+                    xhr.open('POST', config.apis.autocomplete, true);
                     xhr.setRequestHeader('Content-Type', 'application/json');
-                    xhr.setRequestHeader('Authorization', 'Basic ' + btoa(config.api_key + ':'));
+                    if (config.api_key) {
+                        xhr.setRequestHeader('Authorization', 'Basic ' + btoa(config.api_key + ':'));
+                    }
                     xhr.onreadystatechange = function () {
                         if (this.readyState === XMLHttpRequest.DONE) {
                             if (this.status === 200) {
@@ -214,7 +220,7 @@
         /**
          * Enable pre-submission address verification
          */
-        if (config.elements.form.length && config.elements.message.length) {
+        if (config.elements.form.length && (config.strictness === 'passthrough' || config.elements.message.length)) {
 
             function plus4(components) {
                 var parts = [];
@@ -350,13 +356,16 @@
                 config.submit = config.strictness === 'passthrough';
                 config.confirmed = isConfirmation();
                 var xhr = new XMLHttpRequest();
-                xhr.open('POST', 'https://api.lob.com/v1/us_verifications', true);
+                xhr.open('POST', config.apis.verify, true);
                 xhr.setRequestHeader('Content-Type', 'application/json');
-                xhr.setRequestHeader('Authorization', 'Basic ' + btoa(config.api_key + ':'));
+                if (config.api_key) {
+                    xhr.setRequestHeader('Authorization', 'Basic ' + btoa(config.api_key + ':'));
+                }
                 xhr.onreadystatechange = function () {
                     if (this.readyState === XMLHttpRequest.DONE) {
                         var data = parseJSON(xhr.responseText);
-                        if (!this.status || this.status === 200) {
+                        if ((!this.status || this.status === 200) && (!data.statusCode || data.statusCode === 200)) {
+                            data = data && data.body || data;
                             if (isVerified(data, config, this.status)) {
                                 //SUCCESS (time for final submit)
                                 cb(null, true);
@@ -372,6 +381,7 @@
                                 cb({ msg: config.messages[type], type: type });
                             }
                         } else {
+                            data = data && data.body || data;
                             //KNOWN SYSTEM ERROR (e.g., rate limit exceeded, primary line missing)
                             var type = resolveErrorType(data.error.message);
                             cb({ msg: config.messages[type], type: type });
