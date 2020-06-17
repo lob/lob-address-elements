@@ -1,0 +1,52 @@
+
+<html>
+    <head>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    </head>
+    <body class="container pt-5">
+        <div class="row">
+            <h1 class="h1 col-12">Lob Address Elements</h1>
+            <form action="/api/v1/add-address" class="col-12" data-lob-key="live_pub_xxxxxxxxxx"
+            data-lob-verify="passthrough">
+    
+                <div class="alert alert-warning" data-lob-verify-message></div>
+                <div class="form-group">
+                    <label for="street1">Address 1</label>
+                    <input name="street1" type="text" class="form-control" data-lob-primary>
+                    <small class="form-text text-muted" data-lob-primary-message></small>
+                </div>
+                <div class="form-group">
+                    <label for="street2">Address 2</label>
+                    <input name="street2" type="text" class="form-control" data-lob-secondary>
+                </div>
+                <div class="form-group">
+                    <label for="city">City</label>
+                    <input name="city" type="text" class="form-control" data-lob-city>
+                </div>
+                <div class="form-group">
+                    <label for="state">State</label>
+                    <input name="state" type="text" class="form-control" data-lob-state>
+                </div>
+                <div class="form-group">
+                    <label for="zip">Zip</label>
+                    <input name="zip" type="text" class="form-control" data-lob-zip>
+                </div>
+                <input type="submit" value="Submit" class="btn btn-primary">
+            </form>
+        </div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.37.0/autocomplete.jquery.min.js"></script>
+        <script>
+            $(function() {
+                //bind a standard onsubmit handler to the form. Since in passthrough mode, this will execute with each submission
+                $("form").on('submit', function(e) {
+                    console.log("Take action based upon the submission of the stateful form (issue your own ajax call here)");
+                    //cancel the submission to retain state and stay on the page
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
+                });
+            });
+        </script>
+        <script src="lob-address-elements.js"></script>
+    </body>
+    </html>

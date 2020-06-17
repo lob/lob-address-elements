@@ -554,4 +554,95 @@ describe('Address Elements', function () {
             });
         });
     });
+
+
+    describe('#US Verification | Passthrough Mode', function () {
+
+        it('should warn and immediately submit an undeliverable address', function () {
+            var xhr_config = { responseText: JSON.stringify(APIMock.undeliverable) };
+            global.XMLHttpRequest = XHRMock(xhr_config);
+            LobAddressElements.strictness = 'passthrough';
+            LobAddressElements.elements.primary.val('55XXX AVE');
+            LobAddressElements.elements.secondary.val('');
+            LobAddressElements.elements.city.val('San Francisco');
+            LobAddressElements.elements.state.val('CA');
+            LobAddressElements.elements.zip.val('94107');
+            //verify
+            LobAddressElements.do.verify(function (err, success) {
+                assert.equal(success, undefined);
+                assert.equal(err.type, 'undeliverable');
+                //warn
+                LobAddressElements.do.message(err);
+                assert.equal(LobAddressElements.elements.message.text(), 'undeliverable');
+                //submit
+                assert.equal(LobAddressElements.submit, true);
+            });
+        });
+
+        it('should warn and immediately submit a deliverable address with a missing unit', function () {
+            var xhr_config = { responseText: JSON.stringify(APIMock.deliverable_missing_unit) };
+            global.XMLHttpRequest = XHRMock(xhr_config);
+            LobAddressElements.strictness = 'passthrough';
+            //configure a deliverable address with a missing unit
+            LobAddressElements.elements.primary.val('185 Berry St');
+            LobAddressElements.elements.secondary.val('');
+            LobAddressElements.elements.city.val('San Francisco');
+            LobAddressElements.elements.state.val('CA');
+            LobAddressElements.elements.zip.val('94107');
+            //verify
+            LobAddressElements.do.verify(function (err, success) {
+                assert.equal(success, undefined);
+                assert.equal(err.type, 'deliverable_missing_unit');
+                //warn
+                LobAddressElements.do.message(err);
+                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_missing_unit');
+                //submit
+                assert.equal(LobAddressElements.submit, true);
+            });
+        });
+ 
+        it('should warn and immediately submit a deliverable address with an incorrect unit', function () {
+            var xhr_config = { responseText: JSON.stringify(APIMock.deliverable_incorrect_unit) };
+            global.XMLHttpRequest = XHRMock(xhr_config);
+            LobAddressElements.strictness = 'passthrough';
+            //configure a deliverable address with an incorrect unit
+            LobAddressElements.elements.primary.val('185 Berry St');
+            LobAddressElements.elements.secondary.val('Apt 1');
+            LobAddressElements.elements.city.val('San Francisco');
+            LobAddressElements.elements.state.val('CA');
+            LobAddressElements.elements.zip.val('94107');
+            //verify
+            LobAddressElements.do.verify(function (err, success) {
+                assert.equal(success, undefined);
+                assert.equal(err.type, 'deliverable_incorrect_unit');
+                //warn
+                LobAddressElements.do.message(err);
+                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_incorrect_unit');
+                //submit
+                assert.equal(LobAddressElements.submit, true);
+            });
+        });
+ 
+        it('should warn and immediately submit a deliverable address with an unnecessary unit', function () {
+            var xhr_config = { responseText: JSON.stringify(APIMock.deliverable_unnecessary_unit) };
+            global.XMLHttpRequest = XHRMock(xhr_config);
+            LobAddressElements.strictness = 'passthrough';
+            //configure a deliverable address with an unnecessary unit
+            LobAddressElements.elements.primary.val('3230 P ST NW');
+            LobAddressElements.elements.secondary.val('APT 2');
+            LobAddressElements.elements.city.val('Washington');
+            LobAddressElements.elements.state.val('DC');
+            LobAddressElements.elements.zip.val('20007');
+            //verify
+            LobAddressElements.do.verify(function (err, success) {
+                assert.equal(success, undefined);
+                assert.equal(err.type, 'deliverable_unnecessary_unit');
+                //warn
+                LobAddressElements.do.message(err);
+                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_unnecessary_unit');
+                //submit
+                assert.equal(LobAddressElements.submit, true);
+            });
+        });
+    });
 });
