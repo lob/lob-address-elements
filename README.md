@@ -8,6 +8,7 @@ The Lob Address Elements library simplifies client side integration of Lob's *US
   - [In-line Declarations](#in-line-declarations)
   - [Stylesheet Declarations](#stylesheet-declarations)
 - [Localization](#localization)
+- [Init](#init)
 - [Examples](#examples)
 - [Contributing](#contributing)
 - [Building](#building)
@@ -293,6 +294,9 @@ In this example, all styles for the address suggestion list are declared using a
 | Attribute Name                 | Attribute Value(s)  | Description         |
 | :---                              |  :---                 |   :---              |
 | data-lob-suggestion-stylesheet | N/A                 | Use this flag to stop the Address Elements library from loading its default stylesheet. You will be responsible for all styles and colors using a stylesheet under your control.    |
+
+# Init
+By default, Address Elements will scan the page, looking for the necessary tags. However, with single page applications, the HTML elements may not be present when the library loads, and will therefore not create the necessary form bindings. In such a case, you can call `LobAddressElements.do.init()`, and Address Elements will re-scan the HTML on the page, and create all necessary bindings.
 
 # Localization
 It is possible to localize and customize verification messages returned by Lob's verification API. This customization requires a JavaScript configuration file be declared alongside the Lob &lt;script&gt; tag. Customize the value for any message to override.

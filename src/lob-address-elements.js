@@ -49,7 +49,11 @@
                 verify: 'https://api.lob.com/v1/us_verifications',
                 autocomplete: 'https://api.lob.com/v1/us_autocompletions'
             },
-            do: {}
+            do: {
+                init: function() {
+                    LobAddressElements($, LobAddressElementsConfig);
+                }
+            }
         };
 
         function resolveStrictness(cfg) {
