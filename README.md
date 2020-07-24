@@ -8,6 +8,7 @@ The Lob Address Elements library simplifies client side integration of Lob's *US
   - [In-line Declarations](#in-line-declarations)
   - [Stylesheet Declarations](#stylesheet-declarations)
 - [Localization](#localization)
+- [Init](#init)
 - [Examples](#examples)
 - [Contributing](#contributing)
 - [Building](#building)
@@ -49,7 +50,7 @@ The vanilla implementation of the library can be fully configured by adding mark
 </body>
 </html>
 ```
-Embed the Lob Address Elements library using a &lt;script&gt; tag and then enable autocompletion and verification behaviors by decorating relevant HTML elements with `data-lob-*` attributes. For your convenience, we host a minified version of the library at `https://cdn.lob.com/lob-address-elements/0.1.0/lib/lob-address-elements.min.js`. For example:
+Embed the Lob Address Elements library using a &lt;script&gt; tag and then enable autocompletion and verification behaviors by decorating relevant HTML elements with `data-lob-*` attributes. For your convenience, we host a minified version of the library at `https://cdn.lob.com/lob-address-elements/0.1.0/lob-address-elements.min.js`. For example:
 ```
 <!DOCTYPE html>
 <html>
@@ -86,7 +87,7 @@ Embed the Lob Address Elements library using a &lt;script&gt; tag and then enabl
         </div>
         <input type="submit" value="Submit">
     </form>
-    <script src="https://cdn.lob.com/lob-address-elements/0.1.0/lib/lob-address-elements.min.js"></script>
+    <script src="https://cdn.lob.com/lob-address-elements/0.1.0/lob-address-elements.min.js"></script>
 </body>
 </html>
 ```
@@ -96,14 +97,14 @@ Embed the Lob Address Elements library using a &lt;script&gt; tag and then enabl
 | data-lob-key          | `<YOUR_LOB_KEY>`           | Include your Lob live public key as the attribute value. It will use the format `live_pub_*` and is available via the [Lob Dashboard](https://dashboard.lob.com/#/settings).        |
 | data-lob-verify           | `strict`, `normal`, `relaxed`, `passthrough`          | Include this attribute on the HTML &lt;form&gt; element to pre-verify the user's address submission with Lob.  Choose `relaxed` as the attribute value, if you wish to allow users to submit an errant form once they have been warned. Their resubmission of an unchanged form will be used to indicate their preference to override and submit. Choose `normal` (the default) to halt any submissions that Lob deems undeliverable, while still allowing all other inconsistencies to be submitted once the user has confirmed their choice. Choose `strict` to halt any submission that does not pass verification, including minor errors like missing or unnecessary units. Finally, if you wish to verify an address and then submit regardless of the verification result, choose `passthrough`. This is useful for stateful forms that support repeated submissions. *NOTE: If you choose to verify form submissions, you must include the `data-lob-verify-message` attribute to identify where  verification error messages can be displayed to users.* |
 | data-lob-verify-message             | N/A             | This attribute identifies the HTML element where all verification errors will be rendered. You are responsible for styling this component. The Address Elements library will *show* and *hide* this element as necessary to communicate verification issues.           |
-| data-lob-primary          | N/A           | This attribute identifies the primary address field. This should be an HTML text input.         |
-| data-lob-secondary        | N/A           | This attribute identifies the secondary address field.      |
+| data-lob-primary          | N/A, `false`           | This attribute identifies the primary address field. This should be an HTML text input. *Optionally set the value to `false` to disable address autocompletion and only use address verification.*         |
+| data-lob-secondary        | N/A, `false`          | This attribute identifies the secondary address field. *Optionally set the value to `false` to force the suite or unit number to render on the primary address line during address verification.*      |
 | data-lob-city             | N/A           | This attribute identifies the city.      |
 | data-lob-state            | N/A           | This attribute identifies the state.         |
 | data-lob-zip              | N/A           | This attribute identifies the zip code.         |
 | data-lob-primary-message  | N/A           | This optional attribute identifies where to display field-level error messages that affect the primary address field.           |
 | data-lob-secondary-message | N/A          | This optional attribute identifies where to display field-level error messages that affect the secondary address field.         |
-| data-lob-city-message      | N/A          | This opitonal attribute identifies where to display field-level error messages that affect the city field.           |
+| data-lob-city-message      | N/A          | This optional attribute identifies where to display field-level error messages that affect the city field.           |
 | data-lob-state-message     | N/A          | This optional attribute identifies where to display field-level error messages that affect the state field.           |
 | data-lob-zip-message       | N/A          | This optional attribute identifies where to display field-level error messages that affect the zip code field.           |
 
@@ -153,7 +154,7 @@ Hex, RGB and named color values are supported when declaring styles in-line.
         </div>
         <input type="submit" value="Submit">
     </form>
-    <script src="https://cdn.lob.com/lob-address-elements/0.1.0/lib/lob-address-elements.min.js"></script>
+    <script src="https://cdn.lob.com/lob-address-elements/0.1.0/lob-address-elements.min.js"></script>
 </body>
 </html>
 
@@ -284,7 +285,7 @@ In this example, all styles for the address suggestion list are declared using a
         </div>
         <input type="submit" value="Submit">
     </form>
-    <script src="https://cdn.lob.com/lob-address-elements/0.1.0/lib/lob-address-elements.min.js"></script>
+    <script src="https://cdn.lob.com/lob-address-elements/0.1.0/lob-address-elements.min.js"></script>
 </body>
 
 </html>
@@ -293,6 +294,9 @@ In this example, all styles for the address suggestion list are declared using a
 | Attribute Name                 | Attribute Value(s)  | Description         |
 | :---                              |  :---                 |   :---              |
 | data-lob-suggestion-stylesheet | N/A                 | Use this flag to stop the Address Elements library from loading its default stylesheet. You will be responsible for all styles and colors using a stylesheet under your control.    |
+
+# Init
+By default, Address Elements will scan the page, looking for the necessary tags. However, with single page applications, the HTML elements may not be present when the library loads, and will therefore not create the necessary form bindings. In such a case, you can call `LobAddressElements.do.init()`, and Address Elements will re-scan the HTML on the page, and create all necessary bindings.
 
 # Localization
 It is possible to localize and customize verification messages returned by Lob's verification API. This customization requires a JavaScript configuration file be declared alongside the Lob &lt;script&gt; tag. Customize the value for any message to override.
@@ -363,7 +367,9 @@ To contribute, please see the [CONTRIBUTING.md](https://github.com/lob/lob-node/
 
 ## Building
 
-The minified version of the Address Elements library is available for download from the Lob CDN. You do not need to clone the Github repo to use in your Website. But if you do decide to fork and build your own instance of Address Elements, we have provided build tools for minifying your source. Execute via the CLI (NOTE: Replace `0.1.0` with the version number you wish to bind to the minified file name.
+The minified version of the Address Elements library is available for download from the Lob CDN. You do not need to clone the Github repo to use in your Website. But if you do decide to fork and build your own instance of Address Elements, we have provided build tools for minifying your source. Execute via the CLI 
+
+*NOTE: Replace `0.1.0` with the version number you wish to bind to the minified file name.*
 ```
 npm run build 0.1.0
 ```

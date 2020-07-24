@@ -11,6 +11,7 @@
         var config = {
             api_key: cfg.api_key || $('*[data-lob-key]').attr('data-lob-key'),
             strictness: resolveStrictness(cfg.strictness),
+            denormalize: $('input[data-lob-secondary]').attr('data-lob-secondary') !== 'false',
             stylesheet: resolveStyleStrategy(cfg.stylesheet),
             styles: cfg.styles || {
                 color: '#666666',
@@ -49,7 +50,11 @@
                 verify: 'https://api.lob.com/v1/us_verifications',
                 autocomplete: 'https://api.lob.com/v1/us_autocompletions'
             },
-            do: {}
+            do: {
+                init: function () {
+                    LobAddressElements($, LobAddressElementsConfig);
+                }
+            }
         };
 
         function resolveStrictness(cfg) {
@@ -234,14 +239,48 @@
             }
 
             /**
+             * Lob uses the official USPS structure for parsed addresses, but 
+             * it is common for most Websites in the US to not adhere to this
+             * standard. This returns a hybrid that binds the suite to the 
+             * secondary line if the user entered it originally in the secondary
+             * line. 
+             * @param {object} data - US verification response
+             * @param {boolean} bSecondary - user typed in the secondary field?
+             */
+            function denormalizeParts(data, bSecondary) {
+                var sd = data.components.secondary_designator;
+                if (data.secondary_line || config.denormalize === false) {
+                    //echo exactly when configured explicitly or structurally required
+                    return {
+                        secondary_line: data.secondary_line,
+                        primary_line: data.primary_line
+                    }
+                } else if (sd && bSecondary) {
+                    //the user entered the value in the secondary line; echo there
+                    var parts = data.primary_line.split(sd);
+                    return {
+                        secondary_line: sd + ' ' + parts[1],
+                        primary_line: parts[0]
+                    }
+                } else {
+                    //use the default
+                    return {
+                        secondary_line: data.secondary_line,
+                        primary_line: data.primary_line
+                    }
+                }
+            }
+
+            /**
              * Called after Lob verifies an address. Improves/updates and caches
              * @param {object} data - verified address object returned from Lob
              */
             function fixAndSave(data) {
                 var didFix;
+                var parts = denormalizeParts(data, !!config.elements.secondary.val());
                 var address = config.address = {
-                    primary: data.primary_line,
-                    secondary: data.secondary_line,
+                    primary: parts.primary_line,
+                    secondary: parts.secondary_line,
                     city: data.components && data.components.city || '',
                     state: data.components && data.components.state || '',
                     zip: plus4(data.components)
@@ -337,13 +376,19 @@
                     config.elements.zipMsg.text(msg).show('slow');
                 },
                 deliverable_missing_unit: function (msg) {
-                    config.elements.primaryMsg.text(msg).show('slow');
+                    (config.denormalize === false &&
+                        config.elements.primaryMsg.text(msg).show('slow')) ||
+                        config.elements.secondaryMsg.text(msg).show('slow');
                 },
                 deliverable_unnecessary_unit: function (msg) {
-                    config.elements.primaryMsg.text(msg).show('slow');
+                    (config.denormalize === false &&
+                        config.elements.primaryMsg.text(msg).show('slow')) ||
+                        config.elements.secondaryMsg.text(msg).show('slow');
                 },
                 deliverable_incorrect_unit: function (msg) {
-                    config.elements.primaryMsg.text(msg).show('slow');
+                    (config.denormalize === false &&
+                        config.elements.primaryMsg.text(msg).show('slow')) ||
+                        config.elements.secondaryMsg.text(msg).show('slow');
                 }
             };
 
