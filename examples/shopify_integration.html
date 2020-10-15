@@ -1,0 +1,84 @@
+
+<html>
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+</head>
+<body class="container pt-5">
+    <div class="row">
+        <h1 class="h1 col-12">Lob Address Elements</h1>
+        <div class="col-12 mt-5 mb-5">
+            <button class="btn btn-primary" id="checkout-button">Checkout</button>
+        </div>
+    </div>
+    <div class="row" id="checkout-container">
+    </div>
+    <!-- Sample Address form injected at checkout (uses shopify IDs). 
+      Address Elements will add behaviors when it finds a match -->
+    <script type="text/spa-content" id="checkout-content">
+        <form action="/api/v1/add-address" class="col-12">
+            <div class="form-group">
+                <label for="checkout_shipping_address_address1">Primary Line</label>
+                <input id="checkout_shipping_address_address1" name="checkout_shipping_address_address1" type="text" class="form-control">
+                <small id="checkout_shipping_address_address1_error" class="form-text text-muted"</small>
+            </div>
+            <div class="form-group">
+                <label for="checkout_shipping_address_address2">Secondary Line</label>
+                <input id="checkout_shipping_address_address2" name="checkout_shipping_address_address2" type="text" class="form-control">
+                <small id="checkout_shipping_address_address2_error" class="form-text text-muted"></small>
+            </div>
+            <div class="form-group">
+                <label for="checkout_shipping_address_city">City</label>
+                <input id="checkout_shipping_address_city" name="checkout_shipping_address_city" type="text" class="form-control">
+                <small id="checkout_shipping_address_city_error" class="form-text text-muted"></small>
+            </div>
+            <div class="form-group">
+                <label for="checkout_shipping_address_province">State</label>
+                <input id="checkout_shipping_address_province" name="checkout_shipping_address_province" type="text" class="form-control">
+                <small id="checkout_shipping_address_province_error" class="form-text text-muted"></small>
+            </div>
+            <div class="form-group">
+                <label for="checkout_shipping_address_zip">Zip</label>
+                <input id="checkout_shipping_address_zip" name="checkout_shipping_address_zip" type="text" class="form-control">
+                <small id="checkout_shipping_address_zip_error" class="form-text text-muted"></small>
+            </div>
+            <input type="submit" value="Submit" class="btn btn-primary">
+        </form>
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script>
+        setTimeout(function() {
+            $(function() {
+                $("#checkout-button").on('click', function() {
+                    //inject the form (it will auto-configure)
+                    $("#checkout-container").html($("#checkout-content").html());
+                    //configure the submit
+                    $("form").on('submit', function (e) {
+                        console.log("Legacy Submit Action would execute now.");
+                        e.stopImmediatePropagation();
+                        e.preventDefault();
+                        var vals = new URLSearchParams(new FormData($("form")[0])).toString();
+                        $("#checkout-container").html('<div class="col-12" style="word-break: break-all;">' + vals + '</div>');
+                        $("#checkout-button").show();
+                    });
+                    $("#checkout-button").hide();
+                });
+            });
+        }, 500);
+    </script>
+
+    <!-- Paste the following in your top-level shopify template 
+         Remember to replace the key (live_pub_xxx) with your key-->
+    <script src="/lob-address-elements.js" 
+      data-lob-verify-value="strict" 
+      data-lob-verify-message-value="true"
+      data-lob-primary-value="false" 
+      data-lob-primary-id="checkout_shipping_address_address1"
+      data-lob-secondary-id="checkout_shipping_address_address2" 
+      data-lob-city-id="checkout_shipping_address_city"
+      data-lob-state-id="checkout_shipping_address_province" 
+      data-lob-zip-id="checkout_shipping_address_zip"
+      data-lob-error-bgcolor="#006eff" 
+      data-lob-error-color="#ffffff"
+      data-lob-key="live_pub_xxx"></script>
+</body>
+</html>
