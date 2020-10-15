@@ -35,7 +35,7 @@
     }
 
     /**
-     * Returns a configuration value for a @type
+     * Returns a configuration value for a given @type
      * @param {string} type - One of: verify, secondary, primary
      * @returns {object}
      */
@@ -78,51 +78,26 @@
         form: findForm('primary'),
         strictness: resolveStrictness(cfg.strictness),
         message: findElm('verify-message'),
-        create_message: findValue('verify-message') === 'true'
+        create_message: findValue('verify-message') === 'true' || (findForm('primary').length && !findElm('verify-message').length)
       }
       return {
         autocompletion: state.primary.length,
         verification: state.form.length,
         enabled: state.primary.length || state.form.length,
         autocomplete: state.primary.length && findValue('primary') !== 'false',
-        verify: state.form.length && (state.strictness === 'passthrough' || state.message.length || state.create_message)
+        verify: state.form.length && (state.strictness === 'passthrough' || state.message.length || state.create_message),
+        create_message: state.create_message,
+        strictness: state.strictness
       };
     }
-
-    /**
-     * Actively observe the DOM. Enrich target address elements as they appear
-     */
-    (function () {
-      function didChange() {
-        var state = getPageState();
-        if (to_state === "enable" && state.enabled) {
-          to_state = "disable";
-          setTimeout(function () {
-            _LobAddressElements($, cfg, state);
-          }, 0);
-        } else if (to_state === "disable" && !state.enabled) {
-          to_state = "enable";
-        }
-      }
-      var to_state = "enable"
-      var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-      if (MutationObserver) {
-        var observer = new MutationObserver(didChange);
-        observer.observe(window.document.body, {
-          subtree: true,
-          attributes: true,
-          childList: true
-        });
-      }
-    })();
 
     function _LobAddressElements($, cfg, state) {
       var config = {
         api_key: cfg.api_key || findValue('key'),
-        strictness: resolveStrictness(cfg.strictness),
+        strictness: state.strictness,
         denormalize: findValue('secondary') !== 'false',
         stylesheet: resolveStyleStrategy(cfg.stylesheet),
-        message: findValue('verify-message') === 'true',
+        message: state.create_message,
         styles: cfg.styles || {
           'error-color': '#666666',
           'error-bgcolor': '#fefefe',
@@ -604,6 +579,33 @@
     }
 
     var state = getPageState();
+
+    /**
+     * Actively observe the DOM. Enrich target address elements as they appear
+     */
+    (function (to_state) {
+      function didChange() {
+        var state = getPageState();
+        if (to_state === "enable" && state.enabled) {
+          to_state = "disable";
+          setTimeout(function () {
+            _LobAddressElements($, cfg, state);
+          }, 0);
+        } else if (to_state === "disable" && !state.enabled) {
+          to_state = "enable";
+        }
+      }
+      var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+      if (MutationObserver) {
+        var observer = new MutationObserver(didChange);
+        observer.observe(window.document.body, {
+          subtree: true,
+          attributes: true,
+          childList: true
+        });
+      }
+    })(state.enabled ? "disable" : "enable");
+
     if (state.enabled) {
       return _LobAddressElements($, cfg, state);
     } else {
