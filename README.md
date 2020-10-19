@@ -30,22 +30,27 @@ Address Elements works by targeting address-related form elements and enriching 
         <div>
             <label for="address1">Address 1</label>
             <input id="address1">
+            <div id="address1_err" class="err"></div>
         </div>
         <div>
             <label for="address2">Address 2</label>
             <input id="address2">
+            <div id="address2_err" class="err"></div>
         </div>
         <div>
             <label for="city">City</label>
             <input id="city">
+            <div id="city_err" class="err"></div>
         </div>
         <div>
             <label for="state">State</label>
             <input id="state">
+            <div id="state_err" class="err"></div>
         </div>
         <div>
             <label for="zip">Zip</label>
             <input id="zip">
+            <div id="zip_err" class="err"></div>
         </div>
         <input type="submit" value="Submit">
     </form>
@@ -61,22 +66,27 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
         <div>
             <label for="address1">Address 1</label>
             <input id="address1">
+            <div id="address1_err" class="err"></div>
         </div>
         <div>
             <label for="address2">Address 2</label>
             <input id="address2">
+            <div id="address2_err" class="err"></div>
         </div>
         <div>
             <label for="city">City</label>
             <input id="city">
+            <div id="city_err" class="err"></div>
         </div>
         <div>
             <label for="state">State</label>
             <input id="state">
+            <div id="state_err" class="err"></div>
         </div>
         <div>
             <label for="zip">Zip</label>
             <input id="zip">
+            <div id="zip_err" class="err"></div>
         </div>
         <input type="submit" value="Submit">
     </form>
@@ -87,7 +97,12 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
       data-lob-secondary-id="address2"
       data-lob-city-id="city"
       data-lob-state-id="state"
-      data-lob-zip-id="zip"></script>
+      data-lob-zip-id="zip"
+      data-lob-primary-message-id="address1_err"
+      data-lob-secondary-message-id="address2_err"
+      data-lob-city-message-id="city_err"
+      data-lob-state-message-id="state_err"
+      data-lob-zip-message-id="zip_err"></script>
 </body>
 </html>
 ```
@@ -115,20 +130,17 @@ E-commerce platforms like Shopify can be easily enhanced using a pre-configured 
 For example, update the following script to use your Lob public key (`lob_pub_xxx`) and then paste into your top-level Shopify Plus template to add advanced Address Verifiation behaviors to your checkout form.
 
 ```
-    <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
-      data-lob-key="live_pub_xxx"
-      data-lob-verify-value="strict"
-      data-lob-primary-value="false"
-      data-lob-primary-id="checkout_shipping_address_address1"
-      data-lob-secondary-id="checkout_shipping_address_address2"
-      data-lob-city-id="checkout_shipping_address_city"
-      data-lob-state-id="checkout_shipping_address_province"
-      data-lob-zip-id="checkout_shipping_address_zip"
-      data-lob-error-bgcolor="#006eff"
-      data-lob-error-color="#ffffff"></script>
-</body>
-</html>
-
+<script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
+  data-lob-key="live_pub_xxx"
+  data-lob-verify-value="strict"
+  data-lob-primary-value="false"
+  data-lob-primary-id="checkout_shipping_address_address1"
+  data-lob-secondary-id="checkout_shipping_address_address2"
+  data-lob-city-id="checkout_shipping_address_city"
+  data-lob-state-id="checkout_shipping_address_province"
+  data-lob-zip-id="checkout_shipping_address_zip"
+  data-lob-error-bgcolor="#006eff"
+  data-lob-error-color="#ffffff"></script>
 ```
 *NOTE: This example uses `strict` as the verification level, but you may choose `normal`, or `relaxed` depending upon your Shopify use case.*
 
@@ -188,13 +200,13 @@ Hex, RGB and named color values are supported when declaring styles in-line.
 ```
 | Attribute Name                    | Attribute Value(s)    | Description         |
 | :---                              |  :---                 |   :---              |
-| data-lob-suggestion-color         | <`color`, `hex`, `rgb`>           | The text color for an item in the suggestion list.       |
-| data-lob-suggestion-bgcolor       | <`color`, `hex`, `rgb`>           | The background color for an item in the suggestion list.     |
-| data-lob-suggestion-bordercolor   | <`color`, `hex`, `rgb`>           | The border color for the suggestion list.      |
-| data-lob-suggestion-activecolor   | <`color`, `hex`, `rgb`>           | The text color for an item in the suggestion list when actively hovered over or when traversed via the keyboard.         |
-| data-lob-suggestion-activebgcolor | <`color`, `hex`, `rgb`>           | The background color for an item in the suggestion list when actively hovered over or when traversed via the keyboard.    |
-| data-lob-error-color   | <`color`, `hex`, `rgb`>           | The text color to use when rendering a form-level error message when the form fails verification.         |
-| data-lob-error-bgcolor | <`color`, `hex`, `rgb`>           | The background color to use when rendering a form-level error message when the form fails verification    |
+| data-lob-suggestion-color         | <`color`/`hex`/`rgb`>           | The text color for an item in the suggestion list.       |
+| data-lob-suggestion-bgcolor       | <`color`/`hex`/`rgb`>           | The background color for an item in the suggestion list.     |
+| data-lob-suggestion-bordercolor   | <`color`/`hex`/`rgb`>           | The border color for the suggestion list.      |
+| data-lob-suggestion-activecolor   | <`color`/`hex`/`rgb`>           | The text color for an item in the suggestion list when actively hovered over or when traversed via the keyboard.         |
+| data-lob-suggestion-activebgcolor | <`color`/`hex`/`rgb`>           | The background color for an item in the suggestion list when actively hovered over or when traversed via the keyboard.    |
+| data-lob-error-color   | <`color`/`hex`/`rgb`>           | The text color to use when rendering a form-level error message when the form fails verification.         |
+| data-lob-error-bgcolor | <`color`/`hex`/`rgb`>           | The background color to use when rendering a form-level error message when the form fails verification    |
 
 ### Stylesheet Declarations
 
