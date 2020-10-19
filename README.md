@@ -30,27 +30,22 @@ Address Elements works by targeting address-related form elements and enriching 
         <div>
             <label for="address1">Address 1</label>
             <input id="address1">
-            <div id="address1_err" class="err"></div>
         </div>
         <div>
             <label for="address2">Address 2</label>
             <input id="address2">
-            <div id="address2_err" class="err"></div>
         </div>
         <div>
             <label for="city">City</label>
             <input id="city">
-            <div id="city_err" class="err"></div>
         </div>
         <div>
             <label for="state">State</label>
             <input id="state">
-            <div id="state_err" class="err"></div>
         </div>
         <div>
             <label for="zip">Zip</label>
             <input id="zip">
-            <div id="zip_err" class="err"></div>
         </div>
         <input type="submit" value="Submit">
     </form>
