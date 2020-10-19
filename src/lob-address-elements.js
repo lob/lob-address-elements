@@ -14,6 +14,8 @@
    */
   function LobAddressElements($, cfg) {
 
+    var stylesheet_configured = false;
+
     /**
      * Returns a jquery element to which to add behavior, locating
      * the element using one of three methods: id, name, attribute.
@@ -35,8 +37,8 @@
     }
 
     /**
-     * Returns a configuration value for a given @type
-     * @param {string} type - One of: verify, secondary, primary
+     * Returns the configuration value for a given @type
+     * @param {string} type - One of: verify, secondary, primary, verify-message
      * @returns {object}
      */
     function findValue(type) {
@@ -72,35 +74,87 @@
         !!cfg : findElm('suggestion-stylesheet').length > 0
     }
 
-    function getPageState() {
-      var state = {
-        primary: findElm('primary'),
-        form: findForm('primary'),
-        strictness: resolveStrictness(cfg.strictness),
-        message: findElm('verify-message'),
-        create_message: findValue('verify-message') === 'true' || (findForm('primary').length && !findElm('verify-message').length)
+    function resolveInputDisplay(config) {
+      var display = config.elements.primary.css('display');
+      return display.toLowerCase() === "block" ? "block" : "";
+    }
+
+    function resolveInputWidth(config) {
+      var display = config.elements.primary.css('display');
+      if (display.toLowerCase() === "block") {
+        return "100%";
+      } else {
+        return config.elements.primary.css('width') || (config.elements.primary.outerWidth() + 'px');
       }
+    }
+
+    /**
+     * Determine the presence of address-related fields and settings
+     */
+    function getPageState() {
+      var primary = findElm('primary');
+      var strictness = resolveStrictness(cfg.strictness);
+      var create_message = findValue('verify-message') === 'true' || (findForm('primary').length && !findElm('verify-message').length);
+      var autocomplete = primary.length && findValue('primary') !== 'false';
+      var verify = findForm('primary').length && (strictness === 'passthrough' || findElm('verify-message').length || create_message);
       return {
-        autocompletion: state.primary.length,
-        verification: state.form.length,
-        enabled: state.primary.length || state.form.length,
-        autocomplete: state.primary.length && findValue('primary') !== 'false',
-        verify: state.form.length && (state.strictness === 'passthrough' || state.message.length || state.create_message),
-        create_message: state.create_message,
-        strictness: state.strictness
+        autocomplete: autocomplete,
+        verify: verify,
+        enrich: verify || autocomplete,
+        create_message: create_message,
+        strictness: strictness
       };
     }
 
+    /**
+     * Observe the DOM. Trigger enrichment when state changes to 'enrich'
+     * @param {string} state - The current state. One of: enriched, untouched
+     */
+    function observeDOM(state) {
+      function didChange() {
+        var newState = getPageState();
+        if (state === "untouched" && newState.enrich) {
+          state = "enriched";
+          setTimeout(function () {
+            _LobAddressElements($, cfg, newState);
+          }, 0);
+        } else if (state === "enriched" && !newState.enrich) {
+          state = "untouched";
+        }
+      }
+      var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+      if (MutationObserver) {
+        var observer = new MutationObserver(didChange);
+        observer.observe(window.document.body, {
+          subtree: true,
+          attributes: true,
+          childList: true
+        });
+      }
+    }
+
+    /**
+     * Private inner function that enriches page elements
+     * with advanced address functionality. Only called when
+     * the page transitions from NOT having elements to 
+     * having elements. Typically called on page load for
+     * static pages where the form already exists and when
+     * the DOM changes and the target address fields are added.
+     * 
+     * @param {object} $ - jQuery
+     * @param {*} cfg - configuration
+     * @param {*} state - page state
+     */
     function _LobAddressElements($, cfg, state) {
       var config = {
         api_key: cfg.api_key || findValue('key'),
         strictness: state.strictness,
         denormalize: findValue('secondary') !== 'false',
-        stylesheet: resolveStyleStrategy(cfg.stylesheet),
-        message: state.create_message,
+        user_stylesheet: resolveStyleStrategy(cfg.stylesheet),
+        create_message: state.create_message,
         styles: cfg.styles || {
-          'error-color': '#666666',
-          'error-bgcolor': '#fefefe',
+          'error-color': '#117ab8',
+          'error-bgcolor': '#eeeeee',
           'suggestion-color': '#666666',
           'suggestion-bgcolor': '#fefefe',
           'suggestion-bordercolor': '#a8a8a8',
@@ -175,7 +229,7 @@
       /**
        * Inject the form Verification Error Message container
        */
-      if (config.elements.form.length && config.message) {
+      if (state.verify && config.create_message) {
         var message = $('<div class="lob-verify-message"></div>');
         config.elements.form.prepend(message);
         config.elements.message = message;
@@ -192,7 +246,9 @@
               margin-right: -50%;\
               transform: translate(-50%, -50%);\
               text-align: center;\
-              padding: 8px;\
+              padding: .5rem;\
+              margin-top: 1.5rem;\
+              margin-bottom: 1.5rem;\
               color: ' + resolveInlineStyle(config, 'error', 'color') + ';\
               background-color: ' + resolveInlineStyle(config, 'error', 'bgcolor') + ';\
             }'
@@ -200,14 +256,25 @@
       }
 
       /**
-       * Inject the CSS for styling the dropdown if not overridden
+       * Configure address autocompletion
        */
-      if (!config.stylesheet) {
-        $('<style>')
-          .prop('type', 'text/css')
-          .html('\
+      function configureAutocompletion() {
+
+        /**
+         * Inject the CSS for styling the dropdown if not overridden by user
+         */
+        if (!config.user_stylesheet && !stylesheet_configured) {
+          stylesheet_configured = true;
+          $(window).resize(function () {
+            //$(".algolia-autocomplete").width(config.elements.primary.outerWidth());
+          });
+          $('<style>')
+            .prop('type', 'text/css')
+            .html('\
             .algolia-autocomplete {\
-              width: 100%;\
+              display:' + resolveInputDisplay(config) + ';\
+              width: ' + resolveInputWidth(config) + ';\
+              vertical-align: middle;\
             }\
             .aa-dropdown-menu {\
               width: 100%;\
@@ -237,13 +304,8 @@
             .aa-suggestion span {\
               font-size: .8em;\
             }'
-          ).appendTo('head');
-      }
-
-      /**
-       * Configure address autocompletion
-       */
-      function configureAutocompletion() {
+            ).appendTo('head');
+        }
 
         /**
          * query Lob for autocomplete suggestions
@@ -356,8 +418,8 @@
             //the user entered the value in the secondary line; echo there
             var parts = data.primary_line.split(sd);
             return {
-              secondary_line: sd + ' ' + parts[1],
-              primary_line: parts[0]
+              secondary_line: sd + ' ' + (parts[1]).trim(),
+              primary_line: (parts[0]).trim()
             }
           } else {
             //use the default
@@ -580,35 +642,11 @@
 
     var state = getPageState();
 
-    /**
-     * Actively observe the DOM. Enrich target address elements as they appear
-     */
-    (function (to_state) {
-      function didChange() {
-        var state = getPageState();
-        if (to_state === "enable" && state.enabled) {
-          to_state = "disable";
-          setTimeout(function () {
-            _LobAddressElements($, cfg, state);
-          }, 0);
-        } else if (to_state === "disable" && !state.enabled) {
-          to_state = "enable";
-        }
-      }
-      var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-      if (MutationObserver) {
-        var observer = new MutationObserver(didChange);
-        observer.observe(window.document.body, {
-          subtree: true,
-          attributes: true,
-          childList: true
-        });
-      }
-    })(state.enabled ? "disable" : "enable");
-
-    if (state.enabled) {
+    if (state.enrich) {
+      observeDOM("enriched");
       return _LobAddressElements($, cfg, state);
     } else {
+      observeDOM("untouched");
       return {
         do: {
           init: function () {
