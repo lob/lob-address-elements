@@ -125,9 +125,7 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
 | data-lob-zip-message-id       | `<field id>`         | This optional attribute identifies where to display field-level error messages that affect the zip code field.           |
 
 ## Preconfigured Usage
-E-commerce platforms like Shopify can be easily enhanced using a pre-configured instance of Address Elements. 
-
-For example, update the following script to use your Lob public key (`lob_pub_xxx`) and then paste into your top-level Shopify Plus template to add advanced Address Verifiation behaviors to your checkout form.
+E-commerce platforms like Shopify can be easily enhanced using a preconfigured instance of Address Elements. For example, update the following script to use your Lob public key (`live_pub_xxx`) and then paste into your top-level Shopify Plus template to add advanced address verifiation behaviors to your checkout form.
 
 ```
 <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
@@ -145,8 +143,7 @@ For example, update the following script to use your Lob public key (`lob_pub_xx
 *NOTE: This example uses `strict` as the verification level, but you may choose `normal`, or `relaxed` depending upon your Shopify use case.*
 
 ## Component Styles
-You may customize the color and style for the address suggestion list.
-Two approaches are supported. 
+If you choose to enable address verification, Lob will inject an HTML element into the target form in order to share form-level error messages with the end user. Similarly, if you choose to enable address autocompletion, Lob will inject an HTML element to contain the list of suggestions. In both cases, you may customize the color and style, using one of two approaches. 
 
 ### In-line Declarations
 In this example, the colors are declared in-ine, which means
@@ -248,8 +245,7 @@ In this example, all styles for the address suggestion list are declared using a
             width: 100px;
         }
 
-        .validation_error_message {
-            display:none;
+        .lob-verify-message {
             padding:12px;
             font-size:1.2em;
             background-color:lightyellow;
