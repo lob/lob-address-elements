@@ -120,7 +120,7 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
 | data-lob-zip-message-id       | `<field id>`         | This optional attribute identifies where to display field-level error messages that affect the zip code field.           |
 
 ## Preconfigured Usage
-E-commerce platforms like Shopify can be easily enhanced using a preconfigured instance of Address Elements. For example, update the following script to use your Lob public key (`live_pub_xxx`) and then paste into your top-level Shopify Plus template to add advanced address verifiation behaviors to your checkout form.
+E-commerce platforms like Shopify use predictable element names making them easy to extend using Address Elements. For example, update the following script to use your Lob public key (`live_pub_xxx`) and then paste the script into your top-level Shopify Plus template to add advanced address verifiation to your checkout form.
 
 ```
 <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
@@ -132,13 +132,13 @@ E-commerce platforms like Shopify can be easily enhanced using a preconfigured i
   data-lob-city-id="checkout_shipping_address_city"
   data-lob-state-id="checkout_shipping_address_province"
   data-lob-zip-id="checkout_shipping_address_zip"
-  data-lob-error-bgcolor="#006eff"
-  data-lob-error-color="#ffffff"></script>
+  data-lob-err-bgcolor="#006eff"
+  data-lob-err-color="#ffffff"></script>
 ```
 *NOTE: This example uses `strict` as the verification level, but you may choose `normal`, or `relaxed` depending upon your Shopify use case.*
 
 ## Component Styles
-If you choose to enable address verification, Lob will inject an HTML element into the target form in order to share form-level error messages with the end user. Similarly, if you choose to enable address autocompletion, Lob will inject an HTML element to contain the list of suggestions. In both cases, you may customize the color and style, using one of two approaches. 
+If you choose to enable address verification, Lob will inject an HTML element into the target form in order to share form-level error messages with the end user. Similarly, if you choose to enable address autocompletion, Lob will inject an HTML element to contain the list of suggestions. In both cases, you may customize the color and style of the HTML elements using one of two approaches. 
 
 ### In-line Declarations
 In this example, the colors are declared in-ine, which means
@@ -185,8 +185,8 @@ Hex, RGB and named color values are supported when declaring styles in-line.
       data-lob-suggestion-bordercolor="#a8a8a8"
       data-lob-suggestion-activecolor="red" 
       data-lob-suggestion-activebgcolor="#eeeeee"
-      data-lob-error-bgcolor="#006eff"
-      data-lob-error-color="#ffffff"></script>
+      data-lob-err-bgcolor="#006eff"
+      data-lob-err-color="#ffffff"></script>
 </body>
 </html>
 ```
@@ -197,8 +197,8 @@ Hex, RGB and named color values are supported when declaring styles in-line.
 | data-lob-suggestion-bordercolor   | <`color`/`hex`/`rgb`>           | The border color for the suggestion list.      |
 | data-lob-suggestion-activecolor   | <`color`/`hex`/`rgb`>           | The text color for an item in the suggestion list when actively hovered over or when traversed via the keyboard.         |
 | data-lob-suggestion-activebgcolor | <`color`/`hex`/`rgb`>           | The background color for an item in the suggestion list when actively hovered over or when traversed via the keyboard.    |
-| data-lob-error-color   | <`color`/`hex`/`rgb`>           | The text color to use when rendering a form-level error message when the form fails verification.         |
-| data-lob-error-bgcolor | <`color`/`hex`/`rgb`>           | The background color to use when rendering a form-level error message when the form fails verification    |
+| data-lob-err-color   | <`color`/`hex`/`rgb`>           | The text color to use when rendering a form-level error message when the form fails verification.         |
+| data-lob-err-bgcolor | <`color`/`hex`/`rgb`>           | The background color to use when rendering a form-level error message when the form fails verification    |
 
 ### Stylesheet Declarations
 
@@ -329,60 +329,56 @@ In this example, all styles for the address suggestion list are declared using a
 
 
 # Init
-By default, Address Elements will scan the page, looking for the necessary tags. However, with single page applications, the HTML elements may not be present when the library loads, and will therefore not create the necessary form bindings. In such a case, you can call `LobAddressElements.do.init()`, and Address Elements will re-scan the HTML on the page, and create all necessary bindings.
+By default, Address Elements continually monitors changes to the HTML DOM, looking for address-related fields to enrich. This behavior is available for all evergreen browsers and IE11+. If you anticipate needing support for IE9/10, call `LobAddressElements.do.init()` to manually trigger a page scan and initialize address-related fields.
 
 # Localization
-It is possible to localize and customize verification messages returned by Lob's verification API. This customization requires a JavaScript configuration file be declared alongside the Lob &lt;script&gt; tag. Customize the value for any message to override.
+Verification messages can be localized and customized. Update target messages using the pattern, `data-lob-err-*`. For example:
 
 ```
-
 <!DOCTYPE html>
 <html>
 <body>
-    <form action="/some/url" 
-        data-lob-verify="relaxed" 
-        data-lob-key="live_pub_xxxxxx">
-
-        <div data-lob-verify-message></div>
-        <div>
-            <label for="street1">Street 1</label>
-            <input id="street1" data-lob-primary>
-        </div>
-        <div>
-            <label for="street2">Street 2</label>
-            <input id="street2" data-lob-secondary>
-        </div>
-        <div>
-            <label for="city">City</label>
-            <input id="city" data-lob-city>
-        </div>
-        <div>
-            <label for="state">State</label>
-            <input id="state" data-lob-state>
-        </div>
-        <div>
-            <label for="zip">Zip</label>
-            <input id="zip" data-lob-zip>
-        </div>
-        <input type="submit" value="Submit">
-    </form>
-    <script>
-        var LobAddressElementsConfig = {
-            messages: {
-                primary_line: 'Enter the Primary address.',
-                city_state_zip: 'Enter City and State (or Zip).',
-                zip: 'Enter a valid Zip.',
-                undeliverable: 'The address could not be verified.',
-                deliverable_missing_unit: 'Enter a Suite or Unit.',
-                deliverable_unnecessary_unit: 'Suite or Unit unnecessary.',
-                deliverable_incorrect_unit: 'Incorrect Unit. Please confirm.',
-                notify: 'The address has been standardized.',
-                confirm: 'The address has been standardized. Please confirm and resubmit.',
-                DEFAULT: 'Unknown Error. The address could not be verified.'
-            }
-        };
-    </script>
-    <script src="/lob-address-elements.js"></script>
+  <form action="/api/v1/add-address">
+      <div>
+          <label for="address1">Address 1</label>
+          <input id="address1">
+      </div>
+      <div>
+          <label for="address2">Address 2</label>
+          <input id="address2">
+      </div>
+      <div>
+          <label for="city">City</label>
+          <input id="city">
+      </div>
+      <div>
+          <label for="state">State</label>
+          <input id="state">
+      </div>
+      <div>
+          <label for="zip">Zip</label>
+          <input id="zip">
+      </div>
+      <input type="submit" value="Submit">
+  </form>
+  <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
+    data-lob-key="live_pub_xxx" 
+    data-lob-verify-value="strict"
+    data-lob-primary-id="address1"
+    data-lob-secondary-id="address2"
+    data-lob-city-id="city"
+    data-lob-state-id="state"
+    data-lob-zip-id="zip"
+    data-lob-err-primary-line="Enter the Primary address."
+    data-lob-err-city-state-zip="Enter City and State (or Zip)."
+    data-lob-err-zip="Enter a valid Zip."
+    data-lob-err-undeliverable="The address could not be verified."
+    data-lob-err-missing-unit="Enter a Suite or Unit."
+    data-lob-err-unnecessary-unit="Suite or Unit unnecessary."
+    data-lob-err-incorrect-unit="Incorrect Unit. Please confirm."
+    data-lob-err-notify="The address has been standardized."
+    data-lob-err-confirm="The address has been standardized. Please confirm and resubmit."
+    data-lob-err-default="Unknown Error. The address could not be verified."></script>
 </body>
 </html>
 ```

@@ -153,8 +153,8 @@
         user_stylesheet: resolveStyleStrategy(cfg.stylesheet),
         create_message: state.create_message,
         styles: cfg.styles || {
-          'error-color': '#117ab8',
-          'error-bgcolor': '#eeeeee',
+          'err-color': '#117ab8',
+          'err-bgcolor': '#eeeeee',
           'suggestion-color': '#666666',
           'suggestion-bgcolor': '#fefefe',
           'suggestion-bordercolor': '#a8a8a8',
@@ -176,16 +176,16 @@
           zipMsg: findElm('zip-message').hide()
         },
         messages: cfg.messages || {
-          primary_line: 'Enter the Primary address.',
-          city_state_zip: 'Enter City and State (or Zip).',
-          zip: 'Enter a valid Zip.',
-          undeliverable: 'The address could not be verified.',
-          deliverable_missing_unit: 'Enter a Suite or Unit.',
-          deliverable_unnecessary_unit: 'Suite or Unit unnecessary.',
-          deliverable_incorrect_unit: 'Incorrect Unit. Please confirm.',
-          notify: 'The address has been standardized.',
-          confirm: 'The address has been standardized. Please confirm and resubmit.',
-          DEFAULT: 'Unknown Error. The address could not be verified.'
+          primary_line: findValue('err-primary-line') || 'Enter the Primary address.',
+          city_state_zip: findValue('err-city-state-zip') || 'Enter City and State (or Zip).',
+          zip: findValue('err-zip') || 'Enter a valid Zip.',
+          undeliverable: findValue('err-undeliverable') || 'The address could not be verified.',
+          deliverable_missing_unit: findValue('err-missing-unit') || 'Enter a Suite or Unit.',
+          deliverable_unnecessary_unit: findValue('err-unnecessary-unit') || 'Suite or Unit unnecessary.',
+          deliverable_incorrect_unit: findValue('err-incorrect-unit') || 'Incorrect Unit. Please confirm.',
+          notify: findValue('err-notify') || 'The address has been standardized.',
+          confirm: findValue('err-confirm') || 'The address has been standardized. Please confirm and resubmit.',
+          DEFAULT: findValue('err-default') || 'Unknown Error. The address could not be verified.'
         },
         apis: cfg.apis || {
           verify: 'https://api.lob.com/v1/us_verifications',
@@ -249,8 +249,8 @@
               padding: .5rem;\
               margin-top: 1.5rem;\
               margin-bottom: 1.5rem;\
-              color: ' + resolveInlineStyle(config, 'error', 'color') + ';\
-              background-color: ' + resolveInlineStyle(config, 'error', 'bgcolor') + ';\
+              color: ' + resolveInlineStyle(config, 'err', 'color') + ';\
+              background-color: ' + resolveInlineStyle(config, 'err', 'bgcolor') + ';\
             }'
           ).appendTo('head');
       }
