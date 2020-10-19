@@ -26,29 +26,29 @@ Address Elements works by targeting address-related form elements and enriching 
 <!DOCTYPE html>
 <html>
 <body>
-    <form action="/api/v1/add-address">
-        <div>
-            <label for="address1">Address 1</label>
-            <input id="address1">
-        </div>
-        <div>
-            <label for="address2">Address 2</label>
-            <input id="address2">
-        </div>
-        <div>
-            <label for="city">City</label>
-            <input id="city">
-        </div>
-        <div>
-            <label for="state">State</label>
-            <input id="state">
-        </div>
-        <div>
-            <label for="zip">Zip</label>
-            <input id="zip">
-        </div>
-        <input type="submit" value="Submit">
-    </form>
+  <form action="/api/v1/add-address">
+      <div>
+          <label for="address1">Address 1</label>
+          <input id="address1">
+      </div>
+      <div>
+          <label for="address2">Address 2</label>
+          <input id="address2">
+      </div>
+      <div>
+          <label for="city">City</label>
+          <input id="city">
+      </div>
+      <div>
+          <label for="state">State</label>
+          <input id="state">
+      </div>
+      <div>
+          <label for="zip">Zip</label>
+          <input id="zip">
+      </div>
+      <input type="submit" value="Submit">
+  </form>
 </body>
 </html>
 ```
@@ -57,47 +57,47 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
 <!DOCTYPE html>
 <html>
 <body>
-    <form action="/api/v1/add-address">
-        <div>
-            <label for="address1">Address 1</label>
-            <input id="address1">
-            <div id="address1_err" class="err"></div>
-        </div>
-        <div>
-            <label for="address2">Address 2</label>
-            <input id="address2">
-            <div id="address2_err" class="err"></div>
-        </div>
-        <div>
-            <label for="city">City</label>
-            <input id="city">
-            <div id="city_err" class="err"></div>
-        </div>
-        <div>
-            <label for="state">State</label>
-            <input id="state">
-            <div id="state_err" class="err"></div>
-        </div>
-        <div>
-            <label for="zip">Zip</label>
-            <input id="zip">
-            <div id="zip_err" class="err"></div>
-        </div>
-        <input type="submit" value="Submit">
-    </form>
-    <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
-      data-lob-key="live_pub_xxx" 
-      data-lob-verify-value="strict"
-      data-lob-primary-id="address1"
-      data-lob-secondary-id="address2"
-      data-lob-city-id="city"
-      data-lob-state-id="state"
-      data-lob-zip-id="zip"
-      data-lob-primary-message-id="address1_err"
-      data-lob-secondary-message-id="address2_err"
-      data-lob-city-message-id="city_err"
-      data-lob-state-message-id="state_err"
-      data-lob-zip-message-id="zip_err"></script>
+  <form action="/api/v1/add-address">
+      <div>
+          <label for="address1">Address 1</label>
+          <input id="address1">
+          <div id="address1_err" class="err"></div>
+      </div>
+      <div>
+          <label for="address2">Address 2</label>
+          <input id="address2">
+          <div id="address2_err" class="err"></div>
+      </div>
+      <div>
+          <label for="city">City</label>
+          <input id="city">
+          <div id="city_err" class="err"></div>
+      </div>
+      <div>
+          <label for="state">State</label>
+          <input id="state">
+          <div id="state_err" class="err"></div>
+      </div>
+      <div>
+          <label for="zip">Zip</label>
+          <input id="zip">
+          <div id="zip_err" class="err"></div>
+      </div>
+      <input type="submit" value="Submit">
+  </form>
+  <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
+    data-lob-key="live_pub_xxx" 
+    data-lob-verify-value="strict"
+    data-lob-primary-id="address1"
+    data-lob-secondary-id="address2"
+    data-lob-city-id="city"
+    data-lob-state-id="state"
+    data-lob-zip-id="zip"
+    data-lob-primary-message-id="address1_err"
+    data-lob-secondary-message-id="address2_err"
+    data-lob-city-message-id="city_err"
+    data-lob-state-message-id="state_err"
+    data-lob-zip-message-id="zip_err"></script>
 </body>
 </html>
 ```
@@ -149,44 +149,44 @@ Hex, RGB and named color values are supported when declaring styles in-line.
 <!DOCTYPE html>
 <html>
 <body>
-    <form action="/api/v1/add-address">
-        <div>
-            <label for="address1">Address 1</label>
-            <input id="address1">
-        </div>
-        <div>
-            <label for="address2">Address 2</label>
-            <input id="address2">
-        </div>
-        <div>
-            <label for="city">City</label>
-            <input id="city">
-        </div>
-        <div>
-            <label for="state">State</label>
-            <input id="state">
-        </div>
-        <div>
-            <label for="zip">Zip</label>
-            <input id="zip">
-        </div>
-        <input type="submit" value="Submit">
-    </form>
-    <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
-      data-lob-key="live_pub_xxx" 
-      data-lob-verify-value="strict"
-      data-lob-primary-id="address1"
-      data-lob-secondary-id="address2"
-      data-lob-city-id="city"
-      data-lob-state-id="state"
-      data-lob-zip-id="zip"
-      data-lob-suggestion-color="#666666"
-      data-lob-suggestion-bgcolor="#fefefe" 
-      data-lob-suggestion-bordercolor="#a8a8a8"
-      data-lob-suggestion-activecolor="red" 
-      data-lob-suggestion-activebgcolor="#eeeeee"
-      data-lob-err-bgcolor="#006eff"
-      data-lob-err-color="#ffffff"></script>
+  <form action="/api/v1/add-address">
+      <div>
+          <label for="address1">Address 1</label>
+          <input id="address1">
+      </div>
+      <div>
+          <label for="address2">Address 2</label>
+          <input id="address2">
+      </div>
+      <div>
+          <label for="city">City</label>
+          <input id="city">
+      </div>
+      <div>
+          <label for="state">State</label>
+          <input id="state">
+      </div>
+      <div>
+          <label for="zip">Zip</label>
+          <input id="zip">
+      </div>
+      <input type="submit" value="Submit">
+  </form>
+  <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
+    data-lob-key="live_pub_xxx" 
+    data-lob-verify-value="strict"
+    data-lob-primary-id="address1"
+    data-lob-secondary-id="address2"
+    data-lob-city-id="city"
+    data-lob-state-id="state"
+    data-lob-zip-id="zip"
+    data-lob-suggestion-color="#666666"
+    data-lob-suggestion-bgcolor="#fefefe" 
+    data-lob-suggestion-bordercolor="#a8a8a8"
+    data-lob-suggestion-activecolor="red" 
+    data-lob-suggestion-activebgcolor="#eeeeee"
+    data-lob-err-bgcolor="#006eff"
+    data-lob-err-color="#ffffff"></script>
 </body>
 </html>
 ```
@@ -208,117 +208,117 @@ In this example, all styles for the address suggestion list are declared using a
 <!DOCTYPE html>
 <html>
 <head>
-    <style>
-        * {
-            box-sizing: border-box;
-            font-family: sans-serif;
-            color:#333333;
-        }
+  <style>
+      * {
+          box-sizing: border-box;
+          font-family: sans-serif;
+          color:#333333;
+      }
 
-        input {
-            display: block;
-            font-size: 1.05rem;
-            width: 100%;
-            padding: 10px;
-            border-radius: .25rem;
-            border: solid 1px #8c8c8c;
-            margin: 0;
-        }
+      input {
+          display: block;
+          font-size: 1.05rem;
+          width: 100%;
+          padding: 10px;
+          border-radius: .25rem;
+          border: solid 1px #8c8c8c;
+          margin: 0;
+      }
 
-        label {
-            display: block;
-            font-size: 1.1rem;
-            margin: 20px 0 5px 0;
-        }
+      label {
+          display: block;
+          font-size: 1.1rem;
+          margin: 20px 0 5px 0;
+      }
 
-        input[type='submit'] {
-            background-color: #0594d8;
-            color: #ffffff;
-            border-color: #ffffff;
-            font-size: 1.1rem;
-            margin-top: 10px;
-            width: 100px;
-        }
+      input[type='submit'] {
+          background-color: #0594d8;
+          color: #ffffff;
+          border-color: #ffffff;
+          font-size: 1.1rem;
+          margin-top: 10px;
+          width: 100px;
+      }
 
-        .lob-verify-message {
-            padding:12px;
-            font-size:1.2em;
-            background-color:lightyellow;
-            border-radius: .25rem;
-            margin-bottom:20px;
-        }
+      .lob-verify-message {
+          padding:12px;
+          font-size:1.2em;
+          background-color:lightyellow;
+          border-radius: .25rem;
+          margin-bottom:20px;
+      }
 
-        .algolia-autocomplete {
-            width: auto;
-        }
+      .algolia-autocomplete {
+          width: auto;
+      }
 
-        .algolia-autocomplete .aa-dropdown-menu {
-            width: 100%;
-            border: 1px solid #a8a8a8;
-            border-top: 0;
-            background-color: #fefefe;
-            overflow: hidden;
-            border-radius: 0 0 .25rem .25rem;
-            margin-top:-5px;
-        }
+      .algolia-autocomplete .aa-dropdown-menu {
+          width: 100%;
+          border: 1px solid #a8a8a8;
+          border-top: 0;
+          background-color: #fefefe;
+          overflow: hidden;
+          border-radius: 0 0 .25rem .25rem;
+          margin-top:-5px;
+      }
 
-        .algolia-autocomplete .aa-suggestion {
-            cursor: pointer;
-            padding: 12px;
-            color: #666666;
-        }
+      .algolia-autocomplete .aa-suggestion {
+          cursor: pointer;
+          padding: 12px;
+          color: #666666;
+      }
 
-        .algolia-autocomplete .aa-suggestion:hover,
-        .algolia-autocomplete .aa-suggestion:active,
-        .algolia-autocomplete .aa-suggestion.aa-cursor {
-            color: #0594d8;
-            background-color: #eeeeee;
-        }
+      .algolia-autocomplete .aa-suggestion:hover,
+      .algolia-autocomplete .aa-suggestion:active,
+      .algolia-autocomplete .aa-suggestion.aa-cursor {
+          color: #0594d8;
+          background-color: #eeeeee;
+      }
 
-        .algolia-autocomplete .aa-suggestion div {
-            white-space: nowrap !important;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+      .algolia-autocomplete .aa-suggestion div {
+          white-space: nowrap !important;
+          overflow: hidden;
+          text-overflow: ellipsis;
+      }
 
-        .algolia-autocomplete .aa-suggestion span {
-            font-size: .8em;
-        }
-    </style>
+      .algolia-autocomplete .aa-suggestion span {
+          font-size: .8em;
+      }
+  </style>
 </head>
 <body>
-    <form action="/api/v1/add-address">
-        <div>
-            <label for="address1">Address 1</label>
-            <input id="address1">
-        </div>
-        <div>
-            <label for="address2">Address 2</label>
-            <input id="address2">
-        </div>
-        <div>
-            <label for="city">City</label>
-            <input id="city">
-        </div>
-        <div>
-            <label for="state">State</label>
-            <input id="state">
-        </div>
-        <div>
-            <label for="zip">Zip</label>
-            <input id="zip">
-        </div>
-        <input type="submit" value="Submit">
-    </form>
-    <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
-      data-lob-key="live_pub_xxx"
-      data-lob-suggestion-stylesheet
-      data-lob-verify-value="strict"
-      data-lob-primary-id="address1"
-      data-lob-secondary-id="address2"
-      data-lob-city-id="city"
-      data-lob-state-id="state"
-      data-lob-zip-id="zip"></script>
+  <form action="/api/v1/add-address">
+      <div>
+          <label for="address1">Address 1</label>
+          <input id="address1">
+      </div>
+      <div>
+          <label for="address2">Address 2</label>
+          <input id="address2">
+      </div>
+      <div>
+          <label for="city">City</label>
+          <input id="city">
+      </div>
+      <div>
+          <label for="state">State</label>
+          <input id="state">
+      </div>
+      <div>
+          <label for="zip">Zip</label>
+          <input id="zip">
+      </div>
+      <input type="submit" value="Submit">
+  </form>
+  <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
+    data-lob-key="live_pub_xxx"
+    data-lob-suggestion-stylesheet
+    data-lob-verify-value="strict"
+    data-lob-primary-id="address1"
+    data-lob-secondary-id="address2"
+    data-lob-city-id="city"
+    data-lob-state-id="state"
+    data-lob-zip-id="zip"></script>
 </body>
 </html>
 ```
