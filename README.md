@@ -16,9 +16,7 @@ The Lob Address Elements library simplifies client side integration of Lob's *US
 - [Releases](#releases)
 
 ## Registration
-First, you will need to create an account at [Lob.com](https://dashboard.lob.com/#/register) and obtain your **Live API Key**.
-
-Once you have created an account, you can access your API Keys from the [Settings Panel](https://dashboard.lob.com/#/settings).
+Create an account at [Lob.com](https://dashboard.lob.com/#/register) to obtain a **Live API Key**. You'll find the key on the [Lob Settings Panel](https://dashboard.lob.com/#/settings).
 
 ## Usage
 Address Elements works by targeting address-related form elements and enriching their behavior. Start with a standard HTML form that collects a US address.
@@ -52,38 +50,34 @@ Address Elements works by targeting address-related form elements and enriching 
 </body>
 </html>
 ```
-Embed the Lob Address Elements library immediately before the closing &lt;body&gt; tag. For your convenience, we host a minified version of the library at `https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js`. Notice how important elements (those used for collecting the address) are identified using the `data.lob.*` attribute pattern.
+Embed the Lob Address Elements library immediately before the closing &lt;body&gt; tag. For your convenience, Lob hosts a minified version of the library at `https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js`. Notice how important elements (those used for collecting the address) are identified using the `data.lob.*` attribute pattern.
 ```
 <!DOCTYPE html>
 <html>
 <body>
   <form action="/api/v1/add-address">
-      <div>
-          <label for="address1">Address 1</label>
-          <input id="address1">
-          <div id="address1_err" class="err"></div>
-      </div>
-      <div>
-          <label for="address2">Address 2</label>
-          <input id="address2">
-          <div id="address2_err" class="err"></div>
-      </div>
-      <div>
-          <label for="city">City</label>
-          <input id="city">
-          <div id="city_err" class="err"></div>
-      </div>
-      <div>
-          <label for="state">State</label>
-          <input id="state">
-          <div id="state_err" class="err"></div>
-      </div>
-      <div>
-          <label for="zip">Zip</label>
-          <input id="zip">
-          <div id="zip_err" class="err"></div>
-      </div>
-      <input type="submit" value="Submit">
+    <div>
+      <label for="address1">Address 1</label>
+      <input id="address1">
+      <div id="address1_err" class="err"></div>
+    </div>
+    <div>
+      <label for="address2">Address 2</label>
+      <input id="address2">
+    </div>
+    <div>
+      <label for="city">City</label>
+      <input id="city">
+    </div>
+    <div>
+      <label for="state">State</label>
+      <input id="state">
+    </div>
+    <div>
+      <label for="zip">Zip</label>
+      <input id="zip">
+    </div>
+    <input type="submit" value="Submit">
   </form>
   <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx" 
@@ -93,17 +87,13 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
     data-lob-city-id="city"
     data-lob-state-id="state"
     data-lob-zip-id="zip"
-    data-lob-primary-message-id="address1_err"
-    data-lob-secondary-message-id="address2_err"
-    data-lob-city-message-id="city_err"
-    data-lob-state-message-id="state_err"
-    data-lob-zip-message-id="zip_err"></script>
+    data-lob-primary-message-id="address1_err"></script>
 </body>
 </html>
 ```
 
-| Attribute Name               | Attribute Value(s)    | Description         |
-| :---                         |  :---                 |   :---              |
+| Attribute Name    | Attribute Value(s)   | Description      |
+| :---          |  :---                 |   :---              |
 | data-lob-key          | `<lob key>`           | Include your Lob live public key as the attribute value. It will use the format `live_pub_*` and is available via the [Lob Dashboard](https://dashboard.lob.com/#/settings).        |
 | data-lob-verify-value           | `strict`, `normal`, `relaxed`, `passthrough`          | Include this attribute to pre-verify the user's address submission with Lob.  Choose `relaxed` as the attribute value, if you wish to allow users to submit an errant form once they have been warned. Their resubmission of an unchanged form will be used to indicate their preference to override and submit. Choose `normal` (the default) to halt any submissions that Lob deems undeliverable, while still allowing all other inconsistencies to be submitted once the user has confirmed their choice. Choose `strict` to halt any submission that does not pass verification, including minor errors like missing or unnecessary units. Finally, if you wish to verify an address and then submit regardless of the verification result, choose `passthrough`. This is useful for stateful forms that support repeated submissions. |
 | data-lob-primary-value          | `false`      | This is an optional attribute. Set to `false` to disable address autocompletion and only use address verification.        |
@@ -113,14 +103,14 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
 | data-lob-city-id          | `<field id>`      | This attribute identifies the city field. Set it to the ID for the field to target.         |
 | data-lob-state-id          | `<field id>`      | This attribute identifies the state field. Set it to the ID for the field to target.         |
 | data-lob-zip-id          | `<field id>`      | This attribute identifies the zip field. Set it to the ID for the field to target.         |
-| data-lob-primary-message-id  | `<field id>`           | This optional attribute identifies where to display field-level error messages that affect the primary address field.           |
-| data-lob-secondary-message-id | `<field id>`          | This optional attribute identifies where to display field-level error messages that affect the secondary address field.         |
-| data-lob-city-message-id      | `<field id>`         | This optional attribute identifies where to display field-level error messages that affect the city field.           |
-| data-lob-state-message-id     | `<field id>`          | This optional attribute identifies where to display field-level error messages that affect the state field.           |
-| data-lob-zip-message-id       | `<field id>`         | This optional attribute identifies where to display field-level error messages that affect the zip code field.           |
+| data-lob-primary-message-id  | `<field id>`           | This optional attribute identifies the field-level error message for the primary address input. Only include this attribute if the primary address input has an associated error message. Lob will update the text content for this element and toggle its display. *In the example above, a field-level error message has been added to the primary input field, showing its usage.*       |
+| data-lob-secondary-message-id | `<field id>`          | This optional attribute identifies the field-level error message for the secondary address input. Only include this attribute if the secondary address input has an associated error message. Lob will update the text content for this element and toggle its display.         |
+| data-lob-city-message-id      | `<field id>`         | This optional attribute identifies the field-level error message for the city input. Only include this attribute if the city input has an associated error message. Lob will update the text content for this element and toggle its display.           |
+| data-lob-state-message-id     | `<field id>`          | This optional attribute identifies the field-level error message for the state input. Only include this attribute if the state input has an associated error message. Lob will update the text content for this element and toggle its display.           |
+| data-lob-zip-message-id       | `<field id>`         | This optional attribute identifies the field-level error message for the zip input. Only include this attribute if the zip input has an associated error message. Lob will update the text content for this element and toggle its display.           |
 
 ## Preconfigured Usage
-E-commerce platforms like Shopify use predictable element names making them easy to extend using Address Elements. For example, update the following script to use your Lob public key (`live_pub_xxx`) and then paste the script into your top-level Shopify Plus template to add advanced address verifiation to your checkout form.
+E-commerce platforms like Shopify use predictable element names making them easy to extend using Address Elements. Paste the following script into your top-level Shopify Plus template to add advanced address verifiation to your checkout form. *Remember to replace `live_pub_xxx` with your Lob public key.*
 
 ```
 <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
@@ -150,27 +140,27 @@ Hex, RGB and named color values are supported when declaring styles in-line.
 <html>
 <body>
   <form action="/api/v1/add-address">
-      <div>
-          <label for="address1">Address 1</label>
-          <input id="address1">
-      </div>
-      <div>
-          <label for="address2">Address 2</label>
-          <input id="address2">
-      </div>
-      <div>
-          <label for="city">City</label>
-          <input id="city">
-      </div>
-      <div>
-          <label for="state">State</label>
-          <input id="state">
-      </div>
-      <div>
-          <label for="zip">Zip</label>
-          <input id="zip">
-      </div>
-      <input type="submit" value="Submit">
+    <div>
+      <label for="address1">Address 1</label>
+      <input id="address1">
+    </div>
+    <div>
+      <label for="address2">Address 2</label>
+      <input id="address2">
+    </div>
+    <div>
+      <label for="city">City</label>
+      <input id="city">
+    </div>
+    <div>
+      <label for="state">State</label>
+      <input id="state">
+    </div>
+    <div>
+      <label for="zip">Zip</label>
+      <input id="zip">
+    </div>
+    <input type="submit" value="Submit">
   </form>
   <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx" 
@@ -209,106 +199,106 @@ In this example, all styles for the address suggestion list are declared using a
 <html>
 <head>
   <style>
-      * {
-          box-sizing: border-box;
-          font-family: sans-serif;
-          color:#333333;
-      }
+    * {
+      box-sizing: border-box;
+      font-family: sans-serif;
+      color:#333333;
+    }
 
-      input {
-          display: block;
-          font-size: 1.05rem;
-          width: 100%;
-          padding: 10px;
-          border-radius: .25rem;
-          border: solid 1px #8c8c8c;
-          margin: 0;
-      }
+    input {
+      display: block;
+      font-size: 1.05rem;
+      width: 100%;
+      padding: 10px;
+      border-radius: .25rem;
+      border: solid 1px #8c8c8c;
+      margin: 0;
+    }
 
-      label {
-          display: block;
-          font-size: 1.1rem;
-          margin: 20px 0 5px 0;
-      }
+    label {
+      display: block;
+      font-size: 1.1rem;
+      margin: 20px 0 5px 0;
+    }
 
-      input[type='submit'] {
-          background-color: #0594d8;
-          color: #ffffff;
-          border-color: #ffffff;
-          font-size: 1.1rem;
-          margin-top: 10px;
-          width: 100px;
-      }
+    input[type='submit'] {
+      background-color: #0594d8;
+      color: #ffffff;
+      border-color: #ffffff;
+      font-size: 1.1rem;
+      margin-top: 10px;
+      width: 100px;
+    }
 
-      .lob-verify-message {
-          padding:12px;
-          font-size:1.2em;
-          background-color:lightyellow;
-          border-radius: .25rem;
-          margin-bottom:20px;
-      }
+    .lob-verify-message {
+      padding:12px;
+      font-size:1.2em;
+      background-color:lightyellow;
+      border-radius: .25rem;
+      margin-bottom:20px;
+    }
 
-      .algolia-autocomplete {
-          width: auto;
-      }
+    .algolia-autocomplete {
+      width: auto;
+    }
 
-      .algolia-autocomplete .aa-dropdown-menu {
-          width: 100%;
-          border: 1px solid #a8a8a8;
-          border-top: 0;
-          background-color: #fefefe;
-          overflow: hidden;
-          border-radius: 0 0 .25rem .25rem;
-          margin-top:-5px;
-      }
+    .algolia-autocomplete .aa-dropdown-menu {
+      width: 100%;
+      border: 1px solid #a8a8a8;
+      border-top: 0;
+      background-color: #fefefe;
+      overflow: hidden;
+      border-radius: 0 0 .25rem .25rem;
+      margin-top:-5px;
+    }
 
-      .algolia-autocomplete .aa-suggestion {
-          cursor: pointer;
-          padding: 12px;
-          color: #666666;
-      }
+    .algolia-autocomplete .aa-suggestion {
+      cursor: pointer;
+      padding: 12px;
+      color: #666666;
+    }
 
-      .algolia-autocomplete .aa-suggestion:hover,
-      .algolia-autocomplete .aa-suggestion:active,
-      .algolia-autocomplete .aa-suggestion.aa-cursor {
-          color: #0594d8;
-          background-color: #eeeeee;
-      }
+    .algolia-autocomplete .aa-suggestion:hover,
+    .algolia-autocomplete .aa-suggestion:active,
+    .algolia-autocomplete .aa-suggestion.aa-cursor {
+      color: #0594d8;
+      background-color: #eeeeee;
+    }
 
-      .algolia-autocomplete .aa-suggestion div {
-          white-space: nowrap !important;
-          overflow: hidden;
-          text-overflow: ellipsis;
-      }
+    .algolia-autocomplete .aa-suggestion div {
+      white-space: nowrap !important;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
-      .algolia-autocomplete .aa-suggestion span {
-          font-size: .8em;
-      }
+    .algolia-autocomplete .aa-suggestion span {
+      font-size: .8em;
+    }
   </style>
 </head>
 <body>
   <form action="/api/v1/add-address">
-      <div>
-          <label for="address1">Address 1</label>
-          <input id="address1">
-      </div>
-      <div>
-          <label for="address2">Address 2</label>
-          <input id="address2">
-      </div>
-      <div>
-          <label for="city">City</label>
-          <input id="city">
-      </div>
-      <div>
-          <label for="state">State</label>
-          <input id="state">
-      </div>
-      <div>
-          <label for="zip">Zip</label>
-          <input id="zip">
-      </div>
-      <input type="submit" value="Submit">
+    <div>
+      <label for="address1">Address 1</label>
+      <input id="address1">
+    </div>
+    <div>
+      <label for="address2">Address 2</label>
+      <input id="address2">
+    </div>
+    <div>
+      <label for="city">City</label>
+      <input id="city">
+    </div>
+    <div>
+      <label for="state">State</label>
+      <input id="state">
+    </div>
+    <div>
+      <label for="zip">Zip</label>
+      <input id="zip">
+    </div>
+    <input type="submit" value="Submit">
   </form>
   <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx"
@@ -339,27 +329,27 @@ Verification messages can be localized and customized. Update target messages us
 <html>
 <body>
   <form action="/api/v1/add-address">
-      <div>
-          <label for="address1">Address 1</label>
-          <input id="address1">
-      </div>
-      <div>
-          <label for="address2">Address 2</label>
-          <input id="address2">
-      </div>
-      <div>
-          <label for="city">City</label>
-          <input id="city">
-      </div>
-      <div>
-          <label for="state">State</label>
-          <input id="state">
-      </div>
-      <div>
-          <label for="zip">Zip</label>
-          <input id="zip">
-      </div>
-      <input type="submit" value="Submit">
+    <div>
+      <label for="address1">Address 1</label>
+      <input id="address1">
+    </div>
+    <div>
+      <label for="address2">Address 2</label>
+      <input id="address2">
+    </div>
+    <div>
+      <label for="city">City</label>
+      <input id="city">
+    </div>
+    <div>
+      <label for="state">State</label>
+      <input id="state">
+    </div>
+    <div>
+      <label for="zip">Zip</label>
+      <input id="zip">
+    </div>
+    <input type="submit" value="Submit">
   </form>
   <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx" 
@@ -411,7 +401,7 @@ Minified builds are available [here](https://github.com/lob/lob-address-elements
 ### 1.1.0 (CURRENT / LATEST)
 | Release Notes |
 | :---          |
-| [Feature] Target HTML elements are enriched in real time as soon as they they appear in the DOM. |
+| [Feature] Target HTML elements are continuously enriched in real time as soon as they they appear in the DOM. |
 | [Feature] Target HTML elements can now be indentified using a flexible addressing scheme. This includes element IDs, element names, and data attributes. |
 | [Feature] An HTML element for displaying form-level errors is now optional and will be added to the DOM when missing from the target form. |
 | [Fix] The address suggestion list is now positioned correctly on-screen when the target HTML input elements use the `inline` display style.  |
