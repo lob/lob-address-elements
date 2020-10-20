@@ -16,7 +16,7 @@ The Lob Address Elements library simplifies client side integration of Lob's *US
 - [Releases](#releases)
 
 ## Registration
-Create an account at [Lob.com](https://dashboard.lob.com/#/register) to obtain a **Live API Key**. The public key is available on the [Lob Settings Panel](https://dashboard.lob.com/#/settings).
+Create an account at [Lob.com](https://dashboard.lob.com/#/register) to obtain a **Live Public API Key**. The key is available on the [Lob Settings Panel](https://dashboard.lob.com/#/settings). It uses the format `live_pub_xxx`.
 
 ## Usage
 Address Elements works by targeting address-related form elements and enriching their behavior. Start with a standard HTML form for collecting a US address.
@@ -125,10 +125,12 @@ E-commerce platforms like Shopify use predictable element names making them easy
   data-lob-err-bgcolor="#006eff"
   data-lob-err-color="#ffffff"></script>
 ```
-*NOTE: This example uses `strict` as the verification level, but you may choose `normal`, or `relaxed` depending upon your Shopify use case.*
+*NOTE: This example above uses `strict` as the verification level, but you may choose `normal`, or `relaxed` depending upon your Shopify use case.*
 
 ## Component Styles
-When address verification is enabled, Lob will inject an HTML element into the target form in order to communicate form-level error messages. Similarly, when address autocompletion is enabled, Lob will inject an HTML element to contain suggested addresses. In both cases, it is possible to configure the color and style for these HTML elements using one of two approaches. 
+When *address verification* is enabled, Lob will inject an HTML element into the target form in order to communicate form-level error messages. Similarly, when *address autocompletion* is enabled, Lob will inject an HTML element to contain suggested addresses. 
+
+In general, it's easy to customize colors and backgrounds for these elements using in-line color declarations. If, however, you require more advanced customization, you must include a custom CSS stylesheet. These options are described in the following two sections. 
 
 ### In-line Configuration
 In-line configuration uses attribute values to configure element colors. Hex, RGB and named color formats are supported.
@@ -190,7 +192,7 @@ In-line configuration uses attribute values to configure element colors. Hex, RG
 
 ### Stylesheet Declarations
 
-The stylesheet declaration is more complex to implement but gives full control over element styles. All necessary CSS classes have been provided in the example below. Override each class as necessary for full customization.
+Although more complex, a custom stylesheet gives full control over element styles. All necessary CSS classes have been provided in the example below. Override each class as necessary for full customization.
 
 When authoring a custom stylesheet, Lob's default stylesheet should be suppressed using the `data-lob-suggestion-stylesheet` attribute (also shown in the example below).
 
@@ -239,7 +241,7 @@ When authoring a custom stylesheet, Lob's default stylesheet should be suppresse
     }
 
     .algolia-autocomplete {
-      width: auto;
+      width: 100%; /* unnecessary for inline-block inputs */
     }
 
     .algolia-autocomplete .aa-dropdown-menu {
@@ -404,6 +406,7 @@ npm run build 1.1.0
 | An HTML element for displaying form-level errors is now optional and will be added to the DOM when missing from the target form. |
 | Form verification error messages can be localized using HTML attributes. Previous versions required a JSON configuration object. |
 | [Fix] The address suggestion list is now positioned correctly on-screen when the target HTML input elements use the `inline` display style.  |
+| [Fix] If the Lob Public API key becomes invalid for any reason, form verification will be disabled and the form will submit as it did before Address Elements was added to the page.  |
 
 ### 1.0.0 / 0.1.0 (beta)
 | Release Notes |

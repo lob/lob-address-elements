@@ -273,6 +273,10 @@
                   } catch (e) {
                     cb(null);
                   }
+                } else if (this.status == 401) {
+                  //INVALID API KEY; allow default submission
+                  console.log('Please sign up on lob.com to get a valid api key.');
+                  cb(null);
                 } else {
                   cb(null);
                 }
@@ -385,7 +389,7 @@
                 background-color: ' + resolveInlineStyle(config, 'err', 'bgcolor') + ';\
               }'
               ).appendTo('head');
-            }
+          }
         }
 
         function plus4(components) {
@@ -587,6 +591,10 @@
                   type = resolveErrorType(data.deliverability);
                   cb({ msg: config.messages[type], type: type });
                 }
+              } else if (this.status == 401) {
+                //INVALID API KEY; allow default submission
+                console.log('Please sign up on lob.com to get a valid api key.');
+                cb(null, true);
               } else {
                 data = data && data.body || data;
                 //KNOWN SYSTEM ERROR (e.g., rate limit exceeded, primary line missing)

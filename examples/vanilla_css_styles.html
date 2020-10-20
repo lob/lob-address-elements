@@ -1,127 +1,116 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-    <style>
-        * {
-            box-sizing: border-box;
-            font-family: sans-serif;
-            color:#333333;
-        }
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: sans-serif;
+      color: #333333;
+    }
 
-        input {
-            display: block;
-            font-size: 1.05rem;
-            width: 100%;
-            padding: 10px;
-            border-radius: .25rem;
-            border: solid 1px #8c8c8c;
-            margin-bottom: 0;
-        }
+    input {
+      display: block;
+      font-size: 1.05rem;
+      width: 100%;
+      padding: 10px;
+      border-radius: .25rem;
+      border: solid 1px #8c8c8c;
+      margin: 0;
+    }
 
-        label {
-            display: block;
-            font-size: 1.1rem;
-            margin: 20px 0 5px 0;
-        }
+    label {
+      display: block;
+      font-size: 1.1rem;
+      margin: 20px 0 5px 0;
+    }
 
-        input[type='submit'] {
-            background-color: #0594d8;
-            color: #ffffff;
-            border-color: #ffffff;
-            font-size: 1.1rem;
-            margin-top: 10px;
-            width: 100px;
-        }
+    input[type='submit'] {
+      background-color: #0594d8;
+      color: #ffffff;
+      border-color: #ffffff;
+      font-size: 1.1rem;
+      margin-top: 10px;
+      width: 100px;
+    }
 
-        .validation_error_message {
-            display:none;
-            padding:12px;
-            font-size:1.2em;
-            background-color:lightyellow;
-            border-radius: .25rem;
-            margin-bottom:20px;
-        }
+    .lob-verify-message {
+      padding: 12px;
+      font-size: 1.2em;
+      background-color: lightyellow;
+      border-radius: .25rem;
+      margin-bottom: 20px;
+    }
 
-        .algolia-autocomplete {
-            width: 100%;
-        }
+    .algolia-autocomplete {
+      width: 100%; /* unnecessary for inline-block inputs */
+    }
 
-        .algolia-autocomplete .aa-dropdown-menu {
-            width: 100%;
-            border: 1px solid #a8a8a8;
-            border-top: 0;
-            background-color: #fefefe;
-            overflow: hidden;
-            border-radius: 0 0 .25rem .25rem;
-            margin-top:-5px;
-        }
+    .algolia-autocomplete .aa-dropdown-menu {
+      width: 100%;
+      border: 1px solid #a8a8a8;
+      border-top: 0;
+      background-color: #fefefe;
+      overflow: hidden;
+      border-radius: 0 0 .25rem .25rem;
+      margin-top: -5px;
+    }
 
-        .algolia-autocomplete .aa-suggestion {
-            cursor: pointer;
-            padding: 12px;
-            color: #666666;
-        }
+    .algolia-autocomplete .aa-suggestion {
+      cursor: pointer;
+      padding: 12px;
+      color: #666666;
+    }
 
-        .algolia-autocomplete .aa-suggestion:hover,
-        .algolia-autocomplete .aa-suggestion:active,
-        .algolia-autocomplete .aa-suggestion.aa-cursor {
-            color: #0594d8;
-            background-color: #eeeeee;
-        }
+    .algolia-autocomplete .aa-suggestion:hover,
+    .algolia-autocomplete .aa-suggestion:active,
+    .algolia-autocomplete .aa-suggestion.aa-cursor {
+      color: #0594d8;
+      background-color: #eeeeee;
+    }
 
-        .algolia-autocomplete .aa-suggestion div {
-            white-space: nowrap !important;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+    .algolia-autocomplete .aa-suggestion div {
+      white-space: nowrap !important;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
-        .algolia-autocomplete .aa-suggestion span {
-            font-size: .8em;
-        }
-    </style>
+    .algolia-autocomplete .aa-suggestion span {
+      font-size: .8em;
+    }
+  </style>
 </head>
-
-<!--
-
-    THIS EXAMPLE STYLES THE LIST OF ADDRESS SUGGESTIONS USING CSS. REVIEW THE MARKUP FOR THE STREET 1 
-    INPUT FOR USAGE DETAILS. THE KEY ATTRIBUTE IS 'data-lob-suggestion-stylesheet'. THIS LETS THE SYSTEM
-    KNOW THAT THE USER WILL BE PROVVIDING THEIR OWN STYLESHEET FOR THE DROPDOWN. 
-
-    REVIEW THE STYLES ABOVE TO BETTER UNDERSTAND WHAT CAN BE CUSTOMIZED.
-
--->
 <body>
-    <h1>Lob Address Autocompletion</h1>
-    <form action="/api/v1/add-address" 
-        data-lob-verify="warn" 
-        data-lob-key="live_pub_xxxxxxxxxxxxxx">
-        <div class="validation_error_message" data-lob-verify-message></div>
-        <div>
-            <label for="street1">Street 1</label>
-            <input id="street1" data-lob-primary data-lob-suggestion-stylesheet>
-            <small data-lob-primary-message></small>
-        </div>
-        <div>
-            <label for="street2">Street 2</label>
-            <input id="street2" data-lob-secondary>
-            <small data-lob-secondary-message></small>
-        </div>
-        <div>
-            <label for="city">City</label>
-            <input id="city" data-lob-city>
-        </div>
-        <div>
-            <label for="state">State</label>
-            <input id="state" data-lob-state>
-        </div>
-        <div>
-            <label for="zip">Zip</label>
-            <input id="zip" data-lob-zip>
-        </div>
-        <input type="submit" value="Submit">
-    </form>
-    <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"></script>
+  <form action="/api/v1/add-address">
+    <div>
+      <label for="address1">Address 1</label>
+      <input id="address1">
+    </div>
+    <div>
+      <label for="address2">Address 2</label>
+      <input id="address2">
+    </div>
+    <div>
+      <label for="city">City</label>
+      <input id="city">
+    </div>
+    <div>
+      <label for="state">State</label>
+      <input id="state">
+    </div>
+    <div>
+      <label for="zip">Zip</label>
+      <input id="zip">
+    </div>
+    <input type="submit" value="Submit">
+  </form>
+  <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js" 
+    data-lob-key="live_pub_xxx"
+    data-lob-suggestion-stylesheet="false" 
+    data-lob-verify-value="strict" 
+    data-lob-primary-id="address1"
+    data-lob-secondary-id="address2" 
+    data-lob-city-id="city" 
+    data-lob-state-id="state" 
+    data-lob-zip-id="zip"></script>
 </body>
-
 </html>

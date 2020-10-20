@@ -122,6 +122,20 @@ describe('Address Elements', function () {
 
     describe('#US Verification', function () {
 
+        it('should submit the form if Lob returns a 401 Invalid Key', function() {
+          var xhr_config = { status: 401, responseText: JSON.stringify(APIMock.e401) };
+          global.XMLHttpRequest = XHRMock(xhr_config);
+          LobAddressElements.elements.primary.val('185 Berry St Ste 6100');
+          LobAddressElements.elements.secondary.val('');
+          LobAddressElements.elements.city.val('San Francisco');
+          LobAddressElements.elements.state.val('CA');
+          LobAddressElements.elements.zip.val('94107-1741');
+          LobAddressElements.do.verify(function (err, success) {
+            assert.equal(err, null);
+            assert.equal(success, true);
+          });
+        });
+
         it('should immediately submit a deliverable address requiring no fixes', function () {
             var xhr_config = { responseText: JSON.stringify(APIMock.deliverable) };
             global.XMLHttpRequest = XHRMock(xhr_config);
