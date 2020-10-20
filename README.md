@@ -16,41 +16,41 @@ The Lob Address Elements library simplifies client side integration of Lob's *US
 - [Releases](#releases)
 
 ## Registration
-Create an account at [Lob.com](https://dashboard.lob.com/#/register) to obtain a **Live API Key**. You'll find the key on the [Lob Settings Panel](https://dashboard.lob.com/#/settings).
+Create an account at [Lob.com](https://dashboard.lob.com/#/register) to obtain a **Live API Key**. The public key is available on the [Lob Settings Panel](https://dashboard.lob.com/#/settings).
 
 ## Usage
-Address Elements works by targeting address-related form elements and enriching their behavior. Start with a standard HTML form that collects a US address.
+Address Elements works by targeting address-related form elements and enriching their behavior. Start with a standard HTML form for collecting a US address.
 ```
 <!DOCTYPE html>
 <html>
 <body>
   <form action="/api/v1/add-address">
-      <div>
-          <label for="address1">Address 1</label>
-          <input id="address1">
-      </div>
-      <div>
-          <label for="address2">Address 2</label>
-          <input id="address2">
-      </div>
-      <div>
-          <label for="city">City</label>
-          <input id="city">
-      </div>
-      <div>
-          <label for="state">State</label>
-          <input id="state">
-      </div>
-      <div>
-          <label for="zip">Zip</label>
-          <input id="zip">
-      </div>
-      <input type="submit" value="Submit">
+    <div>
+      <label for="address1">Address 1</label>
+      <input id="address1">
+    </div>
+    <div>
+      <label for="address2">Address 2</label>
+      <input id="address2">
+    </div>
+    <div>
+      <label for="city">City</label>
+      <input id="city">
+    </div>
+    <div>
+      <label for="state">State</label>
+      <input id="state">
+    </div>
+    <div>
+      <label for="zip">Zip</label>
+      <input id="zip">
+    </div>
+    <input type="submit" value="Submit">
   </form>
 </body>
 </html>
 ```
-Embed the Lob Address Elements library immediately before the closing &lt;body&gt; tag. For your convenience, Lob hosts a minified version at `https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js`. Configure and customize using the `data.lob.*` attribute pattern.
+Embed the Lob Address Elements library immediately before the closing &lt;body&gt; tag. Configure and customize using the `data.lob.*` attribute pattern. For your convenience, Lob hosts a minified version at `cdn.lob.com`. 
 ```
 <!DOCTYPE html>
 <html>
@@ -128,7 +128,7 @@ E-commerce platforms like Shopify use predictable element names making them easy
 *NOTE: This example uses `strict` as the verification level, but you may choose `normal`, or `relaxed` depending upon your Shopify use case.*
 
 ## Component Styles
-When address verification is enabled, Lob will inject an HTML element into the target form in order to communicate form-level error messages. Similarly, when address autocompletion is enabled, Lob will inject an HTML element to contain suggested addresses. In both cases, the color and style of these HTML elements can be updated using one of two approaches. 
+When address verification is enabled, Lob will inject an HTML element into the target form in order to communicate form-level error messages. Similarly, when address autocompletion is enabled, Lob will inject an HTML element to contain suggested addresses. In both cases, it is possible to configure the color and style for these HTML elements using one of two approaches. 
 
 ### In-line Configuration
 In-line configuration uses attribute values to configure element colors. Hex, RGB and named color formats are supported.
@@ -190,9 +190,9 @@ In-line configuration uses attribute values to configure element colors. Hex, RG
 
 ### Stylesheet Declarations
 
-When using a custom stylesheet, it is your responsibility to define element styles. It is more complex than in-line declarations but gives full control over element styles. The example includes all necessary CSS classes and includes the default border, color, font, and layout options used by Lob. 
+The stylesheet declaration is more complex to implement but gives full control over element styles. All necessary CSS classes have been provided in the example below. Override each class as necessary for full customization.
 
-When authoring a custom stylesheet, the Lob default stylesheet should be suppressed using the `data-lob-suggestion-stylesheet` attribute (also shown in the example below).
+When authoring a custom stylesheet, Lob's default stylesheet should be suppressed using the `data-lob-suggestion-stylesheet` attribute (also shown in the example below).
 
 ```
 <!DOCTYPE html>
@@ -302,7 +302,7 @@ When authoring a custom stylesheet, the Lob default stylesheet should be suppres
   </form>
   <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx"
-    data-lob-suggestion-stylesheet
+    data-lob-suggestion-stylesheet="false"
     data-lob-verify-value="strict"
     data-lob-primary-id="address1"
     data-lob-secondary-id="address2"
@@ -313,16 +313,16 @@ When authoring a custom stylesheet, the Lob default stylesheet should be suppres
 </html>
 ```
 
-| Attribute Name                 | Attribute Value(s)  | Description         |
-| :---                              |  :---                 |   :---              |
-| data-lob-suggestion-stylesheet | N/A                 | Use this flag to stop the Address Elements library from loading its default stylesheet. You will be responsible for all styles and colors using a stylesheet under your control.    |
+| Attribute Name         | Attribute Value(s)  | Description         |
+| :---                   |  :---                 |   :---              |
+| data-lob-suggestion-stylesheet | `false`       | Use this flag to stop the Address Elements library from loading its default stylesheet.   |
 
 
 # Init
-By default, Address Elements continually monitors changes to the HTML DOM, looking for address-related fields to enrich. This behavior is available for all evergreen browsers and IE11+. If you anticipate needing support for IE9/10, call `LobAddressElements.do.init()` to manually trigger a page scan and initialize address-related fields.
+Address Elements continually monitors changes to the HTML DOM, looking for address-related fields to enrich. This behavior is available in all evergreen browsers and IE11+. If you anticipate needing support for IE9/10, call `LobAddressElements.do.init()` to manually trigger a page scan and initialize address-related fields.
 
 # Localization
-Verification messages can be localized and customized. Update target messages using the pattern, `data-lob-err-*`. For example:
+Verification error messages can be localized and customized. Use the pattern, `data-lob-err-*`.
 
 ```
 <!DOCTYPE html>
@@ -375,9 +375,7 @@ Verification messages can be localized and customized. Update target messages us
 
 ## Examples
 
-We've provided various examples for you to try out [here](https://github.com/lob/lob-address-elements/tree/master/examples).
-
-These represent a range of HTML forms and environments you may find similar to your own. Review each for relevant examples for how to use and configure Address Elements.
+This repo includes several [example](https://github.com/lob/lob-address-elements/tree/master/examples) implementations. These represent a range of HTML forms and environments that may be similar to your own.
 
 ## Contributing
 
@@ -396,13 +394,13 @@ npm run build 1.1.0
 
 ## Releases
 
-Minified builds are available [here](https://github.com/lob/lob-address-elements/tree/master/lib) and map to the build numbers listed below.
+[Minified builds](https://github.com/lob/lob-address-elements/tree/master/lib) map to the releases listed below.
 
 ### 1.1.0 (CURRENT / LATEST)
 | Release Notes |
 | :---          |
 | Target HTML elements are enriched in real time as soon as they appear in the DOM. |
-| Target HTML elements are indentifiable using a flexible addressing scheme. This includes element IDs, element names, and data attributes. |
+| Target HTML elements are indentifiable using a flexible addressing scheme. This includes element IDs, element names, and in-line data attributes. |
 | An HTML element for displaying form-level errors is now optional and will be added to the DOM when missing from the target form. |
 | Form verification error messages can be localized using HTML attributes. Previous versions required a JSON configuration object. |
 | [Fix] The address suggestion list is now positioned correctly on-screen when the target HTML input elements use the `inline` display style.  |
