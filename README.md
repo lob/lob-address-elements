@@ -16,7 +16,7 @@ The Lob Address Elements library simplifies client side integration of Lob's *US
 - [Releases](#releases)
 
 ## Registration
-Create an account at [Lob.com](https://dashboard.lob.com/#/register) to obtain a **Live Public API Key**. The key is available on the [Lob Settings Panel](https://dashboard.lob.com/#/settings). It uses the format `live_pub_xxx`.
+Create an account at [Lob.com](https://dashboard.lob.com/#/register) to obtain a **Live Public API Key**. The key is available in the [Lob Settings Panel](https://dashboard.lob.com/#/settings) and uses the format `live_pub_*xxx*`.
 
 ## Usage
 Address Elements works by targeting address-related form elements and enriching their behavior. Start with a standard HTML form for collecting a US address.
@@ -95,7 +95,7 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
 | Attribute Name    | Attribute Value(s)   | Description      |
 | :---          |  :---                 |   :---              |
 | data-lob-key          | `<lob key>`           | Include your Lob live public key as the attribute value. It will use the format `live_pub_*` and is available via the [Lob Dashboard](https://dashboard.lob.com/#/settings).        |
-| data-lob-verify-value           | `strict`, `normal`, `relaxed`, `passthrough`          | Include this attribute to pre-verify the user's address submission with Lob.  Choose `relaxed` as the attribute value, if you wish to allow users to submit an errant form once they have been warned. Their resubmission of an unchanged form will be used to indicate their preference to override and submit. Choose `normal` (the default) to halt any submissions that Lob deems undeliverable, while still allowing all other inconsistencies to be submitted once the user has confirmed their choice. Choose `strict` to halt any submission that does not pass verification, including minor errors like missing or unnecessary units. Finally, if you wish to verify an address and then submit regardless of the verification result, choose `passthrough`. This is useful for stateful forms that support repeated submissions. |
+| data-lob-verify-value           | `strict`, `normal`, `relaxed`, `passthrough`, `false`         | Include this attribute to pre-verify the user's address submission with Lob.  Choose `relaxed` as the attribute value, if you wish to allow users to submit an errant form once they have been warned. Their resubmission of an unchanged form will be used to indicate their preference to override and submit. Choose `normal` (the default) to halt any submissions that Lob deems undeliverable, while still allowing all other inconsistencies to be submitted once the user has confirmed their choice. Choose `strict` to halt any submission that does not pass verification, including minor errors like missing or unnecessary units. If you wish to verify an address and then submit regardless of the verification result, choose `passthrough`. This is useful for stateful forms that support repeated submissions. Enter `false` if you plan to use Address elements for autocompletion but **not** for verification. |
 | data-lob-primary-value          | `false`      | This is an optional attribute. Set to `false` to disable address autocompletion and only use address verification.        |
 | data-lob-primary-id          | `<field id>`      | This attribute identifies the primary address field. Set it to the ID for the field to target.         |
 | data-lob-secondary-value          | `false`      | This is an optional attribute. Set to `false` to force the suite or unit number to render on the primary address line during address verification.         |
@@ -113,7 +113,7 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
 E-commerce platforms like Shopify use predictable element names making them easy to extend. Paste the following preconfigured script into your top-level Shopify Plus template to add address verification to your checkout form. *Remember to replace `live_pub_xxx` with your Lob public key.*
 
 ```
-<script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
+<script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.merged.js"
   data-lob-key="live_pub_xxx"
   data-lob-verify-value="strict"
   data-lob-primary-value="false"
@@ -125,7 +125,7 @@ E-commerce platforms like Shopify use predictable element names making them easy
   data-lob-err-bgcolor="#006eff"
   data-lob-err-color="#ffffff"></script>
 ```
-*NOTE: This example above uses `strict` as the verification level, but you may choose `normal`, or `relaxed` depending upon your Shopify use case.*
+*NOTE: Many E-commerce platforms have strict content security policies that prevent scripts from loading additional content. Embed the `merged` build of Address Elements to handle these situations as shown in the example above (lob-address-elements.min.merged.js). This ensures all dependencies are included in the download.*
 
 ## Component Styles
 When *address verification* is enabled, Lob will inject an HTML element into the target form in order to communicate form-level error messages. Similarly, when *address autocompletion* is enabled, Lob will inject an HTML element to contain suggested addresses. 

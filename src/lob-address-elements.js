@@ -61,7 +61,7 @@
     }
 
     function resolveStrictness(cfg) {
-      var values = ['strict', 'normal', 'relaxed', 'passthrough'];
+      var values = ['false', 'strict', 'normal', 'relaxed', 'passthrough'];
       if (cfg && values.indexOf(cfg) > -1) {
         return cfg;
       } else {
@@ -97,7 +97,7 @@
       var strictness = resolveStrictness(cfg.strictness);
       var create_message = findValue('verify-message') === 'true' || (findForm('primary').length && !findElm('verify-message').length);
       var autocomplete = primary.length && findValue('primary') !== 'false';
-      var verify = findForm('primary').length && (strictness === 'passthrough' || findElm('verify-message').length || create_message);
+      var verify = strictness !== 'false' && findForm('primary').length && (strictness === 'passthrough' || findElm('verify-message').length || create_message);
       return {
         autocomplete: autocomplete,
         verify: verify,
