@@ -14,7 +14,7 @@
    */
   function LobAddressElements($, cfg) {
 
-    var stylesheet_configured = false;
+    var autocompletion_configured = false;
     var verification_configured = false;
 
     /**
@@ -151,7 +151,7 @@
         api_key: cfg.api_key || findValue('key'),
         strictness: state.strictness,
         denormalize: findValue('secondary') !== 'false',
-        user_stylesheet: resolveStyleStrategy(cfg.stylesheet),
+        suppress_stylesheet: resolveStyleStrategy(cfg.stylesheet),
         styles: cfg.styles || {
           'err-color': '#117ab8',
           'err-bgcolor': '#eeeeee',
@@ -203,18 +203,15 @@
       }
 
       /**
-       * Configure address autocompletion
+       * Injects styles, behaviors and fields necessary for address autocompletion
        */
       function configureAutocompletion() {
 
         /**
          * Inject the CSS for styling the dropdown if not overridden by user
          */
-        if (!config.user_stylesheet && !stylesheet_configured) {
-          stylesheet_configured = true;
-          $(window).resize(function () {
-            //$(".algolia-autocomplete").width(config.elements.primary.outerWidth());
-          });
+        if (!config.suppress_stylesheet && !autocompletion_configured) {
+          autocompletion_configured = true;
           $('<style>')
             .prop('type', 'text/css')
             .html('\
@@ -330,7 +327,7 @@
       }
 
       /**
-       * Configure pre-submission address verification
+       * Injects styles, behaviors and fields necessary for address verification
        */
       function configureVerification() {
 
