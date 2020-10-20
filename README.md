@@ -50,7 +50,7 @@ Address Elements works by targeting address-related form elements and enriching 
 </body>
 </html>
 ```
-Embed the Lob Address Elements library immediately before the closing &lt;body&gt; tag. For your convenience, Lob hosts a minified version of the library at `https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js`. Notice how important elements (those used for collecting the address) are identified using the `data.lob.*` attribute pattern.
+Embed the Lob Address Elements library immediately before the closing &lt;body&gt; tag. For your convenience, Lob hosts a minified version at `https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js`. Configure and customize using the `data.lob.*` attribute pattern.
 ```
 <!DOCTYPE html>
 <html>
@@ -110,7 +110,7 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
 | data-lob-zip-message-id       | `<field id>`         | This optional attribute identifies the field-level error message for the zip input. Only include this attribute if the zip input has an associated error message. Lob will update the text content for this element and toggle its display.           |
 
 ## Preconfigured Usage
-E-commerce platforms like Shopify use predictable element names making them easy to extend using Address Elements. Paste the following script into your top-level Shopify Plus template to add advanced address verifiation to your checkout form. *Remember to replace `live_pub_xxx` with your Lob public key.*
+E-commerce platforms like Shopify use predictable element names making them easy to extend. Paste the following preconfigured script into your top-level Shopify Plus template to add address verification to your checkout form. *Remember to replace `live_pub_xxx` with your Lob public key.*
 
 ```
 <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
@@ -128,12 +128,10 @@ E-commerce platforms like Shopify use predictable element names making them easy
 *NOTE: This example uses `strict` as the verification level, but you may choose `normal`, or `relaxed` depending upon your Shopify use case.*
 
 ## Component Styles
-If you choose to enable address verification, Lob will inject an HTML element into the target form in order to share form-level error messages with the end user. Similarly, if you choose to enable address autocompletion, Lob will inject an HTML element to contain the list of suggestions. In both cases, you may customize the color and style of the HTML elements using one of two approaches. 
+When address verification is enabled, Lob will inject an HTML element into the target form in order to communicate form-level error messages. Similarly, when address autocompletion is enabled, Lob will inject an HTML element to contain suggested addresses. In both cases, the color and style of these HTML elements can be updated using one of two approaches. 
 
-### In-line Declarations
-In this example, the colors are declared in-ine, which means
-the address elements library will automatically inject a stylesheet with all CSS styles necessary to style the suggestion list. 
-Hex, RGB and named color values are supported when declaring styles in-line.
+### In-line Configuration
+In-line configuration uses attribute values to configure element colors. Hex, RGB and named color formats are supported.
 
 ```
 <!DOCTYPE html>
@@ -192,7 +190,9 @@ Hex, RGB and named color values are supported when declaring styles in-line.
 
 ### Stylesheet Declarations
 
-In this example, all styles for the address suggestion list are declared using a CSS stylesheet. When using this approach, it is useful to also include the `data-lob-suggestion-stylesheet` attribute to stop the Address Elements library from loading its default stylesheet.
+When using a custom stylesheet, it is your responsibility to define element styles. It is more complex than in-line declarations but gives full control over element styles. The example includes all necessary CSS classes and includes the default border, color, font, and layout options used by Lob. 
+
+When authoring a custom stylesheet, the Lob default stylesheet should be suppressed using the `data-lob-suggestion-stylesheet` attribute (also shown in the example below).
 
 ```
 <!DOCTYPE html>
@@ -401,9 +401,10 @@ Minified builds are available [here](https://github.com/lob/lob-address-elements
 ### 1.1.0 (CURRENT / LATEST)
 | Release Notes |
 | :---          |
-| [Feature] Target HTML elements are continuously enriched in real time as soon as they they appear in the DOM. |
-| [Feature] Target HTML elements can now be indentified using a flexible addressing scheme. This includes element IDs, element names, and data attributes. |
-| [Feature] An HTML element for displaying form-level errors is now optional and will be added to the DOM when missing from the target form. |
+| Target HTML elements are enriched in real time as soon as they appear in the DOM. |
+| Target HTML elements are indentifiable using a flexible addressing scheme. This includes element IDs, element names, and data attributes. |
+| An HTML element for displaying form-level errors is now optional and will be added to the DOM when missing from the target form. |
+| Form verification error messages can be localized using HTML attributes. Previous versions required a JSON configuration object. |
 | [Fix] The address suggestion list is now positioned correctly on-screen when the target HTML input elements use the `inline` display style.  |
 
 ### 1.0.0 / 0.1.0 (beta)
