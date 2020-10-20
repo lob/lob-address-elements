@@ -50,7 +50,7 @@ Address Elements works by targeting address-related form elements and enriching 
 </body>
 </html>
 ```
-Embed the Lob Address Elements library immediately before the closing &lt;body&gt; tag. Configure and customize using the `data.lob.*` attribute pattern. For your convenience, Lob hosts a minified version at `cdn.lob.com`. 
+Embed the Lob Address Elements library immediately before the closing &lt;body&gt; tag. Configure and customize using the `data-lob-*` attribute pattern. For your convenience, Lob hosts a minified version at `cdn.lob.com`. 
 ```
 <!DOCTYPE html>
 <html>

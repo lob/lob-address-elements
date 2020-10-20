@@ -15,6 +15,7 @@
   function LobAddressElements($, cfg) {
 
     var stylesheet_configured = false;
+    var verification_configured = false;
 
     /**
      * Returns a jquery element to which to add behavior, locating
@@ -151,7 +152,6 @@
         strictness: state.strictness,
         denormalize: findValue('secondary') !== 'false',
         user_stylesheet: resolveStyleStrategy(cfg.stylesheet),
-        create_message: state.create_message,
         styles: cfg.styles || {
           'err-color': '#117ab8',
           'err-bgcolor': '#eeeeee',
@@ -200,59 +200,6 @@
 
       function resolveInlineStyle(config, type, subtype) {
         return findValue(type + '-' + subtype) || config.styles[type + '-' + subtype];
-      }
-
-      function resolveErrorType(message) {
-        if (message === 'primary_line is required or address is required') {
-          return 'primary_line';
-        } else if (message === 'zip_code is required or both city and state are required') {
-          return 'city_state_zip';
-        } else if (message === 'zip_code must be in a valid zip or zip+4 format') {
-          return 'zip';
-        } else if (message in config.messages) {
-          return message
-        } else {
-          return 'DEFAULT';
-        }
-      }
-
-      /**
-       * jQuery event handlers execute in binding order. This prioritizes the most-recent 
-       * @param {object} jqElm 
-       * @param {*} event_type 
-       */
-      function prioritizeHandler(jqElm, event_type) {
-        var eventList = $._data(jqElm[0], 'events');
-        eventList[event_type].unshift(eventList[event_type].pop());
-      }
-
-      /**
-       * Inject the form Verification Error Message container
-       */
-      if (state.verify && config.create_message) {
-        var message = $('<div class="lob-verify-message"></div>');
-        config.elements.form.prepend(message);
-        config.elements.message = message;
-        $('<style>')
-          .prop('type', 'text/css')
-          .html('\
-            .lob-verify-message {\
-              display: none;\
-              width: 100%;\
-              border-radius: .25rem;\
-              max-width: 100%;\
-              position: relative;\
-              left: 50%;\
-              margin-right: -50%;\
-              transform: translate(-50%, -50%);\
-              text-align: center;\
-              padding: .5rem;\
-              margin-top: 1.5rem;\
-              margin-bottom: 1.5rem;\
-              color: ' + resolveInlineStyle(config, 'err', 'color') + ';\
-              background-color: ' + resolveInlineStyle(config, 'err', 'bgcolor') + ';\
-            }'
-          ).appendTo('head');
       }
 
       /**
@@ -386,6 +333,64 @@
        * Configure pre-submission address verification
        */
       function configureVerification() {
+
+        /**
+         * jQuery event handlers execute in binding order. 
+         * This prioritizes the most-recent (Lob)
+         * @param {object} jqElm 
+         * @param {*} event_type 
+         */
+        function prioritizeHandler(jqElm, event_type) {
+          var eventList = $._data(jqElm[0], 'events');
+          eventList[event_type].unshift(eventList[event_type].pop());
+        }
+
+        function resolveErrorType(message) {
+          if (message === 'primary_line is required or address is required') {
+            return 'primary_line';
+          } else if (message === 'zip_code is required or both city and state are required') {
+            return 'city_state_zip';
+          } else if (message === 'zip_code must be in a valid zip or zip+4 format') {
+            return 'zip';
+          } else if (message in config.messages) {
+            return message
+          } else {
+            return 'DEFAULT';
+          }
+        }
+
+        /**
+         * Inject the form Verification Error Message container
+         */
+        if (state.create_message) {
+          var message = $('<div class="lob-verify-message"></div>');
+          config.elements.form.prepend(message);
+          config.elements.message = message;
+          if (!verification_configured) {
+            verification_configured = true;
+            $('<style>')
+              .prop('type', 'text/css')
+              .html('\
+              .lob-verify-message {\
+                display: none;\
+                width: 100%;\
+                border-radius: .25rem;\
+                max-width: 100%;\
+                position: relative;\
+                left: 50%;\
+                margin-right: -50%;\
+                transform: translate(-50%, -50%);\
+                text-align: center;\
+                padding: .5rem;\
+                margin-top: 1.5rem;\
+                margin-bottom: 1.5rem;\
+                color: ' + resolveInlineStyle(config, 'err', 'color') + ';\
+                background-color: ' + resolveInlineStyle(config, 'err', 'bgcolor') + ';\
+              }'
+              ).appendTo('head');
+            }
+        }
+
         function plus4(components) {
           var parts = [];
           if (components.zip_code) {
