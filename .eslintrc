@@ -7,7 +7,8 @@
     "ecmaVersion": 5
   },
   "rules": {
-    "no-console": 0
+    "no-console": 0,
+    "quotes": [2, "single", {"avoidEscape": true}]
   },
   "env": {
     "browser": true

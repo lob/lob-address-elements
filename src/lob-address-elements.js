@@ -77,13 +77,13 @@
 
     function resolveInputDisplay(config) {
       var display = config.elements.primary.css('display');
-      return display.toLowerCase() === "block" ? "block" : "";
+      return display.toLowerCase() === 'block' ? 'block' : '';
     }
 
     function resolveInputWidth(config) {
       var display = config.elements.primary.css('display');
-      if (display.toLowerCase() === "block") {
-        return "100%";
+      if (display.toLowerCase() === 'block') {
+        return '100%';
       } else {
         return config.elements.primary.css('width') || (config.elements.primary.outerWidth() + 'px');
       }
@@ -114,13 +114,13 @@
     function observeDOM(state) {
       function didChange() {
         var newState = getPageState();
-        if (state === "untouched" && newState.enrich) {
-          state = "enriched";
+        if (state === 'untouched' && newState.enrich) {
+          state = 'enriched';
           setTimeout(function () {
             _LobAddressElements($, cfg, newState);
           }, 0);
-        } else if (state === "enriched" && !newState.enrich) {
-          state = "untouched";
+        } else if (state === 'enriched' && !newState.enrich) {
+          state = 'untouched';
         }
       }
       var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
@@ -400,7 +400,7 @@
           if (components.zip_code_plus_4) {
             parts.push(components.zip_code_plus_4);
           }
-          return parts.length ? parts.join("-") : '';
+          return parts.length ? parts.join('-') : '';
         }
 
         /**
@@ -653,10 +653,10 @@
     var state = getPageState();
 
     if (state.enrich) {
-      observeDOM("enriched");
+      observeDOM('enriched');
       return _LobAddressElements($, cfg, state);
     } else {
-      observeDOM("untouched");
+      observeDOM('untouched');
       return {
         do: {
           init: function () {
