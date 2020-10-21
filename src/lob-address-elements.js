@@ -273,7 +273,7 @@
                   } catch (e) {
                     cb(null);
                   }
-                } else if (this.status == 401) {
+                } else if (this.status === 401) {
                   //INVALID API KEY; allow default submission
                   console.log('Please sign up on lob.com to get a valid api key.');
                   cb(null);
@@ -414,7 +414,7 @@
          */
         function denormalizeParts(data, bSecondary) {
           var sd = data.components.secondary_designator;
-          if (data.secondary_line || config.denormalize === false) {
+          if (data.secondary_line || !config.denormalize) {
             //echo exactly when configured explicitly or structurally required
             return {
               secondary_line: data.secondary_line,
@@ -452,8 +452,8 @@
           }
           for (var p in address) {
             if (address.hasOwnProperty(p)) {
-              if (address[p].toUpperCase() != config.elements[p].val().toUpperCase() &&
-                !(p === 'zip' && config.elements[p].val().length === 5 && address[p].indexOf(config.elements[p].val()) == 0)) {
+              if (address[p].toUpperCase() !== config.elements[p].val().toUpperCase() &&
+                !(p === 'zip' && config.elements[p].val().length === 5 && address[p].indexOf(config.elements[p].val()) === 0)) {
                 didFix = true;
               }
               config.elements[p].val(address[p]);
@@ -516,7 +516,7 @@
         }
 
         /**
-         * Show form- and field-level error messages as cofigured. Verification did NOT succeed.
+         * Show form- and field-level error messages as configured. Verification did NOT succeed.
          * @param {object} err - Verification error object representing a Lob error type
          * @param {string} err.msg - Top-level message to show for the form
          * @param {string} err.type - Specific error type to apply at field level if relevant
@@ -541,17 +541,17 @@
             config.elements.zipMsg.text(msg).show('slow');
           },
           deliverable_missing_unit: function (msg) {
-            (config.denormalize === false &&
+            (!config.denormalize &&
               config.elements.primaryMsg.text(msg).show('slow')) ||
               config.elements.secondaryMsg.text(msg).show('slow');
           },
           deliverable_unnecessary_unit: function (msg) {
-            (config.denormalize === false &&
+            (!config.denormalize &&
               config.elements.primaryMsg.text(msg).show('slow')) ||
               config.elements.secondaryMsg.text(msg).show('slow');
           },
           deliverable_incorrect_unit: function (msg) {
-            (config.denormalize === false &&
+            (!config.denormalize &&
               config.elements.primaryMsg.text(msg).show('slow')) ||
               config.elements.secondaryMsg.text(msg).show('slow');
           }
@@ -591,7 +591,7 @@
                   type = resolveErrorType(data.deliverability);
                   cb({ msg: config.messages[type], type: type });
                 }
-              } else if (this.status == 401) {
+              } else if (this.status === 401) {
                 //INVALID API KEY; allow default submission
                 console.log('Please sign up on lob.com to get a valid api key.');
                 cb(null, true);

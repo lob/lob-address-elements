@@ -16,7 +16,7 @@ The Lob Address Elements library simplifies client side integration of Lob's *US
 - [Releases](#releases)
 
 ## Registration
-Create an account at [Lob.com](https://dashboard.lob.com/#/register) to obtain a **Live Public API Key**. The key is available in the [Lob Settings Panel](https://dashboard.lob.com/#/settings) and uses the format `live_pub_*xxx*`.
+Create an account at [Lob.com](https://dashboard.lob.com/#/register) to obtain a **Live Public API Key**. The key is available in the [Lob Settings Panel](https://dashboard.lob.com/#/settings) and uses the format, `live_pub_*`.
 
 ## Usage
 Address Elements works by targeting address-related form elements and enriching their behavior. Start with a standard HTML form for collecting a US address.
@@ -402,7 +402,7 @@ npm run build 1.1.0
 | Release Notes |
 | :---          |
 | Target HTML elements are enriched in real time as soon as they appear in the DOM. |
-| Target HTML elements are indentifiable using a flexible addressing scheme. This includes element IDs, element names, and in-line data attributes. |
+| Target HTML elements are identifiable using a flexible addressing scheme. This includes element IDs, element names, and in-line data attributes. |
 | An HTML element for displaying form-level errors is now optional and will be added to the DOM when missing from the target form. |
 | Form verification error messages can be localized using HTML attributes. Previous versions required a JSON configuration object. |
 | [Fix] The address suggestion list is now positioned correctly on-screen when the target HTML input elements use the `inline` display style.  |
