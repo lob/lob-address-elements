@@ -1,5 +1,11 @@
 //sample messages (as returned from lob API endpoints)
 var APIMock = module.exports = {
+    e401: {
+      "error": {
+        "message": "Your API key is not valid. Please sign up on lob.com to get a valid api key.",
+        "status_code": 401
+      }
+    },
     deliverable_unnecessary_unit: {
         "id": "us_ver_abc54437bf7d44618c6d",
         "recipient": "",

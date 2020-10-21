@@ -1,9 +1,11 @@
 {
   "scripts": {
     "build": "node ./dev/minify.js",
+    "lint": "eslint .",
     "test": "mocha"
   },
   "devDependencies": {
+    "eslint": "^4.14.0",
     "@node-minify/core": "^5.3.0",
     "@node-minify/uglify-js": "^5.3.0",
     "mocha": "^7.2.0"

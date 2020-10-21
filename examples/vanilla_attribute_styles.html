@@ -57,41 +57,44 @@
 -->
 
 <body>
-    <h1>Lob Address Autocompletion</h1>
-    <form action="/api/v1/add-address" 
-        data-lob-verify="warn"
-        data-lob-key="live_pub_xxxxxxxxxxxxxx">
-        <div class="validation_error_message" data-lob-verify-message></div>
-        <div>
-            <label for="street1">Street 1</label>
-            <input id="street1" 
-                data-lob-primary 
-                data-lob-suggestion-color="#666666"
-                data-lob-suggestion-bgcolor="#fefefe" 
-                data-lob-suggestion-bordercolor="#a8a8a8"
-                data-lob-suggestion-activecolor="#117ab8" 
-                data-lob-suggestion-activebgcolor="#eeeeee">
-        </div>
-        <div>
-            <label for="street2">Street 2</label>
-            <input id="street2" data-lob-secondary>
-            <small data-lob-secondary-message></small>
-        </div>
-        <div>
-            <label for="city">City</label>
-            <input id="city" data-lob-city>
-        </div>
-        <div>
-            <label for="state">State</label>
-            <input id="state" data-lob-state>
-        </div>
-        <div>
-            <label for="zip">Zip</label>
-            <input id="zip" data-lob-zip>
-        </div>
-        <input type="submit" value="Submit">
-    </form>
-    <script src="/lob-address-elements.js"></script>
+  <h1>Lob Address Autocompletion</h1>
+  <form action="/api/v1/add-address" class="col-12">
+    <div class="form-group">
+      <label for="street1">Street 1<span class="required"></span></label>
+      <input id="street1" type="text" class="form-control" data-lob-primary>
+    </div>
+    <div class="form-group">
+      <label for="street2">Street 2<span class="required"></span></label>
+      <input id="street2" type="text" class="form-control" data-lob-secondary>
+    </div>
+    <div class="form-group">
+      <label for="city">City<span class="required"></span></label>
+      <input id="city" type="text" class="form-control" data-lob-city>
+    </div>
+    <div class="form-group">
+      <label for="state">State<span class="required"></span></label>
+      <input id="state" type="text" class="form-control" data-lob-state>
+    </div>
+    <div class="form-group">
+      <label for="zip">Zip<span class="required"></span></label>
+      <input id="zip" type="text" class="form-control" data-lob-zip>
+    </div>
+    <input type="submit" value="Submit" class="btn btn-primary">
+  </form>
+  <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js" 
+    data-lob-key="live_pub_xxx"
+    data-lob-verify-value="normal"
+    data-lob-primary-id="street1"
+    data-lob-secondary-id="street2"
+    data-lob-city-id="city"
+    data-lob-state-id="state"
+    data-lob-zip-id="zip"
+    data-lob-suggestion-color="#666666"
+    data-lob-suggestion-bgcolor="#fefefe" 
+    data-lob-suggestion-bordercolor="#a8a8a8"
+    data-lob-suggestion-activecolor="red" 
+    data-lob-suggestion-activebgcolor="#eeeeee"
+    data-lob-err-bgcolor="#006eff"
+    data-lob-err-color="#ffffff"></script>
 </body>
-
 </html>
