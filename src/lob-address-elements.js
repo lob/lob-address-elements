@@ -162,6 +162,7 @@
           'suggestion-activebgcolor': '#eeeeee'
         },
         elements: cfg.elements || {
+          errorPosition: findValue('err-form-position'),
           form: findForm('primary'),
           message: findElm('verify-message').hide(),
           primary: findElm('primary'),
@@ -365,8 +366,14 @@
          */
         if (state.create_message) {
           var message = $('<div class="lob-verify-message"></div>');
-          config.elements.form.prepend(message);
+
+          if (config.elements.errorPosition === 'after') {
+            config.elements.form.append(message);
+          } else {
+            config.elements.form.prepend(message);
+          }
           config.elements.message = message;
+
           if (!verification_configured) {
             verification_configured = true;
             $('<style>')
