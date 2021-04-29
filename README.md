@@ -399,7 +399,12 @@ npm run build 1.1.0
 
 [Minified builds](https://github.com/lob/lob-address-elements/tree/master/lib) map to the releases listed below.
 
-### 1.1.0 (CURRENT / LATEST)
+### 1.2.0 (CURRENT / LATEST)
+| Release Notes |
+| :---          |
+| Form-level verification error message can be placed before any other element |
+
+### 1.1.0
 | Release Notes |
 | :---          |
 | Target HTML elements are enriched in real time as soon as they appear in the DOM. |
