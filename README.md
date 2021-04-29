@@ -103,7 +103,8 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
 | data-lob-city-id          | `<field id>`      | This attribute identifies the city field. Set it to the ID for the field to target.         |
 | data-lob-state-id          | `<field id>`      | This attribute identifies the state field. Set it to the ID for the field to target.         |
 | data-lob-zip-id          | `<field id>`      | This attribute identifies the zip field. Set it to the ID for the field to target.         |
-| data-lob-err-anchor-id  | `<field id>`  | This optional attribute will place the general error message **before** the element with the id provided. 
+| data-lob-verify-message-anchor-id  | `<field id>`  | This optional attribute will place the general error message **before** the element with the id provided. |
+| data-lob-verify-message-anchor-class  | `<field id>`  | An alternative to `data-lob-verify-message-anchor-id` to search for the target element by class name. |
 | data-lob-primary-message-id  | `<field id>`           | This optional attribute identifies the field-level error message for the primary address input. Only include this attribute if the primary address input has an associated error message. Lob will update the text content for this element and toggle its display. *In the example above, a field-level error message has been added to the primary input field, showing its usage.*       |
 | data-lob-secondary-message-id | `<field id>`          | This optional attribute identifies the field-level error message for the secondary address input. Only include this attribute if the secondary address input has an associated error message. Lob will update the text content for this element and toggle its display.         |
 | data-lob-city-message-id      | `<field id>`         | This optional attribute identifies the field-level error message for the city input. Only include this attribute if the city input has an associated error message. Lob will update the text content for this element and toggle its display.           |
@@ -325,7 +326,7 @@ When authoring a custom stylesheet, Lob's default stylesheet should be suppresse
 Address Elements continually monitors changes to the HTML DOM, looking for address-related fields to enrich. This behavior is available in all evergreen browsers and IE11+. If you anticipate needing support for IE9/10, call `LobAddressElements.do.init()` to manually trigger a page scan and initialize address-related fields.
 
 # Localization
-Verification error messages can be localized and customized. Use the pattern, `data-lob-err-*`. In addition, you can use `data-lob-err-anchor-id` to control the placement of the form-level error.
+Verification error messages can be localized and customized. Use the pattern, `data-lob-err-*`.
 
 ```
 <!DOCTYPE html>
