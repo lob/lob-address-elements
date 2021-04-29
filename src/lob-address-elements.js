@@ -162,7 +162,7 @@
           'suggestion-activebgcolor': '#eeeeee'
         },
         elements: cfg.elements || {
-          errorPosition: findValue('err-form-position'),
+          errorAnchorElement: findElm('err-anchor'),
           form: findForm('primary'),
           message: findElm('verify-message').hide(),
           primary: findElm('primary'),
@@ -367,8 +367,10 @@
         if (state.create_message) {
           var message = $('<div class="lob-verify-message"></div>');
 
-          if (config.elements.errorPosition === 'after') {
-            config.elements.form.append(message);
+          // Determine where to place error message
+          var anchor = config.elements.errorAnchorElement;
+          if (anchor) {
+            message.insertBefore(anchor);
           } else {
             config.elements.form.prepend(message);
           }
