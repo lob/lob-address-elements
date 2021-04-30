@@ -29,8 +29,11 @@
         return $('#' + pid);
       } else {
         var pnm = $('*[data-lob-' + type + '-name]').attr('data-lob-' + type + '-name');
+        var pc = $('*[data-lob-' + type + '-class]').attr('data-lob-' + type + '-class');
         if (pnm) {
           return $('*[name=' + pnm + ']');
+        } else if (pc) {
+          return $('.' + pc);
         } else {
           return $('*[data-lob-' + type + ']');
         }
@@ -162,6 +165,7 @@
           'suggestion-activebgcolor': '#eeeeee'
         },
         elements: cfg.elements || {
+          errorAnchorElement: findElm('verify-message-anchor'),
           form: findForm('primary'),
           message: findElm('verify-message').hide(),
           primary: findElm('primary'),
@@ -365,8 +369,17 @@
          */
         if (state.create_message) {
           var message = $('<div class="lob-verify-message"></div>');
-          config.elements.form.prepend(message);
+
+          // Determine where to place error message
+          var anchor = config.elements.errorAnchorElement;
+
+          if (anchor) {
+            message.insertBefore(anchor);
+          } else {
+            config.elements.form.prepend(message);
+          }
           config.elements.message = message;
+
           if (!verification_configured) {
             verification_configured = true;
             $('<style>')

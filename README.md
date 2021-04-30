@@ -79,7 +79,7 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
     </div>
     <input type="submit" value="Submit">
   </form>
-  <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
+  <script src="https://cdn.lob.com/lob-address-elements/1.2.0/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx" 
     data-lob-verify-value="strict"
     data-lob-primary-id="address1"
@@ -103,6 +103,8 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
 | data-lob-city-id          | `<field id>`      | This attribute identifies the city field. Set it to the ID for the field to target.         |
 | data-lob-state-id          | `<field id>`      | This attribute identifies the state field. Set it to the ID for the field to target.         |
 | data-lob-zip-id          | `<field id>`      | This attribute identifies the zip field. Set it to the ID for the field to target.         |
+| data-lob-verify-message-anchor-id  | `<field id>`  | This optional attribute will place the general error message **before** the element with the id provided. |
+| data-lob-verify-message-anchor-class  | `<field id>`  | An alternative to `data-lob-verify-message-anchor-id` to search for the target element by class name. **Note:** `data-lob-verify-message-anchor-id` will take priority over `data-lob-verify-message-anchor-class` if it is present. |
 | data-lob-primary-message-id  | `<field id>`           | This optional attribute identifies the field-level error message for the primary address input. Only include this attribute if the primary address input has an associated error message. Lob will update the text content for this element and toggle its display. *In the example above, a field-level error message has been added to the primary input field, showing its usage.*       |
 | data-lob-secondary-message-id | `<field id>`          | This optional attribute identifies the field-level error message for the secondary address input. Only include this attribute if the secondary address input has an associated error message. Lob will update the text content for this element and toggle its display.         |
 | data-lob-city-message-id      | `<field id>`         | This optional attribute identifies the field-level error message for the city input. Only include this attribute if the city input has an associated error message. Lob will update the text content for this element and toggle its display.           |
@@ -113,7 +115,7 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
 E-commerce platforms like Shopify use predictable element names making them easy to extend. Paste the following preconfigured script into your top-level Shopify Plus template to add address verification to your checkout form. *Remember to replace `live_pub_xxx` with your Lob public key.*
 
 ```
-<script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.merged.js"
+<script src="https://cdn.lob.com/lob-address-elements/1.2.0/lob-address-elements.min.merged.js"
   data-lob-key="live_pub_xxx"
   data-lob-verify-value="strict"
   data-lob-primary-value="false"
@@ -124,6 +126,20 @@ E-commerce platforms like Shopify use predictable element names making them easy
   data-lob-zip-id="checkout_shipping_address_zip"
   data-lob-err-bgcolor="#006eff"
   data-lob-err-color="#ffffff"></script>
+
+# Here's another example that places the verification message above the submit/continue button at checkout.
+<script src="https://cdn.lob.com/lob-address-elements/1.2.0/lob-address-elements.min.merged.js"
+  data-lob-key="live_pub_xxx"
+  data-lob-verify-value="strict"
+  data-lob-primary-value="false"
+  data-lob-primary-id="checkout_shipping_address_address1"
+  data-lob-secondary-id="checkout_shipping_address_address2"
+  data-lob-city-id="checkout_shipping_address_city"
+  data-lob-state-id="checkout_shipping_address_province"
+  data-lob-zip-id="checkout_shipping_address_zip"
+  data-lob-err-bgcolor="#006eff"
+  data-lob-err-color="#ffffff"
+  data-lob-verify-message-anchor-class="step__footer"></script>
 ```
 *NOTE: Many E-commerce platforms have strict content security policies that prevent scripts from loading additional content. Embed the `merged` build of Address Elements to handle these situations as shown in the example above (lob-address-elements.min.merged.js). This ensures all dependencies are included in the download.*
 
@@ -162,7 +178,7 @@ In-line configuration uses attribute values to configure element colors. Hex, RG
     </div>
     <input type="submit" value="Submit">
   </form>
-  <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
+  <script src="https://cdn.lob.com/lob-address-elements/1.2.0/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx" 
     data-lob-verify-value="strict"
     data-lob-primary-id="address1"
@@ -302,7 +318,7 @@ When authoring a custom stylesheet, Lob's default stylesheet should be suppresse
     </div>
     <input type="submit" value="Submit">
   </form>
-  <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
+  <script src="https://cdn.lob.com/lob-address-elements/1.2.0/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx"
     data-lob-suggestion-stylesheet="false"
     data-lob-verify-value="strict"
@@ -353,7 +369,7 @@ Verification error messages can be localized and customized. Use the pattern, `d
     </div>
     <input type="submit" value="Submit">
   </form>
-  <script src="https://cdn.lob.com/lob-address-elements/1.1.0/lob-address-elements.min.js"
+  <script src="https://cdn.lob.com/lob-address-elements/1.2.0/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx" 
     data-lob-verify-value="strict"
     data-lob-primary-id="address1"
@@ -389,16 +405,21 @@ The minified version of the Address Elements library is available for download f
 
 If you do decide to fork and build your own instance of Address Elements, we have provided build tools for minifying your source. Execute via the CLI 
 
-*NOTE: Replace `1.1.0` with the version number you wish to bind to the minified file name.*
+*NOTE: Replace `1.2.0` with the version number you wish to bind to the minified file name.*
 ```
-npm run build 1.1.0
+npm run build 1.2.0
 ```
 
 ## Releases
 
 [Minified builds](https://github.com/lob/lob-address-elements/tree/master/lib) map to the releases listed below.
 
-### 1.1.0 (CURRENT / LATEST)
+### 1.2.0 (CURRENT / LATEST)
+| Release Notes |
+| :---          |
+| Adds ability to place verification error message next to any given component |
+
+### 1.1.0
 | Release Notes |
 | :---          |
 | Target HTML elements are enriched in real time as soon as they appear in the DOM. |
