@@ -373,7 +373,7 @@
           // Determine where to place error message
           var anchor = config.elements.errorAnchorElement;
 
-          if (anchor) {
+          if (anchor.length) {
             message.insertBefore(anchor);
           } else {
             config.elements.form.prepend(message);
