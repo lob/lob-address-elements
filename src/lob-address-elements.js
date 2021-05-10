@@ -426,7 +426,7 @@
          * @param {boolean} bSecondary - user typed in the secondary field?
          */
         function denormalizeParts(data, bSecondary) {
-          var sd = data.components.secondary_designator;
+          var sd = data.components && data.components.secondary_designator || '';
           if (data.secondary_line || !config.denormalize) {
             //echo exactly when configured explicitly or structurally required
             return {
@@ -465,8 +465,10 @@
           }
           for (var p in address) {
             if (address.hasOwnProperty(p)) {
-              if (address[p].toUpperCase() !== config.elements[p].val().toUpperCase() &&
-                !(p === 'zip' && config.elements[p].val().length === 5 && address[p].indexOf(config.elements[p].val()) === 0)) {
+              var formInput = config.elements[p].val();
+              var dataDoesNotMatchFormInput = address[p].toUpperCase() !== formInput.toUpperCase();
+              if (dataDoesNotMatchFormInput &&
+                !(p === 'zip' && formInput.length === 5 && address[p].indexOf(formInput) === 0)) {
                 didFix = true;
               }
               config.elements[p].val(address[p]);
@@ -528,6 +530,26 @@
           config.elements.zipMsg.hide();
         }
 
+        String.prototype.format = function() {
+          var a = this;
+          for (var k in arguments) {
+            a = a.replace("{" + k + "}", arguments[k])
+          }
+          return a;
+        }
+
+        function createStandardizationMessage(payload) {
+          const info = config.messages.confirm;
+          const originalAddress = "{0} {1}, {2}, {3} {4}".format(
+            payload.primary_line,
+            payload.secondary_line,
+            payload.city,
+            payload.state,
+            payload.zip_code
+          );
+          return "<span style=\"cursor: pointer\">{0} Click here to revert to your original address: {1}</span>".format(info, originalAddress);
+        }
+
         /**
          * Show form- and field-level error messages as configured. Verification did NOT succeed.
          * @param {object} err - Verification error object representing a Lob error type
@@ -536,7 +558,12 @@
          */
         config.do.message = function (err) {
           if (err) {
-            config.elements.message.text(err.msg).show('slow');
+            // Confirmation error message uses html to give users the ability to revert standardization
+            if (err.type === 'confirm') {
+              config.elements.message.html(err.msg).show('slow');
+            } else {
+              config.elements.message.text(err.msg).show('slow');              
+            }
             messageTypes[err.type] && messageTypes[err.type](config.messages[err.type]);
           }
         }
@@ -578,6 +605,15 @@
         config.do.verify = function (cb) {
           config.submit = config.strictness === 'passthrough';
           config.confirmed = isConfirmation();
+
+          var payload = {
+            primary_line: config.elements.primary.val(),
+            secondary_line: config.elements.secondary.val(),
+            city: config.elements.city.val(),
+            state: config.elements.state.val(),
+            zip_code: config.elements.zip.val()
+          };
+
           var xhr = new XMLHttpRequest();
           xhr.open('POST', config.apis.verify, true);
           xhr.setRequestHeader('Content-Type', 'application/json');
@@ -598,7 +634,22 @@
                   cb({ msg: config.messages.notify, type: 'notify' });
                 } else if (data.deliverability === 'deliverable') {
                   //IMPROVEMENT (ask user to confirm Lob's improvements)
-                  cb({ msg: config.messages.confirm, type: 'confirm' });
+                  var message = createStandardizationMessage(payload);
+                  config.elements.message.click(function () {
+                    // Mock format from API response
+                    fixAndSave({
+                      primary_line: payload.primary_line,
+                      secondary_line: payload.secondary_line,
+                      components: {
+                        city: payload.city,
+                        state: payload.state,
+                        zip_code: payload.zip_code
+                      }
+                    });
+                    hideMessages();
+                    config.elements.message.off('click');
+                  });
+                  cb({ msg: message, type: 'confirm' });
                 } else {
                   //KNOWN VERIFICATION ERROR (e.g., undeliverable)
                   type = resolveErrorType(data.deliverability);
@@ -616,13 +667,7 @@
               }
             }
           }
-          xhr.send(JSON.stringify({
-            primary_line: config.elements.primary.val(),
-            secondary_line: config.elements.secondary.val(),
-            city: config.elements.city.val(),
-            state: config.elements.state.val(),
-            zip_code: config.elements.zip.val()
-          }));
+          xhr.send(JSON.stringify(payload));
           return false;
         }
 
@@ -630,6 +675,10 @@
           e.stopImmediatePropagation();
           e.preventDefault();
           hideMessages();
+
+          // Remove event handler from previous error message
+          config.elements.message.off('click');
+
           return config.do.verify(function (err, success) {
             if (config.submit) {
               config.do.message(err);
