@@ -1,5 +1,7 @@
 'use strict';
 
+import { parseWebPage } from './form-detection';
+
 (function () {
 
   /**
@@ -639,6 +641,7 @@
               var data = parseJSON(xhr.responseText);
               var type;
               if ((!this.status || this.status === 200) && (!data.statusCode || data.statusCode === 200)) {
+                debugger;
                 data = data && data.body || data;
                 if (isVerified(data, config, this.status)) {
                   //SUCCESS (time for final submit)
@@ -717,7 +720,8 @@
     }
 
     var state = getPageState();
-
+    // Test import functionality
+    parseWebPage();
     if (state.enrich) {
       observeDOM('enriched');
       return _LobAddressElements($, cfg, state);

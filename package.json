@@ -1,13 +1,14 @@
 {
+  "version": "1.3.0",
   "scripts": {
-    "build": "node ./dev/minify.js",
+    "build": "webpack",
     "lint": "eslint .",
     "test": "mocha"
   },
   "devDependencies": {
     "eslint": "^4.14.0",
-    "@node-minify/core": "^5.3.0",
-    "@node-minify/uglify-js": "^5.3.0",
-    "mocha": "^7.2.0"
+    "mocha": "^7.2.0",
+    "webpack": "^5.37.0",
+    "webpack-cli": "^4.7.0"
   }
 }
