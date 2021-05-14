@@ -530,24 +530,26 @@
           config.elements.zipMsg.hide();
         }
 
-        String.prototype.format = function() {
-          var a = this;
-          for (var k in arguments) {
-            a = a.replace("{" + k + "}", arguments[k])
+        function format(template, args) {
+          for (var k in args) {
+            template = template.replace("{" + k + "}", args[k])
           }
-          return a;
+          return template;
         }
 
         function createStandardizationMessage(payload) {
           const info = config.messages.confirm;
-          const originalAddress = "{0} {1}, {2}, {3} {4}".format(
+          const originalAddress = format("{0} {1}, {2}, {3} {4}", [
             payload.primary_line,
             payload.secondary_line,
             payload.city,
             payload.state,
             payload.zip_code
+          ]);
+          return format(
+            "<span style=\"cursor: pointer\">{0} Click here to revert to your original address: {1}</span>",
+            [info, originalAddress]
           );
-          return "<span style=\"cursor: pointer\">{0} Click here to revert to your original address: {1}</span>".format(info, originalAddress);
         }
 
         /**
