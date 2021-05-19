@@ -384,8 +384,7 @@ Verification error messages can be localized and customized. Use the pattern, `d
     data-lob-err-missing-unit="Enter a Suite or Unit."
     data-lob-err-unnecessary-unit="Suite or Unit unnecessary."
     data-lob-err-incorrect-unit="Incorrect Unit. Please confirm."
-    data-lob-err-notify="The address has been standardized."
-    data-lob-err-confirm="The address has been standardized. Please confirm and resubmit."
+    data-lob-err-confirm="Did you mean"
     data-lob-err-default="Unknown Error. The address could not be verified."></script>
 </body>
 </html>

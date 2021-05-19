@@ -187,8 +187,7 @@
           deliverable_missing_unit: findValue('err-missing-unit') || 'Enter a Suite or Unit.',
           deliverable_unnecessary_unit: findValue('err-unnecessary-unit') || 'Suite or Unit unnecessary.',
           deliverable_incorrect_unit: findValue('err-incorrect-unit') || 'Incorrect Unit. Please confirm.',
-          notify: findValue('err-notify') || 'The address has been standardized.',
-          confirm: findValue('err-confirm') || 'The address has been standardized. Please confirm and resubmit.',
+          confirm: findValue('err-confirm') || 'Did you mean',
           DEFAULT: findValue('err-default') || 'Unknown Error. The address could not be verified.'
         },
         apis: cfg.apis || {
@@ -449,32 +448,40 @@
           }
         }
 
-        /**
-         * Called after Lob verifies an address. Improves/updates and caches
-         * @param {object} data - verified address object returned from Lob
-         */
-        function fixAndSave(data) {
-          var didFix;
+        function formatAddressFromResponseData(data) {
           var parts = denormalizeParts(data, !!config.elements.secondary.val());
-          var address = config.address = {
+          return {
             primary: parts.primary_line,
             secondary: parts.secondary_line,
             city: data.components && data.components.city || '',
             state: data.components && data.components.state || '',
             zip: plus4(data.components)
           }
+        }
+
+        /**
+         * Called after Lob verifies an address. Improves/updates and caches. Optionally we can
+         * disable fixing to only check if the address needs improvement.
+         * @param {object} data - verified address object returned from Lob
+         */
+        function fixAndSave(data, fix = true) {
+          var needsImprovement;
+          var address = config.address = formatAddressFromResponseData(data);
           for (var p in address) {
             if (address.hasOwnProperty(p)) {
               var formInput = config.elements[p].val();
               var dataDoesNotMatchFormInput = address[p].toUpperCase() !== formInput.toUpperCase();
               if (dataDoesNotMatchFormInput &&
                 !(p === 'zip' && formInput.length === 5 && address[p].indexOf(formInput) === 0)) {
-                didFix = true;
+                needsImprovement = true;
               }
-              config.elements[p].val(address[p]);
+              
+              if (fix) {
+                config.elements[p].val(address[p]);
+              }
             }
           }
-          return didFix;
+          return needsImprovement;
         }
 
         /**
@@ -503,9 +510,9 @@
          * @param {number} status - HTTP status code
          */
         function isVerified(data, config, status) {
-          var didImprove = fixAndSave(data);
+          var addressNeedsImprovement = fixAndSave(data, false /* fix */);
           return !status ||
-            (data.deliverability === 'deliverable' && !didImprove) ||
+            (data.deliverability === 'deliverable' && !addressNeedsImprovement) ||
             (data.deliverability === 'undeliverable' && config.confirmed && config.strictness === 'relaxed') ||
             (data.deliverability === 'deliverable_missing_unit' && config.confirmed && config.strictness !== 'strict') ||
             (data.deliverability === 'deliverable_unnecessary_unit' && config.confirmed && config.strictness !== 'strict') ||
@@ -537,18 +544,19 @@
           return template;
         }
 
-        function createStandardizationMessage(payload) {
-          const info = config.messages.confirm;
-          const originalAddress = format("{0} {1}, {2}, {3} {4}", [
-            payload.primary_line,
-            payload.secondary_line,
-            payload.city,
-            payload.state,
-            payload.zip_code
+        function createDidYouMeanMessage(data) {
+          const address = formatAddressFromResponseData(data);
+          const info = config.messages.confirm; // Did you mean
+          const modifiedAddress = format("{0} {1} {2} {3} {4}", [
+            address.primary,
+            address.secondary,
+            address.city,
+            address.state,
+            address.zip
           ]);
           return format(
-            "<span style=\"cursor: pointer\">{0} Click here to revert to your original address: {1}</span>",
-            [info, originalAddress]
+            "<span style=\"cursor: pointer\">{0} <span style=\"text-decoration: underline\">{1}</span>?</span>",
+            [info, modifiedAddress]
           );
         }
 
@@ -619,6 +627,7 @@
           var xhr = new XMLHttpRequest();
           xhr.open('POST', config.apis.verify, true);
           xhr.setRequestHeader('Content-Type', 'application/json');
+
           if (config.api_key) {
             xhr.setRequestHeader('Authorization', 'Basic ' + btoa(config.api_key + ':'));
           }
@@ -631,23 +640,13 @@
                 if (isVerified(data, config, this.status)) {
                   //SUCCESS (time for final submit)
                   cb(null, true);
-                } else if (data.deliverability === 'deliverable' && config.strictness === 'passthrough') {
-                  //IMPROVEMENT (notify user of Lob's improvements)
-                  cb({ msg: config.messages.notify, type: 'notify' });
                 } else if (data.deliverability === 'deliverable') {
-                  //IMPROVEMENT (ask user to confirm Lob's improvements)
-                  var message = createStandardizationMessage(payload);
+                  // Address verifired as deliverable but the address needs improvement.
+                  // Prompt user to confirm Lob's improvements)
+                  var message = createDidYouMeanMessage(data);
                   config.elements.message.click(function () {
                     // Mock format from API response
-                    fixAndSave({
-                      primary_line: payload.primary_line,
-                      secondary_line: payload.secondary_line,
-                      components: {
-                        city: payload.city,
-                        state: payload.state,
-                        zip_code: payload.zip_code
-                      }
-                    });
+                    fixAndSave(data);
                     hideMessages();
                     config.elements.message.off('click');
                   });
