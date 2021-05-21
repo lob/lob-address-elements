@@ -187,8 +187,7 @@
           deliverable_missing_unit: findValue('err-missing-unit') || 'Enter a Suite or Unit.',
           deliverable_unnecessary_unit: findValue('err-unnecessary-unit') || 'Suite or Unit unnecessary.',
           deliverable_incorrect_unit: findValue('err-incorrect-unit') || 'Incorrect Unit. Please confirm.',
-          notify: findValue('err-notify') || 'The address has been standardized.',
-          confirm: findValue('err-confirm') || 'The address has been standardized. Please confirm and resubmit.',
+          confirm: findValue('err-confirm') || 'Did you mean',
           DEFAULT: findValue('err-default') || 'Unknown Error. The address could not be verified.'
         },
         apis: cfg.apis || {
@@ -427,7 +426,7 @@
          * @param {boolean} bSecondary - user typed in the secondary field?
          */
         function denormalizeParts(data, bSecondary) {
-          var sd = data.components.secondary_designator;
+          var sd = data.components && data.components.secondary_designator || '';
           if (data.secondary_line || !config.denormalize) {
             //echo exactly when configured explicitly or structurally required
             return {
@@ -450,30 +449,40 @@
           }
         }
 
-        /**
-         * Called after Lob verifies an address. Improves/updates and caches
-         * @param {object} data - verified address object returned from Lob
-         */
-        function fixAndSave(data) {
-          var didFix;
+        function formatAddressFromResponseData(data) {
           var parts = denormalizeParts(data, !!config.elements.secondary.val());
-          var address = config.address = {
+          return {
             primary: parts.primary_line,
             secondary: parts.secondary_line,
             city: data.components && data.components.city || '',
             state: data.components && data.components.state || '',
             zip: plus4(data.components)
           }
+        }
+
+        /**
+         * Called after Lob verifies an address. Improves/updates and caches. Optionally we can
+         * disable fixing to only check if the address needs improvement.
+         * @param {object} data - verified address object returned from Lob
+         */
+        function fixAndSave(data, fix = true) {
+          var needsImprovement;
+          var address = config.address = formatAddressFromResponseData(data);
           for (var p in address) {
             if (address.hasOwnProperty(p)) {
-              if (address[p].toUpperCase() !== config.elements[p].val().toUpperCase() &&
-                !(p === 'zip' && config.elements[p].val().length === 5 && address[p].indexOf(config.elements[p].val()) === 0)) {
-                didFix = true;
+              var formInput = config.elements[p].val();
+              var dataDoesNotMatchFormInput = address[p].toUpperCase() !== formInput.toUpperCase();
+              if (dataDoesNotMatchFormInput &&
+                !(p === 'zip' && formInput.length === 5 && address[p].indexOf(formInput) === 0)) {
+                needsImprovement = true;
               }
-              config.elements[p].val(address[p]);
+              
+              if (fix) {
+                config.elements[p].val(address[p]);
+              }
             }
           }
-          return didFix;
+          return needsImprovement;
         }
 
         /**
@@ -502,9 +511,9 @@
          * @param {number} status - HTTP status code
          */
         function isVerified(data, config, status) {
-          var didImprove = fixAndSave(data);
+          var addressNeedsImprovement = fixAndSave(data, false /* fix */);
           return !status ||
-            (data.deliverability === 'deliverable' && !didImprove) ||
+            (data.deliverability === 'deliverable' && !addressNeedsImprovement) ||
             (data.deliverability === 'undeliverable' && config.confirmed && config.strictness === 'relaxed') ||
             (data.deliverability === 'deliverable_missing_unit' && config.confirmed && config.strictness !== 'strict') ||
             (data.deliverability === 'deliverable_unnecessary_unit' && config.confirmed && config.strictness !== 'strict') ||
@@ -529,6 +538,29 @@
           config.elements.zipMsg.hide();
         }
 
+        function format(template, args) {
+          for (var k in args) {
+            template = template.replace("{" + k + "}", args[k])
+          }
+          return template;
+        }
+
+        function createDidYouMeanMessage(data) {
+          const address = formatAddressFromResponseData(data);
+          const info = config.messages.confirm; // Did you mean
+          const modifiedAddress = format("{0} {1} {2} {3} {4}", [
+            address.primary,
+            address.secondary,
+            address.city,
+            address.state,
+            address.zip
+          ]);
+          return format(
+            "<span style=\"cursor: pointer\">{0} <span style=\"text-decoration: underline\">{1}</span>?</span>",
+            [info, modifiedAddress]
+          );
+        }
+
         /**
          * Show form- and field-level error messages as configured. Verification did NOT succeed.
          * @param {object} err - Verification error object representing a Lob error type
@@ -537,7 +569,12 @@
          */
         config.do.message = function (err) {
           if (err) {
-            config.elements.message.text(err.msg).show('slow');
+            // Confirmation error message uses html to give users the ability to revert standardization
+            if (err.type === 'confirm') {
+              config.elements.message.html(err.msg).show('slow');
+            } else {
+              config.elements.message.text(err.msg).show('slow');              
+            }
             messageTypes[err.type] && messageTypes[err.type](config.messages[err.type]);
           }
         }
@@ -579,10 +616,20 @@
         config.do.verify = function (cb) {
           config.submit = config.strictness === 'passthrough';
           config.confirmed = isConfirmation();
+
+          var payload = {
+            primary_line: config.elements.primary.val(),
+            secondary_line: config.elements.secondary.val(),
+            city: config.elements.city.val(),
+            state: config.elements.state.val(),
+            zip_code: config.elements.zip.val()
+          };
+
           var xhr = new XMLHttpRequest();
           const path = config.apis.verify + '?av_elements_origin=' + window.location.href;
           xhr.open('POST', path, true);
           xhr.setRequestHeader('Content-Type', 'application/json');
+
           if (config.api_key) {
             xhr.setRequestHeader('Authorization', 'Basic ' + btoa(config.api_key + ':'));
           }
@@ -595,12 +642,17 @@
                 if (isVerified(data, config, this.status)) {
                   //SUCCESS (time for final submit)
                   cb(null, true);
-                } else if (data.deliverability === 'deliverable' && config.strictness === 'passthrough') {
-                  //IMPROVEMENT (notify user of Lob's improvements)
-                  cb({ msg: config.messages.notify, type: 'notify' });
                 } else if (data.deliverability === 'deliverable') {
-                  //IMPROVEMENT (ask user to confirm Lob's improvements)
-                  cb({ msg: config.messages.confirm, type: 'confirm' });
+                  // Address verifired as deliverable but the address needs improvement.
+                  // Prompt user to confirm Lob's improvements)
+                  var message = createDidYouMeanMessage(data);
+                  config.elements.message.click(function () {
+                    // Mock format from API response
+                    fixAndSave(data);
+                    hideMessages();
+                    config.elements.message.off('click');
+                  });
+                  cb({ msg: message, type: 'confirm' });
                 } else {
                   //KNOWN VERIFICATION ERROR (e.g., undeliverable)
                   type = resolveErrorType(data.deliverability);
@@ -618,13 +670,7 @@
               }
             }
           }
-          xhr.send(JSON.stringify({
-            primary_line: config.elements.primary.val(),
-            secondary_line: config.elements.secondary.val(),
-            city: config.elements.city.val(),
-            state: config.elements.state.val(),
-            zip_code: config.elements.zip.val()
-          }));
+          xhr.send(JSON.stringify(payload));
           return false;
         }
 
@@ -632,6 +678,10 @@
           e.stopImmediatePropagation();
           e.preventDefault();
           hideMessages();
+
+          // Remove event handler from previous error message
+          config.elements.message.off('click');
+
           return config.do.verify(function (err, success) {
             if (config.submit) {
               config.do.message(err);
