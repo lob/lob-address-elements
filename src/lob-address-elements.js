@@ -263,7 +263,8 @@
         config.do.autocomplete = function (query, cb) {
           if (query.match(/[A-Za-z0-9]/)) {
             var xhr = new XMLHttpRequest();
-            xhr.open('POST', config.apis.autocomplete, true);
+            const path = config.apis.autocomplete + '?av_elements_origin=' + window.location.href;
+            xhr.open('POST', path, true);
             xhr.setRequestHeader('Content-Type', 'application/json');
             if (config.api_key) {
               xhr.setRequestHeader('Authorization', 'Basic ' + btoa(config.api_key + ':'));
@@ -579,7 +580,8 @@
           config.submit = config.strictness === 'passthrough';
           config.confirmed = isConfirmation();
           var xhr = new XMLHttpRequest();
-          xhr.open('POST', config.apis.verify, true);
+          const path = config.apis.verify + '?av_elements_origin=' + window.location.href;
+          xhr.open('POST', path, true);
           xhr.setRequestHeader('Content-Type', 'application/json');
           if (config.api_key) {
             xhr.setRequestHeader('Authorization', 'Basic ' + btoa(config.api_key + ':'));
