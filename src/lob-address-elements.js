@@ -262,7 +262,7 @@
         config.do.autocomplete = function (query, cb) {
           if (query.match(/[A-Za-z0-9]/)) {
             var xhr = new XMLHttpRequest();
-            const path = config.apis.autocomplete + '?av_elements_origin=' + window.location.href;
+            var path = config.apis.autocomplete + '?av_elements_origin=' + window.location.href;
             xhr.open('POST', path, true);
             xhr.setRequestHeader('Content-Type', 'application/json');
             if (config.api_key) {
@@ -465,7 +465,8 @@
          * disable fixing to only check if the address needs improvement.
          * @param {object} data - verified address object returned from Lob
          */
-        function fixAndSave(data, fix = true) {
+        function fixAndSave(data, fix) {
+          fix = typeof fix === "undefined" ? true : fix;
           var needsImprovement;
           var address = config.address = formatAddressFromResponseData(data);
           for (var p in address) {
@@ -546,9 +547,9 @@
         }
 
         function createDidYouMeanMessage(data) {
-          const address = formatAddressFromResponseData(data);
-          const info = config.messages.confirm; // Did you mean
-          const modifiedAddress = format("{0} {1} {2} {3} {4}", [
+          var address = formatAddressFromResponseData(data);
+          var info = config.messages.confirm; // Did you mean
+          var modifiedAddress = format("{0} {1} {2} {3} {4}", [
             address.primary,
             address.secondary,
             address.city,
@@ -626,7 +627,7 @@
           };
 
           var xhr = new XMLHttpRequest();
-          const path = config.apis.verify + '?av_elements_origin=' + window.location.href;
+          var path = config.apis.verify + '?av_elements_origin=' + window.location.href;
           xhr.open('POST', path, true);
           xhr.setRequestHeader('Content-Type', 'application/json');
 
