@@ -1,9 +1,9 @@
 'use strict';
 
-import { parseWebPage } from './form-detection';
+import { parseWebPage } from './form-detection.js';
+import countryCodes from './country-codes.js';
 
 (function () {
-
   /**
    * Enriches a standard HTML form by adding two address-related behaviors to the form:
    * 1) US Address autocompletion
@@ -176,6 +176,8 @@ import { parseWebPage } from './form-detection';
           secondaryMsg: findElm('secondary-message').hide(),
           city: findElm('city'),
           cityMsg: findElm('city-message').hide(),
+          country: findElm('country'),
+          countryMsg: findElm('country-message').hide(),
           state: findElm('state'),
           stateMsg: findElm('state-message').hide(),
           zip: findElm('zip'),
@@ -184,6 +186,7 @@ import { parseWebPage } from './form-detection';
         messages: cfg.messages || {
           primary_line: findValue('err-primary-line') || 'Enter the Primary address.',
           city_state_zip: findValue('err-city-state-zip') || 'Enter City and State (or Zip).',
+          country: findValue('err-country') || 'Enter a country',
           zip: findValue('err-zip') || 'Enter a valid Zip.',
           undeliverable: findValue('err-undeliverable') || 'The address could not be verified.',
           deliverable_missing_unit: findValue('err-missing-unit') || 'Enter a Suite or Unit.',
@@ -193,8 +196,9 @@ import { parseWebPage } from './form-detection';
           DEFAULT: findValue('err-default') || 'Unknown Error. The address could not be verified.'
         },
         apis: cfg.apis || {
-          verify: 'https://api.lob.com/v1/us_verifications',
-          autocomplete: 'https://api.lob.com/v1/us_autocompletions'
+          autocomplete: 'https://api.lob.com/v1/us_autocompletions',
+          intl_verify: 'https://api.lob.com/v1/intl_verifications', 
+          us_verify: 'https://api.lob.com/v1/us_verifications'
         },
         do: {
           init: function () {
@@ -202,6 +206,11 @@ import { parseWebPage } from './form-detection';
           }
         }
       };
+
+      function isInternational() {
+        return config.elements.country
+          && !['United States', 'United States of America', 'US', 'U.S', 'U.S.', 'USA', 'U.S.A', 'U.S.A'].includes(config.elements.country.val());
+      }
 
       function resolveInlineStyle(config, type, subtype) {
         return findValue(type + '-' + subtype) || config.styles[type + '-' + subtype];
@@ -262,6 +271,12 @@ import { parseWebPage } from './form-detection';
          * @param {function} cb - callback
          */
         config.do.autocomplete = function (query, cb) {
+          config.international = isInternational();
+
+          if (config.international) {
+            return false;
+          }
+
           if (query.match(/[A-Za-z0-9]/)) {
             var xhr = new XMLHttpRequest();
             var path = config.apis.autocomplete + '?av_elements_origin=' + window.location.href;
@@ -359,6 +374,8 @@ import { parseWebPage } from './form-detection';
             return 'city_state_zip';
           } else if (message === 'zip_code must be in a valid zip or zip+4 format') {
             return 'zip';
+          } else if (message === 'country is required') {
+            return 'country'
           } else if (message in config.messages) {
             return message
           } else {
@@ -467,8 +484,7 @@ import { parseWebPage } from './form-detection';
          * disable fixing to only check if the address needs improvement.
          * @param {object} data - verified address object returned from Lob
          */
-        function fixAndSave(data, fix) {
-          fix = typeof fix === "undefined" ? true : fix;
+        function fixAndSave(data, fix = true) {
           var needsImprovement;
           var address = config.address = formatAddressFromResponseData(data);
           for (var p in address) {
@@ -617,19 +633,28 @@ import { parseWebPage } from './form-detection';
          * @param {function} cb - process the response (submit the form or show an error message)
          */
         config.do.verify = function (cb) {
+          config.international = isInternational();
           config.submit = config.strictness === 'passthrough';
           config.confirmed = isConfirmation();
 
-          var payload = {
+          const payload = {
             primary_line: config.elements.primary.val(),
             secondary_line: config.elements.secondary.val(),
             city: config.elements.city.val(),
-            state: config.elements.state.val(),
-            zip_code: config.elements.zip.val()
+            state: config.elements.state.val()
           };
 
-          var xhr = new XMLHttpRequest();
-          var path = config.apis.verify + '?av_elements_origin=' + window.location.href;
+          if (config.international) {
+            payload.postal_code = config.elements.zip.val();
+            payload.country = countryCodes[config.elements.country.val().toLowerCase()];
+          } else {
+            payload.zip_code = config.elements.zip.val();
+          }
+
+          const endpoint = config.international ? config.apis.intl_verify : config.apis.us_verify;
+          const path = endpoint + '?av_elements_origin=' + window.location.href;
+
+          const xhr = new XMLHttpRequest();
           xhr.open('POST', path, true);
           xhr.setRequestHeader('Content-Type', 'application/json');
 
@@ -641,7 +666,6 @@ import { parseWebPage } from './form-detection';
               var data = parseJSON(xhr.responseText);
               var type;
               if ((!this.status || this.status === 200) && (!data.statusCode || data.statusCode === 200)) {
-                debugger;
                 data = data && data.body || data;
                 if (isVerified(data, config, this.status)) {
                   //SUCCESS (time for final submit)
@@ -714,6 +738,7 @@ import { parseWebPage } from './form-detection';
       if (state.verify) {
         configureVerification();
       }
+
 
       //bind the state to the global element
       return window.LobAddressElements = config;
