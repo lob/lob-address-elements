@@ -8,6 +8,7 @@ The Lob Address Elements library simplifies client side integration of Lob's *US
 - [Component Styles](#component-styles)
   - [In-line Declarations](#in-line-declarations)
   - [Stylesheet Declarations](#stylesheet-declarations)
+- [International](#international-verification)
 - [Localization](#localization)
 - [Init](#init)
 - [Examples](#examples)
@@ -103,6 +104,7 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
 | data-lob-city-id          | `<field id>`      | This attribute identifies the city field. Set it to the ID for the field to target.         |
 | data-lob-state-id          | `<field id>`      | This attribute identifies the state field. Set it to the ID for the field to target.         |
 | data-lob-zip-id          | `<field id>`      | This attribute identifies the zip field. Set it to the ID for the field to target.         |
+| data-lob-country-id          | `<field id>`      | This attribute identifies the country field. Set it to the ID for the field to target.         |
 | data-lob-verify-message-anchor-id  | `<field id>`  | This optional attribute will place the general error message **before** the element with the id provided. |
 | data-lob-verify-message-anchor-class  | `<field id>`  | An alternative to `data-lob-verify-message-anchor-id` to search for the target element by class name. **Note:** `data-lob-verify-message-anchor-id` will take priority over `data-lob-verify-message-anchor-class` if it is present. |
 | data-lob-primary-message-id  | `<field id>`           | This optional attribute identifies the field-level error message for the primary address input. Only include this attribute if the primary address input has an associated error message. Lob will update the text content for this element and toggle its display. *In the example above, a field-level error message has been added to the primary input field, showing its usage.*       |
@@ -110,6 +112,7 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
 | data-lob-city-message-id      | `<field id>`         | This optional attribute identifies the field-level error message for the city input. Only include this attribute if the city input has an associated error message. Lob will update the text content for this element and toggle its display.           |
 | data-lob-state-message-id     | `<field id>`          | This optional attribute identifies the field-level error message for the state input. Only include this attribute if the state input has an associated error message. Lob will update the text content for this element and toggle its display.           |
 | data-lob-zip-message-id       | `<field id>`         | This optional attribute identifies the field-level error message for the zip input. Only include this attribute if the zip input has an associated error message. Lob will update the text content for this element and toggle its display.           |
+| data-lob-country-message-id       | `<field id>`         | This optional attribute identifies the field-level error message for the country input. Only include this attribute if the country input has an associated error message. Lob will update the text content for this element and toggle its display.           |
 
 ## Preconfigured Usage
 E-commerce platforms like Shopify use predictable element names making them easy to extend. Paste the following preconfigured script into your top-level Shopify Plus template to add address verification to your checkout form. *Remember to replace `live_pub_xxx` with your Lob public key.*
@@ -337,7 +340,12 @@ When authoring a custom stylesheet, Lob's default stylesheet should be suppresse
 
 
 # Init
-Address Elements continually monitors changes to the HTML DOM, looking for address-related fields to enrich. This behavior is available in all evergreen browsers and IE11+. If you anticipate needing support for IE9/10, call `LobAddressElements.do.init()` to manually trigger a page scan and initialize address-related fields.
+Address Elements continually monitors changes to the HTML DOM, looking for address-related fields to enrich. This behavior is available in all evergreen browsers and IE11+.
+
+# International Verification
+Address Elements is capable of verifying international addresses. Simply add the attribute `data-lob-country-id` to enable this feature. When the value of the corresponding country input is outside of the United States, we will automatically use Lob's <a href="https://docs.lob.com/#intl_verifications">international verification endpoint</a>. The same form attributes are used for international verifications despite potentially having different labels than U.S. address forms (e.g. `data-lob-zip-id` is still used for postal code, `data-lob-state-id` for province, etc).
+
+_Note: Autocomplete functionality is disabled for international addresses._
 
 # Localization
 Verification error messages can be localized and customized. Use the pattern, `data-lob-err-*`.
