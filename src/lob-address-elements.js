@@ -208,7 +208,7 @@ import countryCodes from './country-codes.js';
       };
 
       function isInternational() {
-        return config.elements.country
+        return config.elements.country.length
           && !['United States', 'United States of America', 'US', 'U.S', 'U.S.', 'USA', 'U.S.A', 'U.S.A'].includes(config.elements.country.val());
       }
 
@@ -469,14 +469,16 @@ import countryCodes from './country-codes.js';
         }
 
         function formatAddressFromResponseData(data) {
-          var parts = denormalizeParts(data, !!config.elements.secondary.val());
+          const { components } = data;
+          const parts = denormalizeParts(data, !!config.elements.secondary.val());
+
           return {
             primary: parts.primary_line,
             secondary: parts.secondary_line,
-            city: data.components && data.components.city || '',
-            state: data.components && data.components.state || '',
-            zip: plus4(data.components)
-          }
+            city: components && components.city || '',
+            state: components && components.state || '',
+            zip: config.international ? components.postal_code : plus4(components)
+          };
         }
 
         /**
@@ -485,14 +487,16 @@ import countryCodes from './country-codes.js';
          * @param {object} data - verified address object returned from Lob
          */
         function fixAndSave(data, fix = true) {
-          var needsImprovement;
-          var address = config.address = formatAddressFromResponseData(data);
-          for (var p in address) {
+          let needsImprovement = false;
+          const address = config.address = formatAddressFromResponseData(data);
+          for (let p in address) {
             if (address.hasOwnProperty(p)) {
-              var formInput = config.elements[p].val();
-              var dataDoesNotMatchFormInput = address[p].toUpperCase() !== formInput.toUpperCase();
-              if (dataDoesNotMatchFormInput &&
-                !(p === 'zip' && formInput.length === 5 && address[p].indexOf(formInput) === 0)) {
+              const formInput = config.elements[p].val();
+              const dataDoesNotMatchFormInput = address[p].toUpperCase() !== formInput.toUpperCase();
+              // Standard 5-digit zip input is good enough. We don't care if it doesn't match response data's zip with +4
+              const zipMismatch = !(p === 'zip' && formInput.length === 5 && address[p].indexOf(formInput) === 0);
+
+              if (dataDoesNotMatchFormInput && (!config.international && zipMismatch)) {
                 needsImprovement = true;
               }
               
@@ -645,8 +649,10 @@ import countryCodes from './country-codes.js';
           };
 
           if (config.international) {
+            const country = config.elements.country.val().toLowerCase();
+
+            payload.country = country.length === 2 ? country : countryCodes[country];
             payload.postal_code = config.elements.zip.val();
-            payload.country = countryCodes[config.elements.country.val().toLowerCase()];
           } else {
             payload.zip_code = config.elements.zip.val();
           }
