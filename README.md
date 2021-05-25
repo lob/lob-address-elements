@@ -402,11 +402,11 @@ To contribute, please see the [CONTRIBUTING.md](https://github.com/lob/lob-node/
 
 The minified version of the Address Elements library is available for download from the Lob CDN. You do not need to clone the Github repo to use in your Website. 
 
-If you do decide to fork and build your own instance of Address Elements, we have provided build tools for minifying your source. Execute via the CLI 
+If you do decide to fork and build your own instance of Address Elements, we use webpack for minifying your source. Execute via the CLI 
 
-*NOTE: Replace `1.3.0` with the version number you wish to bind to the minified file name.*
+*NOTE: Webpack will bind the minified file name to the the version number in package.json*
 ```
-npm run build 1.3.0
+npm run build
 ```
 
 ## Releases
