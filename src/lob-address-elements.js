@@ -69,7 +69,7 @@
         return cfg;
       } else {
         var attr = findValue('verify');
-        return attr && values.indexOf(attr) > -1 ? attr : 'normal';
+        return attr && values.indexOf(attr) > -1 ? attr : 'relaxed';
       }
     }
 
@@ -187,7 +187,7 @@
           deliverable_missing_unit: findValue('err-missing-unit') || 'Enter a Suite or Unit.',
           deliverable_unnecessary_unit: findValue('err-unnecessary-unit') || 'Suite or Unit unnecessary.',
           deliverable_incorrect_unit: findValue('err-incorrect-unit') || 'Incorrect Unit. Please confirm.',
-          confirm: findValue('err-confirm') || 'Did you mean',
+          confirm: findValue('err-confirm') || 'Did you mean?',
           DEFAULT: findValue('err-default') || 'Unknown Error. The address could not be verified.'
         },
         apis: cfg.apis || {
@@ -548,7 +548,7 @@
 
         function createDidYouMeanMessage(data) {
           var address = formatAddressFromResponseData(data);
-          var info = config.messages.confirm; // Did you mean
+          var info = config.messages.confirm; // Did you mean?
           var modifiedAddress = format("{0} {1} {2} {3} {4}", [
             address.primary,
             address.secondary,
@@ -557,7 +557,7 @@
             address.zip
           ]);
           return format(
-            "<span style=\"cursor: pointer\">{0} <span style=\"text-decoration: underline\">{1}</span>?</span>",
+            "<span style=\"cursor: pointer\">{0} <span style=\"text-decoration: underline\">{1}</span></span>",
             [info, modifiedAddress]
           );
         }
