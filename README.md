@@ -79,7 +79,7 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
     </div>
     <input type="submit" value="Submit">
   </form>
-  <script src="https://cdn.lob.com/lob-address-elements/1.3.0/lob-address-elements.min.js"
+  <script src="https://cdn.lob.com/lob-address-elements/1.3.1/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx" 
     data-lob-verify-value="strict"
     data-lob-primary-id="address1"
@@ -95,7 +95,7 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
 | Attribute Name    | Attribute Value(s)   | Description      |
 | :---          |  :---                 |   :---              |
 | data-lob-key          | `<lob key>`           | Include your Lob live public key as the attribute value. It will use the format `live_pub_*` and is available via the [Lob Dashboard](https://dashboard.lob.com/#/settings).        |
-| data-lob-verify-value           | `strict`, `normal`, `relaxed`, `passthrough`, `false`         | Include this attribute to pre-verify the user's address submission with Lob.  Choose `relaxed` as the attribute value, if you wish to allow users to submit an errant form once they have been warned. Their resubmission of an unchanged form will be used to indicate their preference to override and submit. Choose `normal` (the default) to halt any submissions that Lob deems undeliverable, while still allowing all other inconsistencies to be submitted once the user has confirmed their choice. Choose `strict` to halt any submission that does not pass verification, including minor errors like missing or unnecessary units. If you wish to verify an address and then submit regardless of the verification result, choose `passthrough`. This is useful for stateful forms that support repeated submissions. Enter `false` if you plan to use Address elements for autocompletion but **not** for verification. |
+| data-lob-verify-value           | `strict`, `normal`, `relaxed`, `passthrough`, `false`         | Include this attribute to pre-verify the user's address submission with Lob.  Choose `relaxed` (the default) as the attribute value, if you wish to allow users to submit an errant form once they have been warned. Their resubmission of an unchanged form will be used to indicate their preference to override and submit. Choose `normal` to halt any submissions that Lob deems undeliverable, while still allowing all other inconsistencies to be submitted once the user has confirmed their choice. Choose `strict` to halt any submission that does not pass verification, including minor errors like missing or unnecessary units. If you wish to verify an address and then submit regardless of the verification result, choose `passthrough`. This is useful for stateful forms that support repeated submissions. Enter `false` if you plan to use Address elements for autocompletion but **not** for verification. |
 | data-lob-primary-value          | `false`      | This is an optional attribute. Set to `false` to disable address autocompletion and only use address verification.        |
 | data-lob-primary-id          | `<field id>`      | This attribute identifies the primary address field. Set it to the ID for the field to target.         |
 | data-lob-secondary-value          | `false`      | This is an optional attribute. Set to `false` to force the suite or unit number to render on the primary address line during address verification.         |
@@ -115,7 +115,7 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
 E-commerce platforms like Shopify use predictable element names making them easy to extend. Paste the following preconfigured script into your top-level Shopify Plus template to add address verification to your checkout form. *Remember to replace `live_pub_xxx` with your Lob public key.*
 
 ```
-<script src="https://cdn.lob.com/lob-address-elements/1.3.0/lob-address-elements.min.merged.js"
+<script src="https://cdn.lob.com/lob-address-elements/1.3.1/lob-address-elements.min.merged.js"
   data-lob-key="live_pub_xxx"
   data-lob-verify-value="strict"
   data-lob-primary-value="false"
@@ -128,7 +128,7 @@ E-commerce platforms like Shopify use predictable element names making them easy
   data-lob-err-color="#ffffff"></script>
 
 # Here's another example that places the verification message above the submit/continue button at checkout.
-<script src="https://cdn.lob.com/lob-address-elements/1.3.0/lob-address-elements.min.merged.js"
+<script src="https://cdn.lob.com/lob-address-elements/1.3.1/lob-address-elements.min.merged.js"
   data-lob-key="live_pub_xxx"
   data-lob-verify-value="strict"
   data-lob-primary-value="false"
@@ -178,7 +178,7 @@ In-line configuration uses attribute values to configure element colors. Hex, RG
     </div>
     <input type="submit" value="Submit">
   </form>
-  <script src="https://cdn.lob.com/lob-address-elements/1.3.0/lob-address-elements.min.js"
+  <script src="https://cdn.lob.com/lob-address-elements/1.3.1/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx" 
     data-lob-verify-value="strict"
     data-lob-primary-id="address1"
@@ -318,7 +318,7 @@ When authoring a custom stylesheet, Lob's default stylesheet should be suppresse
     </div>
     <input type="submit" value="Submit">
   </form>
-  <script src="https://cdn.lob.com/lob-address-elements/1.3.0/lob-address-elements.min.js"
+  <script src="https://cdn.lob.com/lob-address-elements/1.3.1/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx"
     data-lob-suggestion-stylesheet="false"
     data-lob-verify-value="strict"
@@ -369,7 +369,7 @@ Verification error messages can be localized and customized. Use the pattern, `d
     </div>
     <input type="submit" value="Submit">
   </form>
-  <script src="https://cdn.lob.com/lob-address-elements/1.3.0/lob-address-elements.min.js"
+  <script src="https://cdn.lob.com/lob-address-elements/1.3.1/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx" 
     data-lob-verify-value="strict"
     data-lob-primary-id="address1"
@@ -413,7 +413,12 @@ npm run build 1.3.0
 
 [Minified builds](https://github.com/lob/lob-address-elements/tree/master/lib) map to the releases listed below.
 
-### 1.3.0 (CURRENT / LATEST)
+### 1.3.1 (CURRENT / LATEST)
+| Release Notes |
+| :---          |
+| Tweaks DYM message and changes default strictness to relaxed |
+
+### 1.3.0
 | Release Notes |
 | :---          |
 | Replaces default standardization with Did You Mean? functionality |
