@@ -421,6 +421,12 @@ npm run build
 
 [Minified builds](https://github.com/lob/lob-address-elements/tree/master/lib) map to the releases listed below.
 
+### 2.0.0-beta (Not Released)
+| Current Improvements |
+| :---          |
+| Adds support for international verifications |
+| Modularizes our main script with webpack as our bundler |
+
 ### 1.3.0 (CURRENT / LATEST)
 | Release Notes |
 | :---          |
