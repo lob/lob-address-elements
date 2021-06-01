@@ -1,3 +1,3 @@
-export const parseWebpage = () => {
+export const parseWebPage = () => {
   console.log('parseWebpage');
 };
