@@ -41,7 +41,29 @@ export const findValue = type => {
  */
 export const findForm = type => {
   const form = findElm('verify');
-  return form.length ? form : findElm(type).closest('form');
+  const element = findElm(type);
+
+  const formElement = form.length ? form
+    : element.length ? findElm(type).closest('form')
+    : findAddressElementByLabel(type).closest('form');
+
+  let error = '';
+  if (!formElement.length) {
+    const consoleError =
+      "[Lob AV Elements Error]:\tForm element not found\n" +
+      "Could not find form on page.\n" +
+      "Please ensure that your address form is enclosed by a form tag" +
+      "For more information visit: https://www.lob.com/guides#av-elements-troubleshooting";
+    error =
+      "<p>" +
+      "[Lob AV Elements Error]:\tForm element not found<br/>" +
+      "Could not find form on page. Please ensure that your address form is enclosed by a form tag.<br/>" +
+      "For more information visit <a href=\"https://www.lob.com/guides#av-elements-troubleshooting\">https://www.lob.com/guides#av-elements-troubleshooting</a>" +
+      "</p>";
+    console.log(consoleError);
+  }
+
+  return { form: formElement, error };
 };
 
 /**
@@ -68,6 +90,7 @@ const findAddressElementByLabel = type => {
     city: expandLabels(['City']),
     state: expandLabels(['State']),
     zip: expandLabels(['Zip', 'Postal']),
+    country: expandLabels(['Country'])
   };
 
   /**
@@ -129,6 +152,11 @@ const resolveParsingResults = addressElements => {
   let parseResultError = ''; 
 
   const missingElements = Object.keys(addressElements).filter(key => {
+    // Omit country input in case form is domestic only
+    if (key === 'country') {
+      return false;
+    }
+
     const searchResult = addressElements[key];
     return searchResult === null || (searchResult && searchResult.length === 0);
   });
@@ -185,6 +213,12 @@ const resolveParsingResults = addressElements => {
   return parseResultError;
 };
 
+export const findPrimaryAddressInput = () => {
+  const primary = findAddressElementByLabel('primary');
+  const error = resolveParsingResults({ primary });
+  return { primary, error };
+};
+
 export const parseWebPage = () => {
   const errorMessageElements = {
     errorAnchorElement: findElm('verify-message-anchor'),
@@ -203,12 +237,13 @@ export const parseWebPage = () => {
     city: findAddressElementByLabel('city'),
     state: findAddressElementByLabel('state'),
     zip: findAddressElementByLabel('zip'),
+    country: findAddressElementByLabel('country'),
   };
 
   return {
     ...errorMessageElements,
     ...addressElements,
     parseResultError: resolveParsingResults(addressElements),
-    form: findForm('primary'),
+    form: findForm('primary').form,
   };
 };

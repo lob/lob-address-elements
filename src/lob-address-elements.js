@@ -1,6 +1,6 @@
 'use strict';
 
-import { findElm, findForm, findValue, parseWebPage } from './form-detection.js';
+import { findElm, findForm, findValue, findPrimaryAddressInput, parseWebPage } from './form-detection.js';
 import countryCodes from './country-codes.js';
 
 (function () {
@@ -52,17 +52,21 @@ import countryCodes from './country-codes.js';
      * Determine the presence of address-related fields and settings
      */
     function getPageState() {
-      var primary = findElm('primary');
-      var strictness = resolveStrictness(cfg.strictness);
-      var create_message = findValue('verify-message') === 'true' || (findForm('primary').length && !findElm('verify-message').length);
-      var autocomplete = primary.length && findValue('primary') !== 'false';
-      var verify = strictness !== 'false' && findForm('primary').length && (strictness === 'passthrough' || findElm('verify-message').length || create_message);
+      const { primary, error: inputError } = findPrimaryAddressInput();
+      const { form, error: formError } = findForm('primary');
+
+      const strictness = resolveStrictness(cfg.strictness);
+      const create_message = findValue('verify-message') === 'true' || (form.length && !findElm('verify-message').length);
+      const autocomplete = primary.length && findValue('primary') !== 'false';
+      const verify = strictness !== 'false' && form.length && (strictness === 'passthrough' || findElm('verify-message').length || create_message);
+
       return {
         autocomplete: autocomplete,
         verify: verify,
         enrich: verify || autocomplete,
         create_message: create_message,
-        strictness: strictness
+        strictness: strictness,
+        error: inputError || formError || ''
       };
     }
 
@@ -120,23 +124,6 @@ import countryCodes from './country-codes.js';
           'suggestion-activecolor': '#117ab8',
           'suggestion-activebgcolor': '#eeeeee'
         },
-        // elements: cfg.elements || {
-        //   errorAnchorElement: findElm('verify-message-anchor'),
-        //   primaryMsg: findElm('primary-message').hide(),
-        //   secondaryMsg: findElm('secondary-message').hide(),
-        //   cityMsg: findElm('city-message').hide(),
-        //   stateMsg: findElm('state-message').hide(),
-        //   zipMsg: findElm('zip-message').hide(),
-        //   countryMsg: findElm('country-message').hide(),
-        //   message: findElm('verify-message').hide(),
-        //   form: findForm('primary'),
-        //   primary: findElm('primary'),
-        //   secondary: findElm('secondary'),
-        //   city: findElm('city'),
-        //   country: findElm('country'),
-        //   state: findElm('state'),
-        //   zip: findElm('zip')
-        // },
         elements: cfg.elements || parseWebPage(),
         messages: cfg.messages || {
           primary_line: findValue('err-primary-line') || 'Enter the Primary address.',
@@ -151,9 +138,9 @@ import countryCodes from './country-codes.js';
           DEFAULT: findValue('err-default') || 'Unknown Error. The address could not be verified.'
         },
         apis: cfg.apis || {
-          autocomplete: 'https://api.lob_staging.com/v1/us_autocompletions',
-          intl_verify: 'https://api.lob_staging.com/v1/intl_verifications', 
-          us_verify: 'https://api.lob_staging.com/v1/us_verifications'
+          autocomplete: 'https://api.lob.com/v1/us_autocompletions',
+          intl_verify: 'https://api.lob.com/v1/intl_verifications', 
+          us_verify: 'https://api.lob.com/v1/us_verifications'
         },
         do: {
           init: function () {
@@ -163,7 +150,7 @@ import countryCodes from './country-codes.js';
       };
 
       function isInternational() {
-        return config.elements.country.length
+        return config.elements.country && config.elements.country.length
           && !['United States', 'United States of America', 'US', 'U.S', 'U.S.', 'USA', 'U.S.A', 'U.S.A'].includes(config.elements.country.val());
       }
 
@@ -350,6 +337,7 @@ import countryCodes from './country-codes.js';
           if (anchor.length) {
             message.insertBefore(anchor);
           } else {
+            console.log(config.elements.form);
             config.elements.form.prepend(message);
           }
           config.elements.message = message;
@@ -586,7 +574,6 @@ import countryCodes from './country-codes.js';
           }
         }
 
-
         if (config.elements.parseResultError !== '') {
           config.do.message({ type: 'form_detection', msg: config.elements.parseResultError });
         }
@@ -710,8 +697,28 @@ import countryCodes from './country-codes.js';
       return window.LobAddressElements = config;
     }
 
-    var state = getPageState();
-    if (state.enrich) {
+    const state = getPageState();
+    if (state.error !== '') {
+      // Form cannot be found so we add error to the top of page
+      const message = $(`<div class="lob-form-error-message">${state.error}</div>`);
+      $('<style>')
+      .prop('type', 'text/css')
+      .html('\
+      .lob-form-error-message {\
+        width: 100%;\
+        border-radius: .25rem;\
+        max-width: 100%;\
+        text-align: left;\
+        padding: .5rem;\
+        margin-top: 1.5rem;\
+        margin-bottom: 1.5rem;\
+        color: #117ab8;\
+        background-color: #eeeeee;\
+      }'
+      ).appendTo('head');
+      $("body").prepend(message);
+      return null;
+    } else if (state.enrich) {
       observeDOM('enriched');
       return _LobAddressElements($, cfg, state);
     } else {
