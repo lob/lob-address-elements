@@ -1,4 +1,9 @@
-export default {
+export const isInternational = countryElement => {
+  return countryElement && countryElement.length
+    && !['United States', 'United States of America', 'US', 'U.S', 'U.S.', 'USA', 'U.S.A', 'U.S.A'].includes(countryElement.val());
+}
+
+export const countryCodes = {
   'afghanistan': 'AF',
   'aland islands': 'AX',
   'albania': 'AL',

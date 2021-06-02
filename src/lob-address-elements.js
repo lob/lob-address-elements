@@ -1,7 +1,7 @@
 'use strict';
 
 import { findElm, findForm, findValue, findPrimaryAddressInput, parseWebPage } from './form-detection.js';
-import countryCodes from './country-codes.js';
+import { countryCodes, isInternational } from './international-utils.js';
 
 (function () {
   /**
@@ -149,11 +149,6 @@ import countryCodes from './country-codes.js';
         }
       };
 
-      function isInternational() {
-        return config.elements.country && config.elements.country.length
-          && !['United States', 'United States of America', 'US', 'U.S', 'U.S.', 'USA', 'U.S.A', 'U.S.A'].includes(config.elements.country.val());
-      }
-
       function resolveInlineStyle(config, type, subtype) {
         return findValue(type + '-' + subtype) || config.styles[type + '-' + subtype];
       }
@@ -213,7 +208,7 @@ import countryCodes from './country-codes.js';
          * @param {function} cb - callback
          */
         config.do.autocomplete = function (query, cb) {
-          config.international = isInternational();
+          config.international = isInternational(config.elements.country);
 
           if (config.international) {
             return false;
@@ -584,7 +579,7 @@ import countryCodes from './country-codes.js';
          * @param {function} cb - process the response (submit the form or show an error message)
          */
         config.do.verify = function (cb) {
-          config.international = isInternational();
+          config.international = isInternational(config.elements.country);
           config.submit = config.strictness === 'passthrough';
           config.confirmed = isConfirmation();
 

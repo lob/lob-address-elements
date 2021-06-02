@@ -1,3 +1,5 @@
+import { isInternational } from './international-utils.js';
+
 /**
  * Returns a jquery element to which to add behavior, locating
  * the element using one of three methods: id, name, attribute.
@@ -86,10 +88,10 @@ const findAddressElementByLabel = type => {
     labels.reduce((acc, label) => [...acc, label, capitalize(label), label.toUpperCase()], []);
 
   const potentialLabels = {
-    primary: expandLabels(['primary', 'address']),
-    secondary: expandLabels(['address 2', 'secondary', 'apartment', 'suite']),
-    city: expandLabels(['city']),
-    state: expandLabels(['state']),
+    primary: expandLabels(['primary', 'address', 'street']),
+    secondary: expandLabels(['address 2', 'secondary', 'apartment', 'suite', 'unit', 'apt', 'ste']),
+    city: expandLabels(['city', 'town']),
+    state: expandLabels(['state', 'province', 'county', 'region']),
     zip: expandLabels(['zip', 'postal']),
     country: expandLabels(['country'])
   };
@@ -151,9 +153,16 @@ const findAddressElementByLabel = type => {
 const resolveParsingResults = addressElements => {
   let parseResultError = ''; 
 
+  const international = isInternational(addressElements.country);
+
   const missingElements = Object.keys(addressElements).filter(key => {
     // Omit country input in case form is domestic only
     if (key === 'country') {
+      return false;
+    }
+
+    // Some countries like Germany, state is optional and may not exist in their address forms
+    if (key === 'state' && international) {
       return false;
     }
 
