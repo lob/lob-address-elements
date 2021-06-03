@@ -81,35 +81,35 @@ const findAddressElementByLabel = type => {
   // jQuery selectors are case sensitive so this function will add all case variations.
   // We do this instead of overriding jQuery's selection method in case it's being used in other
   // scripts on the page.
+  const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
   const expandLabels = labels =>
-    labels.reduce((acc, label) => [...acc, label, label.toLowerCase(), label.toUpperCase()], []);
+    labels.reduce((acc, label) => [...acc, label, capitalize(label), label.toUpperCase()], []);
 
   const potentialLabels = {
-    primary: expandLabels(['Primary', 'Address']),
-    secondary: expandLabels(['Address 2', 'Secondary', 'Apartment', 'Suite']),
-    city: expandLabels(['City']),
-    state: expandLabels(['State']),
-    zip: expandLabels(['Zip', 'Postal']),
-    country: expandLabels(['Country'])
+    primary: expandLabels(['primary', 'address']),
+    secondary: expandLabels(['address 2', 'secondary', 'apartment', 'suite']),
+    city: expandLabels(['city']),
+    state: expandLabels(['state']),
+    zip: expandLabels(['zip', 'postal']),
+    country: expandLabels(['country'])
   };
 
+  // Chain together the query selectors of each label
+  const selector = potentialLabels[type].map(currentLabel => `:contains('${currentLabel}')`).join(', ');
+
   /**
-   * Chain together the query selectors of each label. When searching for the primary line we
-   * clarify two variations of an address form:
+   * When searching for the primary line we clarify two variations of an address form:
    *    Form A           Form B
    *    Address 1        Address
    *    Address 2        Apartment, Suite, Unit, etc.
    * Matching on "Address" would include the secondary label and raise an error, so we exclude
    * it in the selector.
    */
-  const selector = potentialLabels[type].map(currentLabel =>
-    type === 'primary' && currentLabel.toLowerCase() === 'address'
-      ? `:contains('${currentLabel}'):not(:contains('${currentLabel} 2'))`
-      : `:contains('${currentLabel}')`
-  ).join(', ');
+  let selections = $(selector);
+  if (type === 'primary') {
+    selections = selections.filter((idx, e) => !/address\s?2/i.test($(e).text()));
+  }
 
-
-  const selections = $(selector);
   if (!selections.length) {
     return null;
   }
@@ -163,12 +163,12 @@ const resolveParsingResults = addressElements => {
 
   const multipleElements = Object.keys(addressElements).filter(key => {
     const searchResult = addressElements[key];
-    return searchResult && searchResult.length > 1;
+    return searchResult && searchResult.filter(":visible").length > 1;
   });
 
   if (missingElements.length) {
     const formElementNames = missingElements.length > 1 
-      ? missingElements.slice(0, -1).join(', ') + ', and ' + missingElements.slice(-1)
+      ? `${missingElements.slice(0, -1).join(', ')}, and ${missingElements.slice(-1)}`
       : missingElements[0].toString();
     const formElementAttributes = missingElements.map(name => `data-lob-${name}-id`).join(', ');
     const consoleMessage =
@@ -190,7 +190,7 @@ const resolveParsingResults = addressElements => {
   
   if (multipleElements.length) {
     const formElementNames = multipleElements.length > 1
-      ? multipleElements.slice(0, -1).join(', ') + ', and ' + multipleElements.slice(-1)
+      ? `${multipleElements.slice(0, -1).join(', ')}, and ${multipleElements.slice(-1)}`
       : multipleElements[0].toString();
     const formElementAttributes = multipleElements.map(name => `data-lob-${name}-id`).join(', ');
     const consoleMessage =
