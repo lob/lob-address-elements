@@ -52,22 +52,41 @@ import { countryCodes, isInternational } from './international-utils.js';
      * Determine the presence of address-related fields and settings
      */
     function getPageState() {
-      const { primary, error: inputError } = findPrimaryAddressInput();
-      const { form, error: formError } = findForm('primary');
+      try {
+        // Propagate error with our message before something else breaks with a more confusing message
+        const { primary, error: inputError } = findPrimaryAddressInput();
+        if (inputError) {
+          throw new Error(inputError);
+        }
 
-      const strictness = resolveStrictness(cfg.strictness);
-      const create_message = findValue('verify-message') === 'true' || (form.length && !findElm('verify-message').length);
-      const autocomplete = primary.length && findValue('primary') !== 'false';
-      const verify = strictness !== 'false' && form.length && (strictness === 'passthrough' || findElm('verify-message').length || create_message);
+        const { form, error: formError } = findForm('primary');
+        if (formError) {
+          throw new Error(inputError);
+        }
 
-      return {
-        autocomplete: autocomplete,
-        verify: verify,
-        enrich: verify || autocomplete,
-        create_message: create_message,
-        strictness: strictness,
-        error: inputError || formError || ''
-      };
+        const strictness = resolveStrictness(cfg.strictness);
+        const create_message = findValue('verify-message') === 'true' || (form.length && !findElm('verify-message').length);
+        const autocomplete = primary.length && findValue('primary') !== 'false';
+        const verify = strictness !== 'false' && form.length && (strictness === 'passthrough' || findElm('verify-message').length || create_message);
+
+        return {
+          autocomplete: autocomplete,
+          verify: verify,
+          enrich: verify || autocomplete,
+          create_message: create_message,
+          strictness: strictness,
+          error: inputError || formError || ''
+        };
+      } catch (error) {
+        return {
+          autocomplete: false,
+          verify: false,
+          enrich: false,
+          create_message: false,
+          strictness: false,
+          error: error.message
+        };
+      }
     }
 
     /**

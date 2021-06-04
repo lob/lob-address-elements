@@ -80,26 +80,19 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
     </div>
     <input type="submit" value="Submit">
   </form>
-  <script src="https://cdn.lob.com/lob-address-elements/1.3.0/lob-address-elements.min.js"
-    data-lob-key="live_pub_xxx" 
-    data-lob-verify-value="strict"
-    data-lob-primary-id="address1"
-    data-lob-secondary-id="address2"
-    data-lob-city-id="city"
-    data-lob-state-id="state"
-    data-lob-zip-id="zip"
-    data-lob-primary-message-id="address1_err"></script>
+  <script src="https://cdn.lob.com/lob-address-elements/2.0.0/lob-address-elements.min.js"
+    data-lob-key="live_pub_xxx"></script>
 </body>
 </html>
 ```
 
 | Attribute Name    | Attribute Value(s)   | Description      |
 | :---          |  :---                 |   :---              |
-| data-lob-key          | `<lob key>`           | Include your Lob live public key as the attribute value. It will use the format `live_pub_*` and is available via the [Lob Dashboard](https://dashboard.lob.com/#/settings).        |
-| data-lob-verify-value           | `strict`, `normal`, `relaxed`, `passthrough`, `false`         | Include this attribute to pre-verify the user's address submission with Lob.  Choose `relaxed` as the attribute value, if you wish to allow users to submit an errant form once they have been warned. Their resubmission of an unchanged form will be used to indicate their preference to override and submit. Choose `normal` (the default) to halt any submissions that Lob deems undeliverable, while still allowing all other inconsistencies to be submitted once the user has confirmed their choice. Choose `strict` to halt any submission that does not pass verification, including minor errors like missing or unnecessary units. If you wish to verify an address and then submit regardless of the verification result, choose `passthrough`. This is useful for stateful forms that support repeated submissions. Enter `false` if you plan to use Address elements for autocompletion but **not** for verification. |
-| data-lob-primary-value          | `false`      | This is an optional attribute. Set to `false` to disable address autocompletion and only use address verification.        |
+| data-lob-key          | `<lob key>`           | **Required.** Include your Lob live public key as the attribute value. It will use the format `live_pub_*` and is available via the [Lob Dashboard](https://dashboard.lob.com/#/settings).        |
+| data-lob-verify-value           | `strict`, `normal`, `relaxed`, `passthrough`, `false`         | Include this attribute to pre-verify the user's address submission with Lob.  Choose `relaxed` (the default) as the attribute value, if you wish to allow users to submit an errant form once they have been warned. Their resubmission of an unchanged form will be used to indicate their preference to override and submit. Choose `normal` to halt any submissions that Lob deems undeliverable, while still allowing all other inconsistencies to be submitted once the user has confirmed their choice. Choose `strict` to halt any submission that does not pass verification, including minor errors like missing or unnecessary units. If you wish to verify an address and then submit regardless of the verification result, choose `passthrough`. This is useful for stateful forms that support repeated submissions. Enter `false` if you plan to use Address elements for autocompletion but **not** for verification. |
+| data-lob-primary-value          | `false`      | Set to `false` to disable address autocompletion and only use address verification.        |
 | data-lob-primary-id          | `<field id>`      | This attribute identifies the primary address field. Set it to the ID for the field to target.         |
-| data-lob-secondary-value          | `false`      | This is an optional attribute. Set to `false` to force the suite or unit number to render on the primary address line during address verification.         |
+| data-lob-secondary-value          | `false`      | Set to `false` to force the suite or unit number to render on the primary address line during address verification.         |
 | data-lob-secondary-id          | `<field id>`      | This attribute identifies the secondary address field. Set it to the ID for the field to target.         |
 | data-lob-city-id          | `<field id>`      | This attribute identifies the city field. Set it to the ID for the field to target.         |
 | data-lob-state-id          | `<field id>`      | This attribute identifies the state field. Set it to the ID for the field to target.         |
@@ -118,36 +111,29 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
 E-commerce platforms like Shopify use predictable element names making them easy to extend. Paste the following preconfigured script into your top-level Shopify Plus template to add address verification to your checkout form. *Remember to replace `live_pub_xxx` with your Lob public key.*
 
 ```
-<script src="https://cdn.lob.com/lob-address-elements/1.3.0/lob-address-elements.min.merged.js"
+<script src="https://cdn.lob.com/lob-address-elements/2.0.0/lob-address-elements.min.merged.js"
   data-lob-key="live_pub_xxx"
   data-lob-verify-value="strict"
   data-lob-primary-value="false"
-  data-lob-primary-id="checkout_shipping_address_address1"
-  data-lob-secondary-id="checkout_shipping_address_address2"
-  data-lob-city-id="checkout_shipping_address_city"
-  data-lob-state-id="checkout_shipping_address_province"
-  data-lob-zip-id="checkout_shipping_address_zip"
   data-lob-err-bgcolor="#006eff"
   data-lob-err-color="#ffffff"></script>
 
 # Here's another example that places the verification message above the submit/continue button at checkout.
-<script src="https://cdn.lob.com/lob-address-elements/1.3.0/lob-address-elements.min.merged.js"
+<script src="https://cdn.lob.com/lob-address-elements/2.0.0/lob-address-elements.min.merged.js"
   data-lob-key="live_pub_xxx"
   data-lob-verify-value="strict"
   data-lob-primary-value="false"
-  data-lob-primary-id="checkout_shipping_address_address1"
-  data-lob-secondary-id="checkout_shipping_address_address2"
-  data-lob-city-id="checkout_shipping_address_city"
-  data-lob-state-id="checkout_shipping_address_province"
-  data-lob-zip-id="checkout_shipping_address_zip"
   data-lob-err-bgcolor="#006eff"
   data-lob-err-color="#ffffff"
   data-lob-verify-message-anchor-class="step__footer"></script>
 ```
 *NOTE: Many E-commerce platforms have strict content security policies that prevent scripts from loading additional content. Embed the `merged` build of Address Elements to handle these situations as shown in the example above (lob-address-elements.min.merged.js). This ensures all dependencies are included in the download.*
 
+## Form Detection
+With v2.0.0, users no longer have to provide the IDs of their address form inputs in the AV elements script tag. We now detect these inputs on start up by search for inputs and labels with address-related key words. Any errors that may arise are displayed in the web page and the browser's console. The quickest solution is to provide the ID of the problem input back in the AV elements script tag.
+
 ## Component Styles
-When *address verification* is enabled, Lob will inject an HTML element into the target form in order to communicate form-level error messages. Similarly, when *address autocompletion* is enabled, Lob will inject an HTML element to contain suggested addresses. 
+When *address verification* is enabled, Lob will inject an HTML element into the target form in order to communicate form-level error messages. Similarly, when *address autocompletion* is enabled, Lob will inject an HTML element to contain suggested addresses.
 
 In general, it's easy to customize colors and backgrounds for these elements using in-line color declarations. If, however, you require more advanced customization, you must include a custom CSS stylesheet. These options are described in the following two sections. 
 
@@ -181,14 +167,9 @@ In-line configuration uses attribute values to configure element colors. Hex, RG
     </div>
     <input type="submit" value="Submit">
   </form>
-  <script src="https://cdn.lob.com/lob-address-elements/1.3.0/lob-address-elements.min.js"
+  <script src="https://cdn.lob.com/lob-address-elements/2.0.0/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx" 
     data-lob-verify-value="strict"
-    data-lob-primary-id="address1"
-    data-lob-secondary-id="address2"
-    data-lob-city-id="city"
-    data-lob-state-id="state"
-    data-lob-zip-id="zip"
     data-lob-suggestion-color="#666666"
     data-lob-suggestion-bgcolor="#fefefe" 
     data-lob-suggestion-bordercolor="#a8a8a8"
@@ -321,7 +302,7 @@ When authoring a custom stylesheet, Lob's default stylesheet should be suppresse
     </div>
     <input type="submit" value="Submit">
   </form>
-  <script src="https://cdn.lob.com/lob-address-elements/1.3.0/lob-address-elements.min.js"
+  <script src="https://cdn.lob.com/lob-address-elements/2.0.0/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx"
     data-lob-suggestion-stylesheet="false"
     data-lob-verify-value="strict"
@@ -343,7 +324,7 @@ When authoring a custom stylesheet, Lob's default stylesheet should be suppresse
 Address Elements continually monitors changes to the HTML DOM, looking for address-related fields to enrich. This behavior is available in all evergreen browsers and IE11+.
 
 # International Verification
-Address Elements is capable of verifying international addresses. Simply add the attribute `data-lob-country-id` to enable this feature. When the value of the corresponding country input is outside of the United States, we will automatically use Lob's <a href="https://docs.lob.com/#intl_verifications">international verification endpoint</a>. The same form attributes are used for international verifications despite potentially having different labels than U.S. address forms (e.g. `data-lob-zip-id` is still used for postal code, `data-lob-state-id` for province, etc).
+Address Elements is capable of verifying international addresses. Simply include a country input in your form to enable this feature. When the value of the input is outside the United States we automatically switch to Lob's <a href="https://docs.lob.com/#intl_verifications">international verification endpoint</a>. The same form attributes are used for international verifications despite potentially having different labels than U.S. address forms (e.g. `data-lob-zip-id` is still used for postal code, `data-lob-state-id` for province, etc).
 
 _Note: Autocomplete functionality is disabled for international addresses._
 
@@ -377,14 +358,9 @@ Verification error messages can be localized and customized. Use the pattern, `d
     </div>
     <input type="submit" value="Submit">
   </form>
-  <script src="https://cdn.lob.com/lob-address-elements/1.3.0/lob-address-elements.min.js"
+  <script src="https://cdn.lob.com/lob-address-elements/2.0.0/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx" 
     data-lob-verify-value="strict"
-    data-lob-primary-id="address1"
-    data-lob-secondary-id="address2"
-    data-lob-city-id="city"
-    data-lob-state-id="state"
-    data-lob-zip-id="zip"
     data-lob-err-primary-line="Enter the Primary address."
     data-lob-err-city-state-zip="Enter City and State (or Zip)."
     data-lob-err-zip="Enter a valid Zip."
@@ -424,6 +400,7 @@ npm run build
 ### 2.0.0-beta (Not Released)
 | Current Improvements |
 | :---          |
+| Implements form detection strategies to simplify script usage |
 | Adds support for international verifications |
 | Modularizes our main script with webpack as our bundler |
 

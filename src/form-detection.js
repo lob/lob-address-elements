@@ -62,7 +62,7 @@ export const findForm = type => {
       "Could not find form on page. Please ensure that your address form is enclosed by a form tag.<br/>" +
       "For more information visit <a href=\"https://www.lob.com/guides#av-elements-troubleshooting\">https://www.lob.com/guides#av-elements-troubleshooting</a>" +
       "</p>";
-    console.log(consoleError);
+    console.error(consoleError);
   }
 
   return { form: formElement, error };
@@ -78,7 +78,7 @@ const expandLabels = labels =>
 
 const addressKeyWords = {
   primary: expandLabels(['primary', 'address', 'street']),
-  secondary: expandLabels(['address 2', 'secondary', 'apartment', 'suite', 'unit', 'apt', 'ste']),
+  secondary: expandLabels(['address 2', 'street 2', 'secondary', 'apartment', 'suite', 'unit', 'apt', 'ste']),
   city: expandLabels(['city', 'town']),
   state: expandLabels(['state', 'province', 'county', 'region', 'district', 'municipality']),
   zip: expandLabels(['zip', 'postal', 'postcode']),
@@ -115,7 +115,7 @@ const findAddressElementByLabel = type => {
    */
   let selections = $(selector);
   if (type === 'primary') {
-    selections = selections.filter((idx, e) => !/address\s?2/i.test($(e).text()));
+    selections = selections.filter((idx, e) => !/(address|street)\s?2/i.test($(e).text()));
   }
 
   if (!selections.length) {
@@ -264,7 +264,7 @@ const resolveParsingResults = addressElements => {
 
 // Helper function to confirm presence of an address form
 export const findPrimaryAddressInput = () => {
-  const primary = findAddressElementByLabel('primary');
+  const primary = findAddressElementById('primary') || findAddressElementByLabel('primary') || findAddressElementsByInput('primary');
   const error = resolveParsingResults({ primary });
   return { primary, error };
 };
