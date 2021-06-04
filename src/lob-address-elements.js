@@ -1,6 +1,6 @@
 'use strict';
 
-import { parseWebPage } from './form-detection.js';
+import { findElm, findForm, findValue, findPrimaryAddressInput, parseWebPage } from './form-detection.js';
 import countryCodes from './country-codes.js';
 
 (function () {
@@ -18,52 +18,6 @@ import countryCodes from './country-codes.js';
 
     var autocompletion_configured = false;
     var verification_configured = false;
-
-    /**
-     * Returns a jquery element to which to add behavior, locating
-     * the element using one of three methods: id, name, attribute.
-     * @param {string} type - For example: primary, secondary, city
-     * @returns {object}
-     */
-    function findElm(type) {
-      var pid = $('*[data-lob-' + type + '-id]').attr('data-lob-' + type + '-id');
-      if (pid) {
-        return $('#' + pid);
-      } else {
-        var pnm = $('*[data-lob-' + type + '-name]').attr('data-lob-' + type + '-name');
-        var pc = $('*[data-lob-' + type + '-class]').attr('data-lob-' + type + '-class');
-        if (pnm) {
-          return $('*[name=' + pnm + ']');
-        } else if (pc) {
-          return $('.' + pc);
-        } else {
-          return $('*[data-lob-' + type + ']');
-        }
-      }
-    }
-
-    /**
-     * Returns the configuration value for a given @type
-     * @param {string} type - One of: verify, secondary, primary, verify-message
-     * @returns {object}
-     */
-    function findValue(type) {
-      var target = findElm(type);
-      var target_val = target.length && target.attr('data-lob-' + type);
-      return target_val || $('*[data-lob-' + type + '-value]').attr('data-lob-' + type + '-value');
-    }
-
-    /**
-     * Returns the form parent for a target element, @type, 
-     * unless the user explicitly identifies the form to use via the
-     * 'verify' label
-     * @param {string} type - For example: primary, secondary, zip, etc
-     * @returns {object}
-     */
-    function findForm(type) {
-      var form = findElm('verify');
-      return form.length ? form : findElm(type).closest('form');
-    }
 
     function resolveStrictness(cfg) {
       var values = ['false', 'strict', 'normal', 'relaxed', 'passthrough'];
@@ -98,17 +52,21 @@ import countryCodes from './country-codes.js';
      * Determine the presence of address-related fields and settings
      */
     function getPageState() {
-      var primary = findElm('primary');
-      var strictness = resolveStrictness(cfg.strictness);
-      var create_message = findValue('verify-message') === 'true' || (findForm('primary').length && !findElm('verify-message').length);
-      var autocomplete = primary.length && findValue('primary') !== 'false';
-      var verify = strictness !== 'false' && findForm('primary').length && (strictness === 'passthrough' || findElm('verify-message').length || create_message);
+      const { primary, error: inputError } = findPrimaryAddressInput();
+      const { form, error: formError } = findForm('primary');
+
+      const strictness = resolveStrictness(cfg.strictness);
+      const create_message = findValue('verify-message') === 'true' || (form.length && !findElm('verify-message').length);
+      const autocomplete = primary.length && findValue('primary') !== 'false';
+      const verify = strictness !== 'false' && form.length && (strictness === 'passthrough' || findElm('verify-message').length || create_message);
+
       return {
         autocomplete: autocomplete,
         verify: verify,
         enrich: verify || autocomplete,
         create_message: create_message,
-        strictness: strictness
+        strictness: strictness,
+        error: inputError || formError || ''
       };
     }
 
@@ -152,7 +110,7 @@ import countryCodes from './country-codes.js';
      * @param {*} state - page state
      */
     function _LobAddressElements($, cfg, state) {
-      var config = {
+      let config = {
         api_key: cfg.api_key || findValue('key'),
         strictness: state.strictness,
         denormalize: findValue('secondary') !== 'false',
@@ -166,23 +124,7 @@ import countryCodes from './country-codes.js';
           'suggestion-activecolor': '#117ab8',
           'suggestion-activebgcolor': '#eeeeee'
         },
-        elements: cfg.elements || {
-          errorAnchorElement: findElm('verify-message-anchor'),
-          form: findForm('primary'),
-          message: findElm('verify-message').hide(),
-          primary: findElm('primary'),
-          primaryMsg: findElm('primary-message').hide(),
-          secondary: findElm('secondary'),
-          secondaryMsg: findElm('secondary-message').hide(),
-          city: findElm('city'),
-          cityMsg: findElm('city-message').hide(),
-          country: findElm('country'),
-          countryMsg: findElm('country-message').hide(),
-          state: findElm('state'),
-          stateMsg: findElm('state-message').hide(),
-          zip: findElm('zip'),
-          zipMsg: findElm('zip-message').hide()
-        },
+        elements: cfg.elements || parseWebPage(),
         messages: cfg.messages || {
           primary_line: findValue('err-primary-line') || 'Enter the Primary address.',
           city_state_zip: findValue('err-city-state-zip') || 'Enter City and State (or Zip).',
@@ -208,7 +150,7 @@ import countryCodes from './country-codes.js';
       };
 
       function isInternational() {
-        return config.elements.country.length
+        return config.elements.country && config.elements.country.length
           && !['United States', 'United States of America', 'US', 'U.S', 'U.S.', 'USA', 'U.S.A', 'U.S.A'].includes(config.elements.country.val());
       }
 
@@ -395,6 +337,7 @@ import countryCodes from './country-codes.js';
           if (anchor.length) {
             message.insertBefore(anchor);
           } else {
+            console.log(config.elements.form);
             config.elements.form.prepend(message);
           }
           config.elements.message = message;
@@ -412,7 +355,7 @@ import countryCodes from './country-codes.js';
                 position: relative;\
                 left: 50%;\
                 margin-right: -50%;\
-                transform: translate(-50%, -50%);\
+                transform: translate(-50%, 0%);\
                 text-align: center;\
                 padding: .5rem;\
                 margin-top: 1.5rem;\
@@ -584,6 +527,35 @@ import countryCodes from './country-codes.js';
           );
         }
 
+        const messageTypes = {
+          primary_line: msg => {
+            config.elements.primaryMsg.text(msg).show('slow');
+          },
+          city_state_zip: msg => {
+            config.elements.cityMsg.text(msg).show('slow');
+            config.elements.stateMsg.text(msg).show('slow');
+            config.elements.zipMsg.text(msg).show('slow');
+          },
+          zip: msg => {
+            config.elements.zipMsg.text(msg).show('slow');
+          },
+          deliverable_missing_unit: msg => {
+            (!config.denormalize &&
+              config.elements.primaryMsg.text(msg).show('slow')) ||
+              config.elements.secondaryMsg.text(msg).show('slow');
+          },
+          deliverable_unnecessary_unit: msg => {
+            (!config.denormalize &&
+              config.elements.primaryMsg.text(msg).show('slow')) ||
+              config.elements.secondaryMsg.text(msg).show('slow');
+          },
+          deliverable_incorrect_unit: msg => {
+            (!config.denormalize &&
+              config.elements.primaryMsg.text(msg).show('slow')) ||
+              config.elements.secondaryMsg.text(msg).show('slow');
+          }
+        };
+
         /**
          * Show form- and field-level error messages as configured. Verification did NOT succeed.
          * @param {object} err - Verification error object representing a Lob error type
@@ -593,7 +565,7 @@ import countryCodes from './country-codes.js';
         config.do.message = function (err) {
           if (err) {
             // Confirmation error message uses html to give users the ability to revert standardization
-            if (err.type === 'confirm') {
+            if (err.type === 'confirm' || err.type === 'form_detection') {
               config.elements.message.html(err.msg).show('slow');
             } else {
               config.elements.message.text(err.msg).show('slow');              
@@ -602,34 +574,9 @@ import countryCodes from './country-codes.js';
           }
         }
 
-        var messageTypes = {
-          primary_line: function (msg) {
-            config.elements.primaryMsg.text(msg).show('slow');
-          },
-          city_state_zip: function (msg) {
-            config.elements.cityMsg.text(msg).show('slow');
-            config.elements.stateMsg.text(msg).show('slow');
-            config.elements.zipMsg.text(msg).show('slow');
-          },
-          zip: function (msg) {
-            config.elements.zipMsg.text(msg).show('slow');
-          },
-          deliverable_missing_unit: function (msg) {
-            (!config.denormalize &&
-              config.elements.primaryMsg.text(msg).show('slow')) ||
-              config.elements.secondaryMsg.text(msg).show('slow');
-          },
-          deliverable_unnecessary_unit: function (msg) {
-            (!config.denormalize &&
-              config.elements.primaryMsg.text(msg).show('slow')) ||
-              config.elements.secondaryMsg.text(msg).show('slow');
-          },
-          deliverable_incorrect_unit: function (msg) {
-            (!config.denormalize &&
-              config.elements.primaryMsg.text(msg).show('slow')) ||
-              config.elements.secondaryMsg.text(msg).show('slow');
-          }
-        };
+        if (config.elements.parseResultError !== '') {
+          config.do.message({ type: 'form_detection', msg: config.elements.parseResultError });
+        }
 
         /**
          * Calls the Lob.com US Verification API. If successful, the user's form will be submitted by 
@@ -750,10 +697,28 @@ import countryCodes from './country-codes.js';
       return window.LobAddressElements = config;
     }
 
-    var state = getPageState();
-    // Test import functionality
-    parseWebPage();
-    if (state.enrich) {
+    const state = getPageState();
+    if (state.error !== '') {
+      // Form cannot be found so we add error to the top of page
+      const message = $(`<div class="lob-form-error-message">${state.error}</div>`);
+      $('<style>')
+      .prop('type', 'text/css')
+      .html('\
+      .lob-form-error-message {\
+        width: 100%;\
+        border-radius: .25rem;\
+        max-width: 100%;\
+        text-align: left;\
+        padding: .5rem;\
+        margin-top: 1.5rem;\
+        margin-bottom: 1.5rem;\
+        color: #117ab8;\
+        background-color: #eeeeee;\
+      }'
+      ).appendTo('head');
+      $("body").prepend(message);
+      return null;
+    } else if (state.enrich) {
       observeDOM('enriched');
       return _LobAddressElements($, cfg, state);
     } else {
