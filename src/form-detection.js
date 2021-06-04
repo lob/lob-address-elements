@@ -69,35 +69,41 @@ export const findForm = type => {
 };
 
 /**
+ * Adds all case variations for a given label to work around jQuery's case sensitivity. We do this
+ * instead of overriding jQuery's selection method in case it's being used in other scripts on the page.
+ */
+const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
+const expandLabels = labels =>
+  labels.reduce((acc, label) => [...acc, label, capitalize(label), label.toUpperCase()], []);
+
+const addressKeyWords = {
+  primary: expandLabels(['primary', 'address', 'street']),
+  secondary: expandLabels(['address 2', 'secondary', 'apartment', 'suite', 'unit', 'apt', 'ste']),
+  city: expandLabels(['city', 'town']),
+  state: expandLabels(['state', 'province', 'county', 'region', 'district', 'municipality']),
+  zip: expandLabels(['zip', 'postal', 'postcode']),
+  country: expandLabels(['country'])
+};
+
+/**
+ * Checks if a form attribute was provided for us in the AV Elements script tag. If so, we locate
+ * the element directly.
+ * @param {string} type - For example: primary, secondary, city
+ * @returns {null || object} - a jQuery object
+ */
+const findAddressElementById = type => {
+  const elementFromID = findElm(type);
+  return elementFromID.length ? elementFromID : null;
+};
+
+/**
  * Performs a localized search relative to an address component's label
  * @param {string} type - For example: primary, secondary, city
  * @returns {null || object} - a jQuery object
  */
 const findAddressElementByLabel = type => {
-  // Check if user already provided the form attribute. If so then no search needed.
-  const elementFromID = findElm(type);
-  if (elementFromID.length) {
-    return elementFromID;
-  }
-
-  // jQuery selectors are case sensitive so this function will add all case variations.
-  // We do this instead of overriding jQuery's selection method in case it's being used in other
-  // scripts on the page.
-  const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
-  const expandLabels = labels =>
-    labels.reduce((acc, label) => [...acc, label, capitalize(label), label.toUpperCase()], []);
-
-  const potentialLabels = {
-    primary: expandLabels(['primary', 'address', 'street']),
-    secondary: expandLabels(['address 2', 'secondary', 'apartment', 'suite', 'unit', 'apt', 'ste']),
-    city: expandLabels(['city', 'town']),
-    state: expandLabels(['state', 'province', 'county', 'region']),
-    zip: expandLabels(['zip', 'postal']),
-    country: expandLabels(['country'])
-  };
-
-  // Chain together the query selectors of each label
-  const selector = potentialLabels[type].map(currentLabel => `:contains('${currentLabel}')`).join(', ');
+  // Chain together the query selectors for every variation of a given label.
+  const selector = addressKeyWords[type].map(currentLabel => `:contains('${currentLabel}')`).join(', ');
 
   /**
    * When searching for the primary line we clarify two variations of an address form:
@@ -149,6 +155,40 @@ const findAddressElementByLabel = type => {
   return null;
 };
 
+/**
+ * Searches for inputs related to an address component (by including such terms in their attributes)
+ * @param {string} type - For example: primary, secondary, city
+ * @returns {null || object} - a jQuery object
+ */
+const findAddressElementsByInput = (type) => {
+  const modifiedAddressKeyWords = { ...addressKeyWords };
+
+  // Include 'address' because attribute values typically don't have spaces so 'address 2' would not show up
+  if(type === 'secondary') {
+    modifiedAddressKeyWords.secondary = modifiedAddressKeyWords.secondary.concat(expandLabels(['address']));
+  }
+
+  // Chain together the query selectors for every variation of a given label.
+  const selector = modifiedAddressKeyWords[type].map(currentLabel =>
+    `input[name*='${currentLabel}'], input[for*='${currentLabel}'], input[id*='${currentLabel}']`
+  ).join(', ');
+  
+  // We account for the same edge case mentioned in the selector of findAddressElementsByLabels.
+  // In this scenario, attribute values for primary and secondary inputs are typically numbered
+  // 1 and 2 respectively.
+  let inputs = $(selector);
+  if (type === 'primary') {
+    inputs = inputs.filter(":not(input[name*='2']):not(input[for*='2']):not(input[id*='2'])");
+  } else if (type === 'secondary') {
+    inputs = inputs.filter(":not(input[name*='1']):not(input[for*='1']):not(input[id*='1'])");
+  }
+
+  if (inputs.length) {
+    return inputs;
+  }
+
+  return null;
+};
 
 const resolveParsingResults = addressElements => {
   let parseResultError = ''; 
@@ -222,6 +262,7 @@ const resolveParsingResults = addressElements => {
   return parseResultError;
 };
 
+// Helper function to confirm presence of an address form
 export const findPrimaryAddressInput = () => {
   const primary = findAddressElementByLabel('primary');
   const error = resolveParsingResults({ primary });
@@ -240,14 +281,11 @@ export const parseWebPage = () => {
     message: findElm('verify-message').hide()
   };
 
-  const addressElements = {
-    primary: findAddressElementByLabel('primary'),
-    secondary: findAddressElementByLabel('secondary'),
-    city: findAddressElementByLabel('city'),
-    state: findAddressElementByLabel('state'),
-    zip: findAddressElementByLabel('zip'),
-    country: findAddressElementByLabel('country'),
-  };
+  // Walk through detection strategies for each address component
+  const addressElements = {};
+  ['primary', 'secondary', 'city', 'state', 'zip', 'country'].forEach(type =>
+    addressElements[type] = findAddressElementById(type) || findAddressElementByLabel(type) || findAddressElementsByInput(type)
+  );
 
   return {
     ...errorMessageElements,
