@@ -78,7 +78,7 @@ const expandLabels = labels =>
 
 const addressKeyWords = {
   primary: expandLabels(['primary', 'address', 'street']),
-  secondary: expandLabels(['address 2', 'street 2', 'secondary', 'apartment', 'suite', 'unit', 'apt', 'ste']),
+  secondary: expandLabels(['address 2', 'street 2', 'secondary', 'apartment', 'suite', 'building', 'unit', 'apt', 'ste', 'bldg']),
   city: expandLabels(['city', 'town']),
   state: expandLabels(['state', 'province', 'county', 'region', 'district', 'municipality']),
   zip: expandLabels(['zip', 'postal', 'postcode']),

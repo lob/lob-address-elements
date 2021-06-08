@@ -1,6 +1,8 @@
+const usaVariations = ['united states', 'united states of america', 'us', 'u.s', 'u.s.', 'usa', 'u.s.a', 'u.s.a'];
+
 export const isInternational = countryElement => {
   return countryElement && countryElement.length
-    && !['United States', 'United States of America', 'US', 'U.S', 'U.S.', 'USA', 'U.S.A', 'U.S.A'].includes(countryElement.val());
+    && !usaVariations.includes(countryElement.val().toLowerCase());
 }
 
 export const countryCodes = {
