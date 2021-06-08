@@ -1,4 +1,11 @@
-export default {
+const usaVariations = ['united states', 'united states of america', 'us', 'u.s', 'u.s.', 'usa', 'u.s.a', 'u.s.a'];
+
+export const isInternational = countryElement => {
+  return countryElement && countryElement.length
+    && !usaVariations.includes(countryElement.val().toLowerCase());
+}
+
+export const countryCodes = {
   'afghanistan': 'AF',
   'aland islands': 'AX',
   'albania': 'AL',

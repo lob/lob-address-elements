@@ -1,3 +1,5 @@
+import { isInternational } from './international-utils.js';
+
 /**
  * Returns a jquery element to which to add behavior, locating
  * the element using one of three methods: id, name, attribute.
@@ -60,10 +62,38 @@ export const findForm = type => {
       "Could not find form on page. Please ensure that your address form is enclosed by a form tag.<br/>" +
       "For more information visit <a href=\"https://www.lob.com/guides#av-elements-troubleshooting\">https://www.lob.com/guides#av-elements-troubleshooting</a>" +
       "</p>";
-    console.log(consoleError);
+    console.error(consoleError);
   }
 
   return { form: formElement, error };
+};
+
+/**
+ * Adds all case variations for a given label to work around jQuery's case sensitivity. We do this
+ * instead of overriding jQuery's selection method in case it's being used in other scripts on the page.
+ */
+const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
+const expandLabels = labels =>
+  labels.reduce((acc, label) => [...acc, label, capitalize(label), label.toUpperCase()], []);
+
+const addressKeyWords = {
+  primary: expandLabels(['primary', 'address', 'street']),
+  secondary: expandLabels(['address 2', 'street 2', 'secondary', 'apartment', 'suite', 'building', 'unit', 'apt', 'ste', 'bldg']),
+  city: expandLabels(['city', 'town']),
+  state: expandLabels(['state', 'province', 'county', 'region', 'district', 'municipality']),
+  zip: expandLabels(['zip', 'postal', 'postcode']),
+  country: expandLabels(['country'])
+};
+
+/**
+ * Checks if a form attribute was provided for us in the AV Elements script tag. If so, we locate
+ * the element directly.
+ * @param {string} type - For example: primary, secondary, city
+ * @returns {null || object} - a jQuery object
+ */
+const findAddressElementById = type => {
+  const elementFromID = findElm(type);
+  return elementFromID.length ? elementFromID : null;
 };
 
 /**
@@ -72,30 +102,8 @@ export const findForm = type => {
  * @returns {null || object} - a jQuery object
  */
 const findAddressElementByLabel = type => {
-  // Check if user already provided the form attribute. If so then no search needed.
-  const elementFromID = findElm(type);
-  if (elementFromID.length) {
-    return elementFromID;
-  }
-
-  // jQuery selectors are case sensitive so this function will add all case variations.
-  // We do this instead of overriding jQuery's selection method in case it's being used in other
-  // scripts on the page.
-  const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
-  const expandLabels = labels =>
-    labels.reduce((acc, label) => [...acc, label, capitalize(label), label.toUpperCase()], []);
-
-  const potentialLabels = {
-    primary: expandLabels(['primary', 'address']),
-    secondary: expandLabels(['address 2', 'secondary', 'apartment', 'suite']),
-    city: expandLabels(['city']),
-    state: expandLabels(['state']),
-    zip: expandLabels(['zip', 'postal']),
-    country: expandLabels(['country'])
-  };
-
-  // Chain together the query selectors of each label
-  const selector = potentialLabels[type].map(currentLabel => `:contains('${currentLabel}')`).join(', ');
+  // Chain together the query selectors for every variation of a given label.
+  const selector = addressKeyWords[type].map(currentLabel => `:contains('${currentLabel}')`).join(', ');
 
   /**
    * When searching for the primary line we clarify two variations of an address form:
@@ -107,7 +115,7 @@ const findAddressElementByLabel = type => {
    */
   let selections = $(selector);
   if (type === 'primary') {
-    selections = selections.filter((idx, e) => !/address\s?2/i.test($(e).text()));
+    selections = selections.filter((idx, e) => !/(address|street)\s?2/i.test($(e).text()));
   }
 
   if (!selections.length) {
@@ -147,13 +155,54 @@ const findAddressElementByLabel = type => {
   return null;
 };
 
+/**
+ * Searches for inputs related to an address component (by including such terms in their attributes)
+ * @param {string} type - For example: primary, secondary, city
+ * @returns {null || object} - a jQuery object
+ */
+const findAddressElementsByInput = (type) => {
+  const modifiedAddressKeyWords = { ...addressKeyWords };
+
+  // Include 'address' because attribute values typically don't have spaces so 'address 2' would not show up
+  if(type === 'secondary') {
+    modifiedAddressKeyWords.secondary = modifiedAddressKeyWords.secondary.concat(expandLabels(['address']));
+  }
+
+  // Chain together the query selectors for every variation of a given label.
+  const selector = modifiedAddressKeyWords[type].map(currentLabel =>
+    `input[name*='${currentLabel}'], input[for*='${currentLabel}'], input[id*='${currentLabel}']`
+  ).join(', ');
+  
+  // We account for the same edge case mentioned in the selector of findAddressElementsByLabels.
+  // In this scenario, attribute values for primary and secondary inputs are typically numbered
+  // 1 and 2 respectively.
+  let inputs = $(selector);
+  if (type === 'primary') {
+    inputs = inputs.filter(":not(input[name*='2']):not(input[for*='2']):not(input[id*='2'])");
+  } else if (type === 'secondary') {
+    inputs = inputs.filter(":not(input[name*='1']):not(input[for*='1']):not(input[id*='1'])");
+  }
+
+  if (inputs.length) {
+    return inputs;
+  }
+
+  return null;
+};
 
 const resolveParsingResults = addressElements => {
   let parseResultError = ''; 
 
+  const international = isInternational(addressElements.country);
+
   const missingElements = Object.keys(addressElements).filter(key => {
     // Omit country input in case form is domestic only
     if (key === 'country') {
+      return false;
+    }
+
+    // Some countries like Germany, state is optional and may not exist in their address forms
+    if (key === 'state' && international) {
       return false;
     }
 
@@ -213,8 +262,9 @@ const resolveParsingResults = addressElements => {
   return parseResultError;
 };
 
+// Helper function to confirm presence of an address form
 export const findPrimaryAddressInput = () => {
-  const primary = findAddressElementByLabel('primary');
+  const primary = findAddressElementById('primary') || findAddressElementByLabel('primary') || findAddressElementsByInput('primary');
   const error = resolveParsingResults({ primary });
   return { primary, error };
 };
@@ -231,14 +281,11 @@ export const parseWebPage = () => {
     message: findElm('verify-message').hide()
   };
 
-  const addressElements = {
-    primary: findAddressElementByLabel('primary'),
-    secondary: findAddressElementByLabel('secondary'),
-    city: findAddressElementByLabel('city'),
-    state: findAddressElementByLabel('state'),
-    zip: findAddressElementByLabel('zip'),
-    country: findAddressElementByLabel('country'),
-  };
+  // Walk through detection strategies for each address component
+  const addressElements = {};
+  ['primary', 'secondary', 'city', 'state', 'zip', 'country'].forEach(type =>
+    addressElements[type] = findAddressElementById(type) || findAddressElementByLabel(type) || findAddressElementsByInput(type)
+  );
 
   return {
     ...errorMessageElements,

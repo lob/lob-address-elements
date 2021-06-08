@@ -1,7 +1,7 @@
 'use strict';
 
 import { findElm, findForm, findValue, findPrimaryAddressInput, parseWebPage } from './form-detection.js';
-import countryCodes from './country-codes.js';
+import { countryCodes, isInternational } from './international-utils.js';
 
 (function () {
   /**
@@ -52,22 +52,41 @@ import countryCodes from './country-codes.js';
      * Determine the presence of address-related fields and settings
      */
     function getPageState() {
-      const { primary, error: inputError } = findPrimaryAddressInput();
-      const { form, error: formError } = findForm('primary');
+      try {
+        // Propagate error with our message before something else breaks with a more confusing message
+        const { primary, error: inputError } = findPrimaryAddressInput();
+        if (inputError) {
+          throw new Error(inputError);
+        }
 
-      const strictness = resolveStrictness(cfg.strictness);
-      const create_message = findValue('verify-message') === 'true' || (form.length && !findElm('verify-message').length);
-      const autocomplete = primary.length && findValue('primary') !== 'false';
-      const verify = strictness !== 'false' && form.length && (strictness === 'passthrough' || findElm('verify-message').length || create_message);
+        const { form, error: formError } = findForm('primary');
+        if (formError) {
+          throw new Error(inputError);
+        }
 
-      return {
-        autocomplete: autocomplete,
-        verify: verify,
-        enrich: verify || autocomplete,
-        create_message: create_message,
-        strictness: strictness,
-        error: inputError || formError || ''
-      };
+        const strictness = resolveStrictness(cfg.strictness);
+        const create_message = findValue('verify-message') === 'true' || (form.length && !findElm('verify-message').length);
+        const autocomplete = primary.length && findValue('primary') !== 'false';
+        const verify = strictness !== 'false' && form.length && (strictness === 'passthrough' || findElm('verify-message').length || create_message);
+
+        return {
+          autocomplete: autocomplete,
+          verify: verify,
+          enrich: verify || autocomplete,
+          create_message: create_message,
+          strictness: strictness,
+          error: inputError || formError || ''
+        };
+      } catch (error) {
+        return {
+          autocomplete: false,
+          verify: false,
+          enrich: false,
+          create_message: false,
+          strictness: false,
+          error: error.message
+        };
+      }
     }
 
     /**
@@ -149,11 +168,6 @@ import countryCodes from './country-codes.js';
         }
       };
 
-      function isInternational() {
-        return config.elements.country && config.elements.country.length
-          && !['United States', 'United States of America', 'US', 'U.S', 'U.S.', 'USA', 'U.S.A', 'U.S.A'].includes(config.elements.country.val());
-      }
-
       function resolveInlineStyle(config, type, subtype) {
         return findValue(type + '-' + subtype) || config.styles[type + '-' + subtype];
       }
@@ -213,7 +227,7 @@ import countryCodes from './country-codes.js';
          * @param {function} cb - callback
          */
         config.do.autocomplete = function (query, cb) {
-          config.international = isInternational();
+          config.international = isInternational(config.elements.country);
 
           if (config.international) {
             return false;
@@ -584,7 +598,7 @@ import countryCodes from './country-codes.js';
          * @param {function} cb - process the response (submit the form or show an error message)
          */
         config.do.verify = function (cb) {
-          config.international = isInternational();
+          config.international = isInternational(config.elements.country);
           config.submit = config.strictness === 'passthrough';
           config.confirmed = isConfirmation();
 
