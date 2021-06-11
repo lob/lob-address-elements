@@ -305,12 +305,7 @@ When authoring a custom stylesheet, Lob's default stylesheet should be suppresse
   <script src="https://cdn.lob.com/lob-address-elements/2.0.0/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx"
     data-lob-suggestion-stylesheet="false"
-    data-lob-verify-value="strict"
-    data-lob-primary-id="address1"
-    data-lob-secondary-id="address2"
-    data-lob-city-id="city"
-    data-lob-state-id="state"
-    data-lob-zip-id="zip"></script>
+    data-lob-verify-value="strict"></script>
 </body>
 </html>
 ```
@@ -397,14 +392,14 @@ npm run build
 
 [Minified builds](https://github.com/lob/lob-address-elements/tree/master/lib) map to the releases listed below.
 
-### 2.0.0-beta (Not Released)
+### 2.0.0 (CURRENT / LATEST)
 | Current Improvements |
 | :---          |
 | Implements form detection strategies to simplify script usage |
 | Adds support for international verifications |
 | Modularizes our main script with webpack as our bundler |
 
-### 1.3.0 (CURRENT / LATEST)
+### 1.3.0
 | Release Notes |
 | :---          |
 | Replaces default standardization with Did You Mean? functionality |

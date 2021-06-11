@@ -61,7 +61,7 @@ import { countryCodes, isInternational } from './international-utils.js';
 
         const { form, error: formError } = findForm('primary');
         if (formError) {
-          throw new Error(inputError);
+          throw new Error(formError);
         }
 
         const strictness = resolveStrictness(cfg.strictness);

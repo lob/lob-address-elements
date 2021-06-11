@@ -53,8 +53,7 @@ export const findForm = type => {
   if (!formElement.length) {
     const consoleError =
       "[Lob AV Elements Error]:\tForm element not found\n" +
-      "Could not find form on page.\n" +
-      "Please ensure that your address form is enclosed by a form tag" +
+      "Could not find form on page. Please ensure that your address form is enclosed by a form tag\n" +
       "For more information visit: https://www.lob.com/guides#av-elements-troubleshooting";
     error =
       "<p>" +
@@ -77,10 +76,10 @@ const expandLabels = labels =>
   labels.reduce((acc, label) => [...acc, label, capitalize(label), label.toUpperCase()], []);
 
 const addressKeyWords = {
-  primary: expandLabels(['primary', 'address', 'street']),
-  secondary: expandLabels(['address 2', 'street 2', 'secondary', 'apartment', 'suite', 'building', 'unit', 'apt', 'ste', 'bldg']),
+  primary: expandLabels(['primary', 'address', 'address1', 'street']),
+  secondary: expandLabels(['address 2', 'address2', 'street 2', 'secondary', 'apartment', 'suite', 'building', 'unit', 'apt', 'ste', 'bldg']),
   city: expandLabels(['city', 'town']),
-  state: expandLabels(['state', 'province', 'county', 'region', 'district', 'municipality']),
+  state: expandLabels(['state', 'province', 'county', 'district', 'municipality']),
   zip: expandLabels(['zip', 'postal', 'postcode']),
   country: expandLabels(['country'])
 };
@@ -117,21 +116,21 @@ const findAddressElementByLabel = type => {
   if (type === 'primary') {
     selections = selections.filter((idx, e) => !/(address|street)\s?2/i.test($(e).text()));
   }
-
   if (!selections.length) {
     return null;
   }
 
+  const labels = selections.filter("label");
+
   // Raise an error on multiple matching labels for the user to resolve 
-  if (selections.filter("label").length > 1) {
-    return selections.filter("label");
+  if (labels.length > 1) {
+    return labels;
   }
 
   // Selections are ordered from furthest to closest, so the last element most likely contains
   // the label text itself
-  const label = $(selections[selections.length - 1]);
-  const inputId = label.attr("for");
-
+  const label = labels[0];
+  const inputId = label.htmlFor;
   if (inputId) {
     const inputSelections = $(`#${inputId}`);
     return inputSelections;
@@ -170,7 +169,7 @@ const findAddressElementsByInput = (type) => {
 
   // Chain together the query selectors for every variation of a given label.
   const selector = modifiedAddressKeyWords[type].map(currentLabel =>
-    `input[name*='${currentLabel}'], input[for*='${currentLabel}'], input[id*='${currentLabel}']`
+    `input[id*='${currentLabel}'], select[id*='${currentLabel}']`
   ).join(', ');
   
   // We account for the same edge case mentioned in the selector of findAddressElementsByLabels.
@@ -283,9 +282,17 @@ export const parseWebPage = () => {
 
   // Walk through detection strategies for each address component
   const addressElements = {};
-  ['primary', 'secondary', 'city', 'state', 'zip', 'country'].forEach(type =>
-    addressElements[type] = findAddressElementById(type) || findAddressElementByLabel(type) || findAddressElementsByInput(type)
-  );
+  ['primary', 'secondary', 'city', 'state', 'zip', 'country'].forEach(type => {
+    addressElements[type] = findAddressElementById(type);
+
+    if (!addressElements[type]) {
+      addressElements[type] = findAddressElementByLabel(type);
+    }
+
+    if (!addressElements[type] || (addressElements[type] && addressElements[type].length > 1)) {
+      addressElements[type] = findAddressElementsByInput(type);
+    }
+  });
 
   return {
     ...errorMessageElements,
