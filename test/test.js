@@ -1,5 +1,5 @@
 const assert = require('assert');
-const JQMock = require('./mock/JQuery.js');
+const jsdom = require('jsdom');
 const XHRMock = require('./mock/XHR.js');
 const APIMock = require('./mock/LobAPIs.js');
 
@@ -7,29 +7,38 @@ describe('Address Elements', function () {
     let refs, LobAddressElements;
 
     before(function () {
+        const { JSDOM } = jsdom;
         refs = {
             window: global.window,
             XMLHttpRequest: global.XMLHttpRequest,
             btoa: global.btoa
         };
-        global.window = { jQuery: JQMock };
-        global.btoa = function () { };
-        //NOTE: `elements` and `styles` can also be tested by mocking here as well
-        global.window.LobAddressElementsConfig = {
-            messages: {
-                primary_line: 'primary_line',
-                city_state_zip: 'city_state_zip',
-                zip: 'zip',
-                undeliverable: 'undeliverable',
-                deliverable_missing_unit: 'deliverable_missing_unit',
-                deliverable_incorrect_unit: 'deliverable_incorrect_unit',
-                deliverable_unnecessary_unit: 'deliverable_unnecessary_unit',
-                confirm: 'confirm',
-                DEFAULT: 'DEFAULT'
+        return JSDOM.fromFile('examples/vanilla_css_styles.html', { url: 'http://localhost'}).then(dom => {
+            global.window = { ...dom.window };
+            global.document = dom.window.document;
+            global.btoa = function () { };
+
+            global.$ = global.jQuery = require('jquery');
+            global.window.jQuery = global.jQuery;
+            global.window.jQuery.fn.autocomplete = require('jquery-ui');
+
+            //NOTE: `elements` and `styles` can also be tested by mocking here as well
+            global.window.LobAddressElementsConfig = {
+                messages: {
+                    primary_line: 'primary_line',
+                    city_state_zip: 'city_state_zip',
+                    zip: 'zip',
+                    undeliverable: 'undeliverable',
+                    deliverable_missing_unit: 'deliverable_missing_unit',
+                    deliverable_incorrect_unit: 'deliverable_incorrect_unit',
+                    deliverable_unnecessary_unit: 'deliverable_unnecessary_unit',
+                    confirm: 'confirm',
+                    DEFAULT: 'DEFAULT'
+                }
             }
-        }
-        require('../src/lob-address-elements.js');
-        LobAddressElements = global.window.LobAddressElements;
+            require('../src/lob-address-elements.js');
+            LobAddressElements = global.window.LobAddressElements;
+        });
     });
 
     after(function () {
@@ -50,7 +59,6 @@ describe('Address Elements', function () {
     });
 
     describe('#US Autocompletion', function () {
-
         it('should return a suggestion for alphanumeric entries', function () {
             var xhr_config = { responseText: JSON.stringify(APIMock.suggestions) };
             global.XMLHttpRequest = XHRMock(xhr_config);
@@ -178,35 +186,26 @@ describe('Address Elements', function () {
             });
         });
 
-       it('should submit a fixed, deliverable address once confirmed', function () {
-            var xhr_config = { responseText: JSON.stringify(APIMock.deliverable) };
-            global.XMLHttpRequest = XHRMock(xhr_config);
-            LobAddressElements.elements.primary.val('185 Berry St Ste 6100');
-            LobAddressElements.elements.secondary.val('');
-            LobAddressElements.elements.city.val('San Francisco');
-            LobAddressElements.elements.state.val('CA');
-            LobAddressElements.elements.zip.val('94106'); //this will be changed to 94107-1741
-            LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'confirm');
+        describe('Did you mean?', function () {
+            it('should suggest a deliverable address once confirmed', function () {
+                var xhr_config = { responseText: JSON.stringify(APIMock.deliverable) };
+                global.XMLHttpRequest = XHRMock(xhr_config);
+                LobAddressElements.elements.primary.val('185 Berry St Ste 6100');
+                LobAddressElements.elements.secondary.val('');
+                LobAddressElements.elements.city.val('San Francisco');
+                LobAddressElements.elements.state.val('CA');
+                LobAddressElements.elements.zip.val('94106'); //this will be changed to 94107-1741
                 LobAddressElements.do.verify(function (err, success) {
-                    assert.equal(err, null);
-                    assert.equal(success, true);
-                });
-            });
-        });
+                    assert.equal(success, undefined);
+                    assert.equal(err.type, 'confirm');
+                    assert.ok(/94107-1741/.test(err.msg));
 
-        it('should fix zip, city, and state using the verification object', function () {
-            var xhr_config = { responseText: JSON.stringify(APIMock.deliverable_missing_unit) };
-            global.XMLHttpRequest = XHRMock(xhr_config);
-            LobAddressElements.elements.primary.val('185 Berry St');
-            LobAddressElements.elements.city.val(''); //this will change to San Francisco
-            LobAddressElements.elements.state.val(''); //this will change to CA
-            LobAddressElements.elements.zip.val('94106'); //this will change to 94107-5705
-            LobAddressElements.do.verify(function (err, success) {
-                assert.equal(LobAddressElements.elements.zip.val(), APIMock.deliverable_missing_unit.components.zip_code + "-" + APIMock.deliverable_missing_unit.components.zip_code_plus_4);
-                assert.equal(LobAddressElements.elements.city.val(), APIMock.deliverable_missing_unit.components.city);
-                assert.equal(LobAddressElements.elements.state.val(), APIMock.deliverable_missing_unit.components.state);
+                    LobAddressElements.elements.message.click();
+                    LobAddressElements.do.verify(function (err, success) {
+                        assert.equal(err, null);
+                        assert.equal(success, true);
+                    });
+                });
             });
         });
     });
@@ -258,26 +257,12 @@ describe('Address Elements', function () {
             LobAddressElements.elements.state.val('CA');
             LobAddressElements.elements.zip.val('94107');
             //verify
-            LobAddressElements.do.verify(function (err, success) {
-                //error
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'deliverable_missing_unit');
-                //warn
-                LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_missing_unit');
-                //verify once more
-                LobAddressElements.do.verify(function (err, success) {
-                    //still error
-                    assert.equal(success, undefined);
-                    assert.equal(err.type, 'deliverable_missing_unit');
-                    //try one last time
-                    LobAddressElements.do.verify(function (err, success) {
-                        //still error
-                        assert.equal(success, undefined);
-                        assert.equal(err.type, 'deliverable_missing_unit');
-                    });
-                });
-            });
+            LobAddressElements.elements.form.submit();
+            //confirm warning was presented
+            assert.equal(LobAddressElements.elements.message.text(), 'deliverable_missing_unit');
+            //verify once more
+            LobAddressElements.elements.form.submit();
+            assert.equal(LobAddressElements.submitted, true);
         });
 
         it('should never allow a deliverable address with an incorrect unit to be submitted', function () {
@@ -291,26 +276,12 @@ describe('Address Elements', function () {
             LobAddressElements.elements.state.val('CA');
             LobAddressElements.elements.zip.val('94107');
             //verify
-            LobAddressElements.do.verify(function (err, success) {
-                //error
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'deliverable_incorrect_unit');
-                //warn
-                LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_incorrect_unit');
-                //verify once more
-                LobAddressElements.do.verify(function (err, success) {
-                    //still error
-                    assert.equal(success, undefined);
-                    assert.equal(err.type, 'deliverable_incorrect_unit');
-                    //try one last time
-                    LobAddressElements.do.verify(function (err, success) {
-                        //still error
-                        assert.equal(success, undefined);
-                        assert.equal(err.type, 'deliverable_incorrect_unit');
-                    });
-                });
-            });
+            LobAddressElements.elements.form.submit();
+            //confirm warning was presented
+            assert.equal(LobAddressElements.elements.message.text(), 'deliverable_incorrect_unit');
+            //verify once more
+            LobAddressElements.elements.form.submit();
+            assert.equal(LobAddressElements.submitted, true);
         });
 
         it('should never allow a deliverable address with an unnecessary unit to be submitted', function () {
@@ -324,29 +295,14 @@ describe('Address Elements', function () {
             LobAddressElements.elements.state.val('DC');
             LobAddressElements.elements.zip.val('20007');
             //verify
-            LobAddressElements.do.verify(function (err, success) {
-                //error
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'deliverable_unnecessary_unit');
-                //warn
-                LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_unnecessary_unit');
-                //verify once more
-                LobAddressElements.do.verify(function (err, success) {
-                    //still error
-                    assert.equal(success, undefined);
-                    assert.equal(err.type, 'deliverable_unnecessary_unit');
-                    //try one last time
-                    LobAddressElements.do.verify(function (err, success) {
-                        //still error
-                        assert.equal(success, undefined);
-                        assert.equal(err.type, 'deliverable_unnecessary_unit');
-                    });
-                });
-            });
+            LobAddressElements.elements.form.submit();
+            //confirm warning was presented
+            assert.equal(LobAddressElements.elements.message.text(), 'deliverable_unnecessary_unit');
+            //verify once more
+            LobAddressElements.elements.form.submit();
+            assert.equal(LobAddressElements.submitted, true);
         });
     });
-
 
     describe('#US Verification | Normal Mode', function () {
 
@@ -394,19 +350,12 @@ describe('Address Elements', function () {
             LobAddressElements.elements.state.val('CA');
             LobAddressElements.elements.zip.val('94107');
             //verify
-            LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'deliverable_missing_unit');
-                //warn
-                LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_missing_unit');
-                //verify once more
-                LobAddressElements.do.verify(function (err, success) {
-                    //success
-                    assert.equal(success, true);
-                    assert.equal(err, null);
-                });
-            });
+            LobAddressElements.elements.form.submit();
+            //confirm warning was presented
+            assert.equal(LobAddressElements.elements.message.text(), 'deliverable_missing_unit');
+            //verify once more
+            LobAddressElements.elements.form.submit();
+            assert.equal(LobAddressElements.submitted, true);
         });
  
         it('should warn then allow a deliverable address with an incorrect unit to be submitted', function () {
@@ -420,19 +369,12 @@ describe('Address Elements', function () {
             LobAddressElements.elements.state.val('CA');
             LobAddressElements.elements.zip.val('94107');
             //verify
-            LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'deliverable_incorrect_unit');
-                //warn
-                LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_incorrect_unit');
-                //verify once more
-                LobAddressElements.do.verify(function (err, success) {
-                    //success
-                    assert.equal(success, true);
-                    assert.equal(err, null);
-                });
-            });
+            LobAddressElements.elements.form.submit();
+            //confirm warning was presented
+            assert.equal(LobAddressElements.elements.message.text(), 'deliverable_incorrect_unit');
+            //verify once more
+            LobAddressElements.elements.form.submit();
+            assert.equal(LobAddressElements.submitted, true);
         });
  
         it('should warn then allow a deliverable address with an unnecessary unit to be submitted', function () {
@@ -446,19 +388,12 @@ describe('Address Elements', function () {
             LobAddressElements.elements.state.val('DC');
             LobAddressElements.elements.zip.val('20007');
             //verify
-            LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'deliverable_unnecessary_unit');
-                //warn
-                LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_unnecessary_unit');
-                //verify once more
-                LobAddressElements.do.verify(function (err, success) {
-                    //success
-                    assert.equal(success, true);
-                    assert.equal(err, null);
-                });
-            });
+            LobAddressElements.elements.form.submit();
+            //confirm warning was presented
+            assert.equal(LobAddressElements.elements.message.text(), 'deliverable_unnecessary_unit');
+            //verify once more
+            LobAddressElements.elements.form.submit();
+            assert.equal(LobAddressElements.submitted, true);
         });
     });
 
@@ -475,19 +410,12 @@ describe('Address Elements', function () {
             LobAddressElements.elements.state.val('CA');
             LobAddressElements.elements.zip.val('94107');
             //verify
-            LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'undeliverable');
-                //warn
-                LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'undeliverable');
-                //verify once more
-                LobAddressElements.do.verify(function (err, success) {
-                    //success
-                    assert.equal(success, true);
-                    assert.equal(err, null);
-                });
-            });
+            LobAddressElements.elements.form.submit();
+            //confirm warning was presented
+            assert.equal(LobAddressElements.elements.message.text(), 'undeliverable');
+            //verify once more
+            LobAddressElements.elements.form.submit();
+            assert.equal(LobAddressElements.submitted, true);
         });
 
         it('should warn then allow a deliverable address with a missing unit to be submitted', function () {
@@ -501,19 +429,12 @@ describe('Address Elements', function () {
             LobAddressElements.elements.state.val('CA');
             LobAddressElements.elements.zip.val('94107');
             //verify
-            LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'deliverable_missing_unit');
-                //warn
-                LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_missing_unit');
-                //verify once more
-                LobAddressElements.do.verify(function (err, success) {
-                    //success
-                    assert.equal(success, true);
-                    assert.equal(err, null);
-                });
-            });
+            LobAddressElements.elements.form.submit();
+            //confirm warning was presented
+            assert.equal(LobAddressElements.elements.message.text(), 'deliverable_missing_unit');
+            //verify once more
+            LobAddressElements.elements.form.submit();
+            assert.equal(LobAddressElements.submitted, true);
         });
  
         it('should warn then allow a deliverable address with an incorrect unit to be submitted', function () {
@@ -527,19 +448,12 @@ describe('Address Elements', function () {
             LobAddressElements.elements.state.val('CA');
             LobAddressElements.elements.zip.val('94107');
             //verify
-            LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'deliverable_incorrect_unit');
-                //warn
-                LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_incorrect_unit');
-                //verify once more
-                LobAddressElements.do.verify(function (err, success) {
-                    //success
-                    assert.equal(success, true);
-                    assert.equal(err, null);
-                });
-            });
+            LobAddressElements.elements.form.submit();
+            //confirm warning was presented
+            assert.equal(LobAddressElements.elements.message.text(), 'deliverable_incorrect_unit');
+            //verify once more
+            LobAddressElements.elements.form.submit();
+            assert.equal(LobAddressElements.submitted, true);
         });
  
         it('should warn then allow a deliverable address with an unnecessary unit to be submitted', function () {
@@ -553,19 +467,12 @@ describe('Address Elements', function () {
             LobAddressElements.elements.state.val('DC');
             LobAddressElements.elements.zip.val('20007');
             //verify
-            LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'deliverable_unnecessary_unit');
-                //warn
-                LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_unnecessary_unit');
-                //verify once more
-                LobAddressElements.do.verify(function (err, success) {
-                    //success
-                    assert.equal(success, true);
-                    assert.equal(err, null);
-                });
-            });
+            LobAddressElements.elements.form.submit();
+            //confirm warning was presented
+            assert.equal(LobAddressElements.elements.message.text(), 'deliverable_unnecessary_unit');
+            //verify once more
+            LobAddressElements.elements.form.submit();
+            assert.equal(LobAddressElements.submitted, true);
         });
     });
 

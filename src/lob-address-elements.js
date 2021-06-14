@@ -275,7 +275,12 @@ import { countryCodes, isInternational } from './international-utils.js';
          * @param {object} suggestion - as returned from the Lob API
          */
         config.do.apply = function (suggestion) {
-          config.elements.primary.autocomplete('val', suggestion.primary_line);
+          // Check autocomplete in case we're in running in a unit test
+          if (typeof config.elements.primary.autocomplete === 'function') {
+            config.elements.primary.autocomplete('val', suggestion.primary_line);
+          } else {
+            config.elements.primary.val(suggestion.primary_line);
+          }
           config.elements.secondary.val('');
           config.elements.city.val(suggestion.city);
           config.elements.state.val(suggestion.state);
@@ -285,26 +290,29 @@ import { countryCodes, isInternational } from './international-utils.js';
         /**
          * configure the Algolia Autocomplete plugin
          */
-        config.elements.primary.autocomplete(
-          {
-            hint: false
-          },
-          {
-            source: config.do.autocomplete,
-            templates: {
-              suggestion: function (suggestion) {
-                var suggestionElement = $('<div></div>');
-                var suggestionSpan = $('<span></span>');
-                suggestionElement.text(suggestion.primary_line + ' ');
-                suggestionSpan.text(suggestion.city + ', ' + suggestion.state + ' ' + suggestion.zip_code);
-                suggestionElement.append(suggestionSpan);
-                return suggestionElement;
-              }
+        if (typeof config.elements.primary.autocomplete === 'function') {
+
+          config.elements.primary.autocomplete(
+            {
+              hint: false
             },
-            cache: false
-          }).on('autocomplete:selected', function (event, suggestion) {
-            config.do.apply(suggestion);
-          });
+            {
+              source: config.do.autocomplete,
+              templates: {
+                suggestion: function (suggestion) {
+                  var suggestionElement = $('<div></div>');
+                  var suggestionSpan = $('<span></span>');
+                  suggestionElement.text(suggestion.primary_line + ' ');
+                  suggestionSpan.text(suggestion.city + ', ' + suggestion.state + ' ' + suggestion.zip_code);
+                  suggestionElement.append(suggestionSpan);
+                  return suggestionElement;
+                }
+              },
+              cache: false
+            }).on('autocomplete:selected', function (event, suggestion) {
+              config.do.apply(suggestion);
+            });
+          }
       }
 
       /**
@@ -672,16 +680,18 @@ import { countryCodes, isInternational } from './international-utils.js';
         config.elements.form.on('submit', function preFlight(e) {
           e.stopImmediatePropagation();
           e.preventDefault();
+
           hideMessages();
 
           // Remove event handler from previous error message
           config.elements.message.off('click');
 
           return config.do.verify(function (err, success) {
-            if (config.submit) {
+            if (config.submit || config.override) {
               config.do.message(err);
               config.elements.form.off('submit', preFlight);
               config.submitted = true;
+              config.override = false;
               config.elements.form.submit();
               config.elements.form.on('submit', preFlight);
               prioritizeHandler(config.elements.form, 'submit');
@@ -691,6 +701,8 @@ import { countryCodes, isInternational } from './international-utils.js';
                 config.elements.form.submit();
               } else {
                 config.do.message(err);
+                // Allow user to bypass known warnings after they see our warning message 
+                config.override = err.type !== 'DEFAULT';
               }
             }
           });
