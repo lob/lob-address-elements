@@ -36,7 +36,7 @@ describe('Address Elements', function () {
                     DEFAULT: 'DEFAULT'
                 }
             }
-            require('../src/lob-address-elements.js');
+            require('../src/main.js');
             LobAddressElements = global.window.LobAddressElements;
         });
     });
