@@ -21,7 +21,7 @@ let verification_configured = false;
  * @param {*} cfg - configuration
  * @param {*} state - page state
  */
-export function _LobAddressElements($, cfg, state) {
+export function LobAddressElements($, cfg, state) {
   let config = {
     api_key: cfg.api_key || findValue('key'),
     strictness: state.strictness,
@@ -56,7 +56,7 @@ export function _LobAddressElements($, cfg, state) {
     },
     do: {
       init: function () {
-        _LobAddressElements($, cfg);
+        LobAddressElements($, cfg);
       }
     }
   };

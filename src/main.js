@@ -1,8 +1,8 @@
 'use strict';
 
 import { findElm, findForm, findValue, findPrimaryAddressInput } from './form-detection.js';
-
-import { _LobAddressElements } from './lob-address-elements.js';
+import { createFormErrorMessageStyles } from './stylesheets.js';
+import { LobAddressElements } from './lob-address-elements.js';
 
 (function () {
   /**
@@ -15,9 +15,9 @@ import { _LobAddressElements } from './lob-address-elements.js';
    * @param {object} cfg - user configuration passed as a JSON file (optional)
    * @returns {object}
    */
-  function LobAddressElementsFactory($, cfg) {
+  const enrichWebPage = ($, cfg) => {
 
-    function resolveStrictness(cfg) {
+    const resolveStrictness = cfg => {
       const values = ['false', 'strict', 'normal', 'relaxed', 'passthrough'];
       if (cfg && values.indexOf(cfg) > -1) {
         return cfg;
@@ -27,14 +27,10 @@ import { _LobAddressElements } from './lob-address-elements.js';
       }
     }
 
-    function createLobAddressElements($, cfg, state) {
-      return new _LobAddressElements($, cfg, state);
-    }
-
     /**
      * Determine the presence of address-related fields and settings
      */
-    function getPageState() {
+    const getPageState = () => {
       try {
         // Propagate error with our message before something else breaks with a more confusing message
         const { primary, error: inputError } = findPrimaryAddressInput();
@@ -76,14 +72,12 @@ import { _LobAddressElements } from './lob-address-elements.js';
      * Observe the DOM. Trigger enrichment when state changes to 'enrich'
      * @param {string} state - The current state. One of: enriched, untouched
      */
-    function observeDOM(state) {
-      function didChange() {
+    const observeDOM = state => {
+      const didChange = () => {
         const newState = getPageState();
         if (state === 'untouched' && newState.enrich) {
           state = 'enriched';
-          setTimeout(function () {
-            createLobAddressElements($, cfg, newState);
-          }, 0);
+          setTimeout(() => new LobAddressElements($, cfg, newState), 0);
         } else if (state === 'enriched' && !newState.enrich) {
           state = 'untouched';
         }
@@ -104,32 +98,19 @@ import { _LobAddressElements } from './lob-address-elements.js';
       // Form cannot be found so we add error to the top of page
       const message = $(`<div class="lob-form-error-message">${state.error}</div>`);
       $('<style>')
-      .prop('type', 'text/css')
-      .html('\
-      .lob-form-error-message {\
-        width: 100%;\
-        border-radius: .25rem;\
-        max-width: 100%;\
-        text-align: left;\
-        padding: .5rem;\
-        margin-top: 1.5rem;\
-        margin-bottom: 1.5rem;\
-        color: #117ab8;\
-        background-color: #eeeeee;\
-      }'
-      ).appendTo('head');
+        .prop('type', 'text/css')
+        .html(createFormErrorMessageStyles())
+        .appendTo('head');
       $("body").prepend(message);
       return null;
     } else if (state.enrich) {
       observeDOM('enriched');
-      return createLobAddressElements($, cfg, state);
+      return new LobAddressElements($, cfg, state);
     } else {
       observeDOM('untouched');
       return {
         do: {
-          init: function () {
-            createLobAddressElements($, cfg, state);
-          }
+          init: () => new LobAddressElements($, cfg, state),
         }
       };
     }
@@ -138,7 +119,7 @@ import { _LobAddressElements } from './lob-address-elements.js';
   /**
    * CDN URLs for required dependencies
    */
-  var paths = {
+  const paths = {
     jquery: 'https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js',
     jquery_ac: 'https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.37.0/autocomplete.jquery.min.js',
   }
@@ -146,16 +127,16 @@ import { _LobAddressElements } from './lob-address-elements.js';
   /**
    * Dependency Loader
    */
-  var BootStrapper = {
+  const BootStrapper = {
     load: function () {
-      var args = Array.prototype.slice.call(arguments[0]);
-      var next = BootStrapper[args.shift()];
+      const args = Array.prototype.slice.call(arguments[0]);
+      const next = BootStrapper[args.shift()];
       next && next.apply(this, args);
     },
     jquery: function () {
       if (!window.jQuery) {
-        var args = arguments;
-        var jq = document.createElement('script');
+        const args = arguments;
+        const jq = document.createElement('script');
         jq.onload = function () {
           BootStrapper.load(args);
         };
@@ -167,8 +148,8 @@ import { _LobAddressElements } from './lob-address-elements.js';
     },
     jquery_autocomplete: function () {
       if (!window.jQuery.fn.autocomplete) {
-        var jqac = document.createElement('script');
-        var args = arguments;
+        const jqac = document.createElement('script');
+        const args = arguments;
         jqac.onload = function () {
           BootStrapper.load(args);
         };
@@ -180,8 +161,8 @@ import { _LobAddressElements } from './lob-address-elements.js';
     },
     address_elements: function () {
       if (!window.LobAddressElements) {
-        var config = window.LobAddressElementsConfig || {};
-        window.LobAddressElements = new LobAddressElementsFactory(window.jQuery, config);
+        const config = window.LobAddressElementsConfig || {};
+        window.LobAddressElements = enrichWebPage(window.jQuery, config);
         BootStrapper.load(arguments);
       } else {
         BootStrapper.load(arguments);
