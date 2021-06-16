@@ -19,154 +19,172 @@ let verification_configured = false;
  * 
  * @param {object} $ - jQuery
  * @param {*} cfg - configuration
- * @param {*} state - page state
+ * @param {*} pageState - page state
  */
-export function LobAddressElements($, cfg, state) {
-  let config = {
-    api_key: cfg.api_key || findValue('key'),
-    strictness: state.strictness,
-    denormalize: findValue('secondary') !== 'false',
-    suppress_stylesheet: resolveStyleStrategy(cfg),
-    styles: cfg.styles || {
-      'err-color': '#117ab8',
-      'err-bgcolor': '#eeeeee',
-      'suggestion-color': '#666666',
-      'suggestion-bgcolor': '#fefefe',
-      'suggestion-bordercolor': '#a8a8a8',
-      'suggestion-activecolor': '#117ab8',
-      'suggestion-activebgcolor': '#eeeeee'
-    },
-    elements: cfg.elements || parseWebPage(),
-    messages: cfg.messages || {
-      primary_line: findValue('err-primary-line') || 'Enter the Primary address.',
-      city_state_zip: findValue('err-city-state-zip') || 'Enter City and State (or Zip).',
-      country: findValue('err-country') || 'Enter a country',
-      zip: findValue('err-zip') || 'Enter a valid Zip.',
-      undeliverable: findValue('err-undeliverable') || 'The address could not be verified.',
-      deliverable_missing_unit: findValue('err-missing-unit') || 'Enter a Suite or Unit.',
-      deliverable_unnecessary_unit: findValue('err-unnecessary-unit') || 'Suite or Unit unnecessary.',
-      deliverable_incorrect_unit: findValue('err-incorrect-unit') || 'Incorrect Unit. Please confirm.',
-      confirm: findValue('err-confirm') || 'Did you mean',
-      DEFAULT: findValue('err-default') || 'Unknown Error. The address could not be verified.'
-    },
-    apis: cfg.apis || {
-      autocomplete: 'https://api.lob.com/v1/us_autocompletions',
-      intl_verify: 'https://api.lob.com/v1/intl_verifications', 
-      us_verify: 'https://api.lob.com/v1/us_verifications'
-    },
-    do: {
-      init: function () {
-        LobAddressElements($, cfg);
+export class LobAddressElements {
+
+  constructor($, cfg, pageState) {
+    this.pageState = pageState;
+    this.config = {
+      api_key: cfg.api_key || findValue('key'),
+      strictness: pageState.strictness,
+      denormalize: findValue('secondary') !== 'false',
+      suppress_stylesheet: resolveStyleStrategy(cfg),
+      styles: cfg.styles || {
+        'err-color': '#117ab8',
+        'err-bgcolor': '#eeeeee',
+        'suggestion-color': '#666666',
+        'suggestion-bgcolor': '#fefefe',
+        'suggestion-bordercolor': '#a8a8a8',
+        'suggestion-activecolor': '#117ab8',
+        'suggestion-activebgcolor': '#eeeeee'
+      },
+      elements: cfg.elements || parseWebPage(),
+      messages: cfg.messages || {
+        primary_line: findValue('err-primary-line') || 'Enter the Primary address.',
+        city_state_zip: findValue('err-city-state-zip') || 'Enter City and State (or Zip).',
+        country: findValue('err-country') || 'Enter a country',
+        zip: findValue('err-zip') || 'Enter a valid Zip.',
+        undeliverable: findValue('err-undeliverable') || 'The address could not be verified.',
+        deliverable_missing_unit: findValue('err-missing-unit') || 'Enter a Suite or Unit.',
+        deliverable_unnecessary_unit: findValue('err-unnecessary-unit') || 'Suite or Unit unnecessary.',
+        deliverable_incorrect_unit: findValue('err-incorrect-unit') || 'Incorrect Unit. Please confirm.',
+        confirm: findValue('err-confirm') || 'Did you mean',
+        DEFAULT: findValue('err-default') || 'Unknown Error. The address could not be verified.'
+      },
+      apis: cfg.apis || {
+        autocomplete: 'https://api.lob.com/v1/us_autocompletions',
+        intl_verify: 'https://api.lob.com/v1/intl_verifications', 
+        us_verify: 'https://api.lob.com/v1/us_verifications'
+      },
+      do: {
+        init: function () {
+          LobAddressElements($, cfg);
+        }
       }
+    };
+
+    if (pageState.autocomplete) {
+      this.configureAutocompletion();
     }
-  };
+
+    if (pageState.verify) {
+      this.configureVerification();
+    }
+
+    //bind the state to the global element
+    window.LobAddressElements = this;
+  }
+
+
+  /**
+   * query Lob for autocomplete suggestions
+   * @param {string} query - what the user just keyed into the autocomplete input
+   * @param {function} cb - callback
+   */
+  autocomplete(query, cb) {
+    this.config.international = isInternational(this.config.elements.country);
+
+    if (this.config.international) {
+      return false;
+    }
+
+    if (query.match(/[A-Za-z0-9]/)) {
+      const xhr = new XMLHttpRequest();
+      const path = `${this.config.apis.autocomplete}?av_elements_origin=${window.location.href}`;
+
+      xhr.open('POST', path, true);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      if (this.config.api_key) {
+        xhr.setRequestHeader('Authorization', 'Basic ' + btoa(this.config.api_key + ':'));
+      }
+      xhr.onreadystatechange = function () {
+        if (this.readyState === XMLHttpRequest.DONE) {
+          if (this.status === 200) {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              cb(data.suggestions);
+            } catch (e) {
+              cb(null);
+            }
+          } else if (this.status === 401) {
+            //INVALID API KEY; allow default submission
+            console.log('Please sign up on lob.com to get a valid api key.');
+            cb(null);
+          } else {
+            cb(null);
+          }
+        }
+      }
+      xhr.send(JSON.stringify({
+        address_prefix: query,
+        city: this.config.elements.city.val(),
+        zip_code: this.config.elements.zip.val(),
+        state: this.config.elements.state.val(),
+        geo_ip_sort: true
+      }));
+    }
+    return false;
+  }
+
 
   /**
    * Injects styles, behaviors and fields necessary for address autocompletion
    */
-  function configureAutocompletion() {
+  configureAutocompletion() {
+    const {
+      elements,
+      suppress_stylesheet,
+    } = this.config;
 
     /**
      * Inject the CSS for styling the dropdown if not overridden by user
      */
-    if (!config.suppress_stylesheet && !autocompletion_configured) {
+    if (!suppress_stylesheet && !autocompletion_configured) {
       autocompletion_configured = true;
       $('<style>')
         .prop('type', 'text/css')
-        .html(createAutocompleteStyles(config))
+        .html(createAutocompleteStyles(this.config))
         .appendTo('head');
     }
 
-    /**
-     * query Lob for autocomplete suggestions
-     * @param {string} query - what the user just keyed into the autocomplete input
-     * @param {function} cb - callback
-     */
-    config.do.autocomplete = function (query, cb) {
-      config.international = isInternational(config.elements.country);
-
-      if (config.international) {
-        return false;
-      }
-
-      if (query.match(/[A-Za-z0-9]/)) {
-        var xhr = new XMLHttpRequest();
-        var path = config.apis.autocomplete + '?av_elements_origin=' + window.location.href;
-        xhr.open('POST', path, true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        if (config.api_key) {
-          xhr.setRequestHeader('Authorization', 'Basic ' + btoa(config.api_key + ':'));
-        }
-        xhr.onreadystatechange = function () {
-          if (this.readyState === XMLHttpRequest.DONE) {
-            if (this.status === 200) {
-              try {
-                var data = JSON.parse(xhr.responseText);
-                cb(data.suggestions);
-              } catch (e) {
-                cb(null);
-              }
-            } else if (this.status === 401) {
-              //INVALID API KEY; allow default submission
-              console.log('Please sign up on lob.com to get a valid api key.');
-              cb(null);
-            } else {
-              cb(null);
-            }
-          }
-        }
-        xhr.send(JSON.stringify({
-          address_prefix: query,
-          city: config.elements.city.val(),
-          zip_code: config.elements.zip.val(),
-          state: config.elements.state.val(),
-          geo_ip_sort: true
-        }));
-      }
-      return false;
-    }
+    // Check autocomplete in case we're in running in a unit test
+    const isLiveEnv = typeof elements.primary.autocomplete === 'function';
 
     /**
      * Project the chosen suggested address into the UI
      * @param {object} suggestion - as returned from the Lob API
      */
-    config.do.apply = function (suggestion) {
+    const applySuggestion = suggestion => {
       // Check autocomplete in case we're in running in a unit test
-      if (typeof config.elements.primary.autocomplete === 'function') {
-        config.elements.primary.autocomplete('val', suggestion.primary_line);
+      if (isLiveEnv) {
+        elements.primary.autocomplete('val', suggestion.primary_line);
       } else {
-        config.elements.primary.val(suggestion.primary_line);
+        elements.primary.val(suggestion.primary_line);
       }
-      config.elements.secondary.val('');
-      config.elements.city.val(suggestion.city);
-      config.elements.state.val(suggestion.state);
-      config.elements.zip.val(suggestion.zip_code);
+      elements.secondary.val('');
+      elements.city.val(suggestion.city);
+      elements.state.val(suggestion.state);
+      elements.zip.val(suggestion.zip_code);
     }
 
     /**
      * configure the Algolia Autocomplete plugin
      */
-    if (typeof config.elements.primary.autocomplete === 'function') {
-
-      config.elements.primary.autocomplete(
+    if (isLiveEnv) {
+      elements.primary.autocomplete(
         {
           hint: false
         },
         {
-          source: config.do.autocomplete,
+          source: this.autocomplete.bind(this),
           templates: {
-            suggestion: function (suggestion) {
-              var suggestionElement = $('<div></div>');
-              var suggestionSpan = $('<span></span>');
-              suggestionElement.text(suggestion.primary_line + ' ');
-              suggestionSpan.text(suggestion.city + ', ' + suggestion.state + ' ' + suggestion.zip_code);
-              suggestionElement.append(suggestionSpan);
-              return suggestionElement;
-            }
+            suggestion: ({ primary_line, city, state, zip_code }) =>
+              $(`<div>${primary_line} <span>${city}, ${state} ${zip_code}</span></div>`)
           },
           cache: false
-        }).on('autocomplete:selected', function (event, suggestion) {
-          config.do.apply(suggestion);
+        }).on('autocomplete:selected', (event, suggestion) => {
+          applySuggestion(suggestion);
         });
       }
   }
@@ -174,7 +192,7 @@ export function LobAddressElements($, cfg, state) {
   /**
    * Injects styles, behaviors and fields necessary for address verification
    */
-  function configureVerification() {
+  configureVerification() {
 
     /**
      * jQuery event handlers execute in binding order. 
@@ -196,7 +214,7 @@ export function LobAddressElements($, cfg, state) {
         return 'zip';
       } else if (message === 'country is required') {
         return 'country'
-      } else if (message in config.messages) {
+      } else if (message in this.config.messages) {
         return message
       } else {
         return 'DEFAULT';
@@ -206,25 +224,25 @@ export function LobAddressElements($, cfg, state) {
     /**
      * Inject the form Verification Error Message container
      */
-    if (state.create_message) {
+    if (this.pageState.create_message) {
       var message = $('<div class="lob-verify-message"></div>');
 
       // Determine where to place error message
-      var anchor = config.elements.errorAnchorElement;
+      var anchor = this.config.elements.errorAnchorElement;
 
       if (anchor.length) {
         message.insertBefore(anchor);
       } else {
-        console.log(config.elements.form);
-        config.elements.form.prepend(message);
+        console.log(this.config.elements.form);
+        this.config.elements.form.prepend(message);
       }
-      config.elements.message = message;
+      this.config.elements.message = message;
 
       if (!verification_configured) {
         verification_configured = true;
         $('<style>')
           .prop('type', 'text/css')
-          .html(createVerifyMessageStyles(config))
+          .html(createVerifyMessageStyles(this.config))
           .appendTo('head');
       }
     }
@@ -251,7 +269,7 @@ export function LobAddressElements($, cfg, state) {
      */
     function denormalizeParts(data, bSecondary) {
       var sd = data.components && data.components.secondary_designator || '';
-      if (data.secondary_line || !config.denormalize) {
+      if (data.secondary_line || !this.config.denormalize) {
         //echo exactly when configured explicitly or structurally required
         return {
           secondary_line: data.secondary_line,
@@ -275,14 +293,14 @@ export function LobAddressElements($, cfg, state) {
 
     function formatAddressFromResponseData(data) {
       const { components } = data;
-      const parts = denormalizeParts(data, !!config.elements.secondary.val());
+      const parts = denormalizeParts(data, !!this.config.elements.secondary.val());
 
       return {
         primary: parts.primary_line,
         secondary: parts.secondary_line,
         city: components && components.city || '',
         state: components && components.state || '',
-        zip: config.international ? components.postal_code : plus4(components)
+        zip: this.config.international ? components.postal_code : plus4(components)
       };
     }
 
@@ -293,20 +311,20 @@ export function LobAddressElements($, cfg, state) {
      */
     function fixAndSave(data, fix = true) {
       let needsImprovement = false;
-      const address = config.address = formatAddressFromResponseData(data);
+      const address = this.config.address = formatAddressFromResponseData(data);
       for (let p in address) {
         if (address.hasOwnProperty(p)) {
-          const formInput = config.elements[p].val();
+          const formInput = this.config.elements[p].val();
           const dataDoesNotMatchFormInput = address[p].toUpperCase() !== formInput.toUpperCase();
           // Standard 5-digit zip input is good enough. We don't care if it doesn't match response data's zip with +4
           const zipMismatch = !(p === 'zip' && formInput.length === 5 && address[p].indexOf(formInput) === 0);
 
-          if (dataDoesNotMatchFormInput && (!config.international && zipMismatch)) {
+          if (dataDoesNotMatchFormInput && (!this.config.international && zipMismatch)) {
             needsImprovement = true;
           }
           
           if (fix) {
-            config.elements[p].val(address[p]);
+            this.config.elements[p].val(address[p]);
           }
         }
       }
@@ -319,10 +337,10 @@ export function LobAddressElements($, cfg, state) {
      * passthrough mode, confirmation is unnecessary
      */
     function isConfirmation() {
-      if (config.strictness !== 'passthrough' && config.address) {
-        for (var p in config.address) {
-          if (config.address.hasOwnProperty(p) &&
-            config.elements[p].val().toUpperCase() !== config.address[p].toUpperCase()) {
+      if (this.config.strictness !== 'passthrough' && this.config.address) {
+        for (var p in this.config.address) {
+          if (this.config.address.hasOwnProperty(p) &&
+            this.config.elements[p].val().toUpperCase() !== this.config.address[p].toUpperCase()) {
             return false;
           }
         }
@@ -335,17 +353,17 @@ export function LobAddressElements($, cfg, state) {
      * Returns true if the verification check with Lob has succeeded.
      * NOTE: If the API endpoint is unavailable (status 0), return success.
      * @param {object} data - Lob API server response
-     * @param {object} config - Address Element configuration
+     * @param {object} this.config - Address Element configuration
      * @param {number} status - HTTP status code
      */
     function isVerified(data, config, status) {
       var addressNeedsImprovement = fixAndSave(data, false /* fix */);
       return !status ||
         (data.deliverability === 'deliverable' && !addressNeedsImprovement) ||
-        (data.deliverability === 'undeliverable' && config.confirmed && config.strictness === 'relaxed') ||
-        (data.deliverability === 'deliverable_missing_unit' && config.confirmed && config.strictness !== 'strict') ||
-        (data.deliverability === 'deliverable_unnecessary_unit' && config.confirmed && config.strictness !== 'strict') ||
-        (data.deliverability === 'deliverable_incorrect_unit' && config.confirmed && config.strictness !== 'strict')
+        (data.deliverability === 'undeliverable' && this.config.confirmed && this.config.strictness === 'relaxed') ||
+        (data.deliverability === 'deliverable_missing_unit' && this.config.confirmed && this.config.strictness !== 'strict') ||
+        (data.deliverability === 'deliverable_unnecessary_unit' && this.config.confirmed && this.config.strictness !== 'strict') ||
+        (data.deliverability === 'deliverable_incorrect_unit' && this.config.confirmed && this.config.strictness !== 'strict')
     }
 
     function parseJSON(s) {
@@ -358,12 +376,12 @@ export function LobAddressElements($, cfg, state) {
     }
 
     function hideMessages() {
-      config.elements.message.hide();
-      config.elements.primaryMsg.hide();
-      config.elements.secondaryMsg.hide();
-      config.elements.cityMsg.hide();
-      config.elements.stateMsg.hide();
-      config.elements.zipMsg.hide();
+      this.config.elements.message.hide();
+      this.config.elements.primaryMsg.hide();
+      this.config.elements.secondaryMsg.hide();
+      this.config.elements.cityMsg.hide();
+      this.config.elements.stateMsg.hide();
+      this.config.elements.zipMsg.hide();
     }
 
     function format(template, args) {
@@ -375,7 +393,7 @@ export function LobAddressElements($, cfg, state) {
 
     function createDidYouMeanMessage(data) {
       var address = formatAddressFromResponseData(data);
-      var info = config.messages.confirm; // Did you mean
+      var info = this.config.messages.confirm; // Did you mean
       var modifiedAddress = format("{0} {1} {2} {3} {4}", [
         address.primary,
         address.secondary,
@@ -389,55 +407,8 @@ export function LobAddressElements($, cfg, state) {
       );
     }
 
-    const messageTypes = {
-      primary_line: msg => {
-        config.elements.primaryMsg.text(msg).show('slow');
-      },
-      city_state_zip: msg => {
-        config.elements.cityMsg.text(msg).show('slow');
-        config.elements.stateMsg.text(msg).show('slow');
-        config.elements.zipMsg.text(msg).show('slow');
-      },
-      zip: msg => {
-        config.elements.zipMsg.text(msg).show('slow');
-      },
-      deliverable_missing_unit: msg => {
-        (!config.denormalize &&
-          config.elements.primaryMsg.text(msg).show('slow')) ||
-          config.elements.secondaryMsg.text(msg).show('slow');
-      },
-      deliverable_unnecessary_unit: msg => {
-        (!config.denormalize &&
-          config.elements.primaryMsg.text(msg).show('slow')) ||
-          config.elements.secondaryMsg.text(msg).show('slow');
-      },
-      deliverable_incorrect_unit: msg => {
-        (!config.denormalize &&
-          config.elements.primaryMsg.text(msg).show('slow')) ||
-          config.elements.secondaryMsg.text(msg).show('slow');
-      }
-    };
-
-    /**
-     * Show form- and field-level error messages as configured. Verification did NOT succeed.
-     * @param {object} err - Verification error object representing a Lob error type
-     * @param {string} err.msg - Top-level message to show for the form
-     * @param {string} err.type - Specific error type to apply at field level if relevant
-     */
-    config.do.message = function (err) {
-      if (err) {
-        // Confirmation error message uses html to give users the ability to revert standardization
-        if (err.type === 'confirm' || err.type === 'form_detection') {
-          config.elements.message.html(err.msg).show('slow');
-        } else {
-          config.elements.message.text(err.msg).show('slow');              
-        }
-        messageTypes[err.type] && messageTypes[err.type](config.messages[err.type]);
-      }
-    }
-
-    if (config.elements.parseResultError !== '') {
-      config.do.message({ type: 'form_detection', msg: config.elements.parseResultError });
+    if (this.config.elements.parseResultError !== '') {
+      this.showMessage({ type: 'form_detection', msg: this.config.elements.parseResultError });
     }
 
     /**
@@ -445,36 +416,36 @@ export function LobAddressElements($, cfg, state) {
      * the cb handler to its original endpoint. If unsuccessful, an error message will be shown.
      * @param {function} cb - process the response (submit the form or show an error message)
      */
-    config.do.verify = function (cb) {
-      config.international = isInternational(config.elements.country);
-      config.submit = config.strictness === 'passthrough';
-      config.confirmed = isConfirmation();
+    this.config.do.verify = function (cb) {
+      this.config.international = isInternational(this.config.elements.country);
+      this.config.submit = this.config.strictness === 'passthrough';
+      this.config.confirmed = isConfirmation();
 
       const payload = {
-        primary_line: config.elements.primary.val(),
-        secondary_line: config.elements.secondary.val(),
-        city: config.elements.city.val(),
-        state: config.elements.state.val()
+        primary_line: this.config.elements.primary.val(),
+        secondary_line: this.config.elements.secondary.val(),
+        city: this.config.elements.city.val(),
+        state: this.config.elements.state.val()
       };
 
-      if (config.international) {
-        const country = config.elements.country.val().toLowerCase();
+      if (this.config.international) {
+        const country = this.config.elements.country.val().toLowerCase();
 
         payload.country = country.length === 2 ? country : countryCodes[country];
-        payload.postal_code = config.elements.zip.val();
+        payload.postal_code = this.config.elements.zip.val();
       } else {
-        payload.zip_code = config.elements.zip.val();
+        payload.zip_code = this.config.elements.zip.val();
       }
 
-      const endpoint = config.international ? config.apis.intl_verify : config.apis.us_verify;
+      const endpoint = this.config.international ? this.config.apis.intl_verify : this.config.apis.us_verify;
       const path = endpoint + '?av_elements_origin=' + window.location.href;
 
       const xhr = new XMLHttpRequest();
       xhr.open('POST', path, true);
       xhr.setRequestHeader('Content-Type', 'application/json');
 
-      if (config.api_key) {
-        xhr.setRequestHeader('Authorization', 'Basic ' + btoa(config.api_key + ':'));
+      if (this.config.api_key) {
+        xhr.setRequestHeader('Authorization', 'Basic ' + btoa(this.config.api_key + ':'));
       }
 
       xhr.onreadystatechange = function () {
@@ -483,24 +454,24 @@ export function LobAddressElements($, cfg, state) {
           var type;
           if ((!this.status || this.status === 200) && (!data.statusCode || data.statusCode === 200)) {
             data = data && data.body || data;
-            if (isVerified(data, config, this.status)) {
+            if (isVerified(data, this.config, this.status)) {
               //SUCCESS (time for final submit)
               cb(null, true);
             } else if (data.deliverability === 'deliverable') {
               // Address verifired as deliverable but the address needs improvement.
               // Prompt user to confirm Lob's improvements)
               var message = createDidYouMeanMessage(data);
-              config.elements.message.click(function () {
+              this.config.elements.message.click(function () {
                 // Mock format from API response
                 fixAndSave(data);
                 hideMessages();
-                config.elements.message.off('click');
+                this.config.elements.message.off('click');
               });
               cb({ msg: message, type: 'confirm' });
             } else {
               //KNOWN VERIFICATION ERROR (e.g., undeliverable)
               type = resolveErrorType(data.deliverability);
-              cb({ msg: config.messages[type], type: type });
+              cb({ msg: this.config.messages[type], type: type });
             }
           } else if (this.status === 401) {
             //INVALID API KEY; allow default submission
@@ -510,7 +481,7 @@ export function LobAddressElements($, cfg, state) {
             data = data && data.body || data;
             //KNOWN SYSTEM ERROR (e.g., rate limit exceeded, primary line missing)
             type = resolveErrorType(data.error.message);
-            cb({ msg: config.messages[type], type: type });
+            cb({ msg: this.config.messages[type], type: type });
           }
         }
       }
@@ -518,48 +489,96 @@ export function LobAddressElements($, cfg, state) {
       return false;
     }
 
-    config.elements.form.on('submit', function preFlight(e) {
+    this.config.elements.form.on('submit', function preFlight(e) {
       e.stopImmediatePropagation();
       e.preventDefault();
 
       hideMessages();
 
       // Remove event handler from previous error message
-      config.elements.message.off('click');
+      this.config.elements.message.off('click');
 
-      return config.do.verify(function (err, success) {
-        if (config.submit || config.override) {
-          config.do.message(err);
-          config.elements.form.off('submit', preFlight);
-          config.submitted = true;
-          config.override = false;
-          config.elements.form.submit();
-          config.elements.form.on('submit', preFlight);
-          prioritizeHandler(config.elements.form, 'submit');
+      return this.config.do.verify(function (err, success) {
+        if (this.config.submit || this.config.override) {
+          this.showMessage(err);
+          this.config.elements.form.off('submit', preFlight);
+          this.config.submitted = true;
+          this.config.override = false;
+          this.config.elements.form.submit();
+          this.config.elements.form.on('submit', preFlight);
+          prioritizeHandler(this.config.elements.form, 'submit');
         } else {
           if (success) {
-            config.elements.form.off('submit', preFlight);
-            config.elements.form.submit();
+            this.config.elements.form.off('submit', preFlight);
+            this.config.elements.form.submit();
           } else {
-            config.do.message(err);
+            this.showMessage(err);
             // Allow user to bypass known warnings after they see our warning message 
-            config.override = err.type !== 'DEFAULT';
+            this.config.override = err.type !== 'DEFAULT';
           }
         }
       });
     });
-    prioritizeHandler(config.elements.form, 'submit');
+    prioritizeHandler(this.config.elements.form, 'submit');
   }
 
-  if (state.autocomplete) {
-    configureAutocompletion();
+  /**
+   * Show form- and field-level error messages as configured. Verification did NOT succeed.
+   * @param {object} err - Verification error object representing a Lob error type
+   * @param {string} err.msg - Top-level message to show for the form
+   * @param {string} err.type - Specific error type to apply at field level if relevant
+   */
+  showMessage(err) {
+    const {
+      elements: {
+        message,
+        primaryMsg,
+        secondaryMsg,
+        cityMsg,
+        stateMsg,
+        zipMsg
+      },
+      messages,
+      denormalize,
+    } = this.config;
+
+    const messageTypes = {
+      primary_line: msg => {
+        primaryMsg.text(msg).show('slow');
+      },
+      city_state_zip: msg => {
+        cityMsg.text(msg).show('slow');
+        stateMsg.text(msg).show('slow');
+        zipMsg.text(msg).show('slow');
+      },
+      zip: msg => {
+        zipMsg.text(msg).show('slow');
+      },
+      deliverable_missing_unit: msg => {
+        (!denormalize &&
+          primaryMsg.text(msg).show('slow')) ||
+          secondaryMsg.text(msg).show('slow');
+      },
+      deliverable_unnecessary_unit: msg => {
+        (!denormalize &&
+          primaryMsg.text(msg).show('slow')) ||
+          secondaryMsg.text(msg).show('slow');
+      },
+      deliverable_incorrect_unit: msg => {
+        (!denormalize &&
+          primaryMsg.text(msg).show('slow')) ||
+          secondaryMsg.text(msg).show('slow');
+      }
+    };
+
+    if (err) {
+      // Confirmation error message uses html to give users the ability to revert standardization
+      if (err.type === 'confirm' || err.type === 'form_detection') {
+        message.html(err.msg).show('slow');
+      } else {
+        message.text(err.msg).show('slow');              
+      }
+      messageTypes[err.type] && messageTypes[err.type](messages[err.type]);
+    }
   }
-
-  if (state.verify) {
-    configureVerification();
-  }
-
-
-  //bind the state to the global element
-  return window.LobAddressElements = config;
 }
