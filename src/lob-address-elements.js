@@ -77,6 +77,81 @@ export class LobAddressElements {
   }
 
 
+  // UI functionality
+
+  hideMessages() {
+    const { elements } = this.config;
+    elements.message.hide();
+    elements.primaryMsg.hide();
+    elements.secondaryMsg.hide();
+    elements.cityMsg.hide();
+    elements.stateMsg.hide();
+    elements.zipMsg.hide();
+  }
+
+  /**
+   * Show form- and field-level error messages as configured. Verification did NOT succeed.
+   * @param {object} err - Verification error object representing a Lob error type
+   * @param {string} err.msg - Top-level message to show for the form
+   * @param {string} err.type - Specific error type to apply at field level if relevant
+   */
+  showMessage(err) {
+    const {
+      elements: {
+        message,
+        primaryMsg,
+        secondaryMsg,
+        cityMsg,
+        stateMsg,
+        zipMsg
+      },
+      messages,
+      denormalize,
+    } = this.config;
+
+    const messageTypes = {
+      primary_line: msg => {
+        primaryMsg.text(msg).show('slow');
+      },
+      city_state_zip: msg => {
+        cityMsg.text(msg).show('slow');
+        stateMsg.text(msg).show('slow');
+        zipMsg.text(msg).show('slow');
+      },
+      zip: msg => {
+        zipMsg.text(msg).show('slow');
+      },
+      deliverable_missing_unit: msg => {
+        (!denormalize &&
+          primaryMsg.text(msg).show('slow')) ||
+          secondaryMsg.text(msg).show('slow');
+      },
+      deliverable_unnecessary_unit: msg => {
+        (!denormalize &&
+          primaryMsg.text(msg).show('slow')) ||
+          secondaryMsg.text(msg).show('slow');
+      },
+      deliverable_incorrect_unit: msg => {
+        (!denormalize &&
+          primaryMsg.text(msg).show('slow')) ||
+          secondaryMsg.text(msg).show('slow');
+      }
+    };
+
+    if (err) {
+      // Confirmation error message uses html to give users the ability to revert standardization
+      if (err.type === 'confirm' || err.type === 'form_detection') {
+        message.html(err.msg).show('slow');
+      } else {
+        message.text(err.msg).show('slow');              
+      }
+      messageTypes[err.type] && messageTypes[err.type](messages[err.type]);
+    }
+  }
+
+
+  // Autocomplete functionality
+
   /**
    * query Lob for autocomplete suggestions
    * @param {string} query - what the user just keyed into the autocomplete input
@@ -129,11 +204,79 @@ export class LobAddressElements {
     return false;
   }
 
+
+  /**
+   * Project the chosen suggested address into the UI
+   * @param {object} suggestion - as returned from the Lob API
+   */
+  applySuggestion(suggestion) {
+    const { elements } = this.config;
+    // Check autocomplete in case we're in running in a unit test
+    const isLiveEnv = typeof elements.primary.autocomplete === 'function';
+
+    if (isLiveEnv) {
+      elements.primary.autocomplete('val', suggestion.primary_line);
+    } else {
+      elements.primary.val(suggestion.primary_line);
+    }
+    elements.secondary.val('');
+    elements.city.val(suggestion.city);
+    elements.state.val(suggestion.state);
+    elements.zip.val(suggestion.zip_code);
+  }
+
+  /**
+   * Injects styles, behaviors and fields necessary for address autocompletion
+   */
+  configureAutocompletion() {
+    const {
+      elements,
+      suppress_stylesheet,
+    } = this.config;
+
+    /**
+     * Inject the CSS for styling the dropdown if not overridden by user
+     */
+    if (!suppress_stylesheet && !autocompletion_configured) {
+      autocompletion_configured = true;
+      $('<style>')
+        .prop('type', 'text/css')
+        .html(createAutocompleteStyles(this.config))
+        .appendTo('head');
+    }
+
+    // Check autocomplete in case we're in running in a unit test
+    const isLiveEnv = typeof elements.primary.autocomplete === 'function';
+
+    /**
+     * configure the Algolia Autocomplete plugin
+     */
+    if (isLiveEnv) {
+      elements.primary.autocomplete(
+        {
+          hint: false
+        },
+        {
+          source: this.autocomplete.bind(this),
+          templates: {
+            suggestion: ({ primary_line, city, state, zip_code }) =>
+              $(`<div>${primary_line} <span>${city}, ${state} ${zip_code}</span></div>`)
+          },
+          cache: false
+        }).on('autocomplete:selected', (event, suggestion) => {
+          this.applySuggestion(suggestion);
+        });
+      }
+  }
+
+
+  // Verification functionality
+
   parseJSON(s) {
     try {
       return JSON.parse(s);
     } catch (e) {
-      console.log('ERR', e);
+      console.log('Error parsing json', e);
       return { error: { message: 'DEFAULT' } };
     }
   }
@@ -382,66 +525,53 @@ export class LobAddressElements {
     return false;
   }
 
-
   /**
-   * Injects styles, behaviors and fields necessary for address autocompletion
+   * jQuery event handlers execute in binding order. 
+   * This prioritizes the most-recent (Lob)
+   * @param {object} jqElm 
+   * @param {*} event_type 
    */
-  configureAutocompletion() {
-    const {
-      elements,
-      suppress_stylesheet,
-    } = this.config;
+  prioritizeHandler(jqElm, event_type) {
+    const eventList = $._data(jqElm[0], 'events');
+    eventList[event_type].unshift(eventList[event_type].pop());
+  }
 
-    /**
-     * Inject the CSS for styling the dropdown if not overridden by user
-     */
-    if (!suppress_stylesheet && !autocompletion_configured) {
-      autocompletion_configured = true;
-      $('<style>')
-        .prop('type', 'text/css')
-        .html(createAutocompleteStyles(this.config))
-        .appendTo('head');
-    }
-
-    // Check autocomplete in case we're in running in a unit test
-    const isLiveEnv = typeof elements.primary.autocomplete === 'function';
-
-    /**
-     * Project the chosen suggested address into the UI
-     * @param {object} suggestion - as returned from the Lob API
-     */
-    const applySuggestion = suggestion => {
-      // Check autocomplete in case we're in running in a unit test
-      if (isLiveEnv) {
-        elements.primary.autocomplete('val', suggestion.primary_line);
+  verifyCallback(err, success) {
+    const { elements, override, strictness, submit } = this.config;
+    if (submit || override) {
+      this.showMessage(err);
+      elements.form.off('submit', this.preFlight);
+      this.config.submitted = true;
+      this.config.override = false;
+      elements.form.unbind().submit();
+      elements.form.on('submit', this.preFlight);
+      this.prioritizeHandler(elements.form, 'submit');
+    } else {
+      if (success) {
+        elements.form.off('submit', this.preFlight);
+        elements.form.unbind().submit();
       } else {
-        elements.primary.val(suggestion.primary_line);
-      }
-      elements.secondary.val('');
-      elements.city.val(suggestion.city);
-      elements.state.val(suggestion.state);
-      elements.zip.val(suggestion.zip_code);
-    }
+        this.showMessage(err);
 
-    /**
-     * configure the Algolia Autocomplete plugin
-     */
-    if (isLiveEnv) {
-      elements.primary.autocomplete(
-        {
-          hint: false
-        },
-        {
-          source: this.autocomplete.bind(this),
-          templates: {
-            suggestion: ({ primary_line, city, state, zip_code }) =>
-              $(`<div>${primary_line} <span>${city}, ${state} ${zip_code}</span></div>`)
-          },
-          cache: false
-        }).on('autocomplete:selected', (event, suggestion) => {
-          applySuggestion(suggestion);
-        });
+        // Allow user to bypass known warnings after they see our warning message with the
+        // exemption of undeliverable addresses in which case we check strictness
+        this.config.override = err.type === 'undeliverable'
+          ? strictness === 'relaxed'
+          : err.type !== 'DEFAULT' && this.config.strictness !== 'strict';
       }
+    }
+  }
+
+  preFlight = (e) => {
+    e.stopImmediatePropagation();
+    e.preventDefault();
+
+    this.hideMessages();
+
+    // Remove event handler from previous error message
+    this.config.elements.message.off('click');
+
+    return this.verify(this.verifyCallback.bind(this));
   }
 
   /**
@@ -449,17 +579,6 @@ export class LobAddressElements {
    */
   configureVerification() {
     const { elements } = this.config;
-
-    /**
-     * jQuery event handlers execute in binding order. 
-     * This prioritizes the most-recent (Lob)
-     * @param {object} jqElm 
-     * @param {*} event_type 
-     */
-    const prioritizeHandler = (jqElm, event_type) => {
-      const eventList = $._data(jqElm[0], 'events');
-      eventList[event_type].unshift(eventList[event_type].pop());
-    }
 
     /**
      * Inject the form Verification Error Message container
@@ -473,7 +592,6 @@ export class LobAddressElements {
       if (anchor.length) {
         message.insertBefore(anchor);
       } else {
-        console.log(elements.form);
         elements.form.prepend(message);
       }
       elements.message = message;
@@ -491,107 +609,8 @@ export class LobAddressElements {
       this.showMessage({ type: 'form_detection', msg: elements.parseResultError });
     }
 
-    elements.form.on('submit', function preFlight(e) {
-      e.stopImmediatePropagation();
-      e.preventDefault();
-
-      this.hideMessages();
-
-      // Remove event handler from previous error message
-      elements.message.off('click');
-
-      return this.verify((err, success) => {
-        if (this.config.submit || this.config.override) {
-          this.showMessage(err);
-          elements.form.off('submit', preFlight);
-          this.config.submitted = true;
-          this.config.override = false;
-          elements.form.unbind().submit();
-          elements.form.on('submit', preFlight);
-          prioritizeHandler(elements.form, 'submit');
-        } else {
-          if (success) {
-            elements.form.off('submit', preFlight);
-            elements.form.unbind().submit();
-          } else {
-            this.showMessage(err);
-            // Allow user to bypass known warnings after they see our warning message 
-            this.config.override = err.type !== 'DEFAULT';
-          }
-        }
-      });
-    }.bind(this));
+    elements.form.on('submit', this.preFlight.bind(this));
   
-    prioritizeHandler(elements.form, 'submit');
-  }
-
-  hideMessages() {
-    const { elements } = this.config;
-    elements.message.hide();
-    elements.primaryMsg.hide();
-    elements.secondaryMsg.hide();
-    elements.cityMsg.hide();
-    elements.stateMsg.hide();
-    elements.zipMsg.hide();
-  }
-
-  /**
-   * Show form- and field-level error messages as configured. Verification did NOT succeed.
-   * @param {object} err - Verification error object representing a Lob error type
-   * @param {string} err.msg - Top-level message to show for the form
-   * @param {string} err.type - Specific error type to apply at field level if relevant
-   */
-  showMessage(err) {
-    const {
-      elements: {
-        message,
-        primaryMsg,
-        secondaryMsg,
-        cityMsg,
-        stateMsg,
-        zipMsg
-      },
-      messages,
-      denormalize,
-    } = this.config;
-
-    const messageTypes = {
-      primary_line: msg => {
-        primaryMsg.text(msg).show('slow');
-      },
-      city_state_zip: msg => {
-        cityMsg.text(msg).show('slow');
-        stateMsg.text(msg).show('slow');
-        zipMsg.text(msg).show('slow');
-      },
-      zip: msg => {
-        zipMsg.text(msg).show('slow');
-      },
-      deliverable_missing_unit: msg => {
-        (!denormalize &&
-          primaryMsg.text(msg).show('slow')) ||
-          secondaryMsg.text(msg).show('slow');
-      },
-      deliverable_unnecessary_unit: msg => {
-        (!denormalize &&
-          primaryMsg.text(msg).show('slow')) ||
-          secondaryMsg.text(msg).show('slow');
-      },
-      deliverable_incorrect_unit: msg => {
-        (!denormalize &&
-          primaryMsg.text(msg).show('slow')) ||
-          secondaryMsg.text(msg).show('slow');
-      }
-    };
-
-    if (err) {
-      // Confirmation error message uses html to give users the ability to revert standardization
-      if (err.type === 'confirm' || err.type === 'form_detection') {
-        message.html(err.msg).show('slow');
-      } else {
-        message.text(err.msg).show('slow');              
-      }
-      messageTypes[err.type] && messageTypes[err.type](messages[err.type]);
-    }
+    this.prioritizeHandler(elements.form, 'submit');
   }
 }
