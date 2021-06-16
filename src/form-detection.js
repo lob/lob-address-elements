@@ -127,6 +127,9 @@ const findAddressElementByLabel = type => {
     return labels;
   }
 
+  if (labels.length !== 1) {
+    return null;
+  }
   // Selections are ordered from furthest to closest, so the last element most likely contains
   // the label text itself
   const label = labels[0];
