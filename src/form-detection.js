@@ -1,3 +1,5 @@
-export const parseWebpage = () => {
-  console.log('parseWebpage');
+module.exports = {
+  parseWebPage: () => {
+    console.log('parseWebpage');
+  }
 };
