@@ -5,7 +5,7 @@ const package = require('./package.json');
 
 module.exports = {
   devtool: "nosources-source-map",
-  entry: './src/lob-address-elements.js',
+  entry: './src/main.js',
   optimization: {
     minimizer: [
       new TerserPlugin({
