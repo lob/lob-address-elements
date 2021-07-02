@@ -1,6 +1,6 @@
 'use strict';
 
-import { parseWebPage } from './form-detection';
+const { parseWebPage } = require('./form-detection');
 
 (function () {
 
@@ -23,23 +23,46 @@ import { parseWebPage } from './form-detection';
      * Returns a jquery element to which to add behavior, locating
      * the element using one of three methods: id, name, attribute.
      * @param {string} type - For example: primary, secondary, city
+     * @param {object} [form] - jquery form parent; if multiple matches,
+     * only those that belong to the target form will be returned
      * @returns {object}
      */
-    function findElm(type) {
+    function findElm(type, form) {
+      var elms;
       var pid = $('*[data-lob-' + type + '-id]').attr('data-lob-' + type + '-id');
       if (pid) {
-        return $('#' + pid);
+        elms = $('*[id=' + pid + ']');
       } else {
         var pnm = $('*[data-lob-' + type + '-name]').attr('data-lob-' + type + '-name');
         var pc = $('*[data-lob-' + type + '-class]').attr('data-lob-' + type + '-class');
         if (pnm) {
-          return $('*[name=' + pnm + ']');
+          elms = $('*[name=' + pnm + ']');
         } else if (pc) {
-          return $('.' + pc);
+          elms = $('.' + pc);
         } else {
-          return $('*[data-lob-' + type + ']');
+          elms = $('*[data-lob-' + type + ']');
         }
       }
+      return closest(elms, form);
+    }
+
+    /**
+     * filters elms, returning only descendnt elms
+     * @param {*} elms - jquery elements
+     * @param {*} [form] - if present, filter for descendnt elms
+     * @returns 
+     */
+    function closest(elms, form) {
+      if (form && form.length && elms && elms.length) {
+        var elm;
+        elms.each(function (idx, _elm) {
+          if (form.is(_elm.closest("form"))) {
+            elm = $(_elm);
+          }
+        });
+        return elm || elms;
+      }
+      return elms
     }
 
     /**
@@ -51,18 +74,6 @@ import { parseWebPage } from './form-detection';
       var target = findElm(type);
       var target_val = target.length && target.attr('data-lob-' + type);
       return target_val || $('*[data-lob-' + type + '-value]').attr('data-lob-' + type + '-value');
-    }
-
-    /**
-     * Returns the form parent for a target element, @type, 
-     * unless the user explicitly identifies the form to use via the
-     * 'verify' label
-     * @param {string} type - For example: primary, secondary, zip, etc
-     * @returns {object}
-     */
-    function findForm(type) {
-      var form = findElm('verify');
-      return form.length ? form : findElm(type).closest('form');
     }
 
     function resolveStrictness(cfg) {
@@ -97,36 +108,47 @@ import { parseWebPage } from './form-detection';
     /**
      * Determine the presence of address-related fields and settings
      */
-    function getPageState() {
-      var primary = findElm('primary');
-      var strictness = resolveStrictness(cfg.strictness);
-      var create_message = findValue('verify-message') === 'true' || (findForm('primary').length && !findElm('verify-message').length);
-      var autocomplete = primary.length && findValue('primary') !== 'false';
-      var verify = strictness !== 'false' && findForm('primary').length && (strictness === 'passthrough' || findElm('verify-message').length || create_message);
-      return {
-        autocomplete: autocomplete,
-        verify: verify,
-        enrich: verify || autocomplete,
-        create_message: create_message,
-        strictness: strictness
-      };
+    function getFormStates() {
+      //everything pivots around the primary address field
+      var primaries = findElm('primary');
+      var responses = [];
+      primaries.each(function (idx, primary) {
+        primary = $(primary);
+        var form = primary.closest("form");
+        var strictness = resolveStrictness(cfg.strictness);
+        var create_message = findValue('verify-message') === 'true' || (form.length && !findElm('verify-message', form).length);
+        var autocomplete = primary.length && findValue('primary') !== 'false';
+        var verify = strictness !== 'false' && form.length && (strictness === 'passthrough' || findElm('verify-message', form).length || create_message);
+        responses.push({
+          primary,
+          form,
+          autocomplete: autocomplete,
+          verify: verify,
+          enrich: verify || autocomplete,
+          create_message: create_message,
+          strictness: strictness
+        });
+      });
+      return responses;
     }
 
     /**
      * Observe the DOM. Trigger enrichment when state changes to 'enrich'
-     * @param {string} state - The current state. One of: enriched, untouched
      */
-    function observeDOM(state) {
+    function observeDOM() {
       function didChange() {
-        var newState = getPageState();
-        if (state === 'untouched' && newState.enrich) {
-          state = 'enriched';
-          setTimeout(function () {
-            _LobAddressElements($, cfg, newState);
-          }, 0);
-        } else if (state === 'enriched' && !newState.enrich) {
-          state = 'untouched';
-        }
+        var newStates = getFormStates();
+        newStates.forEach(function (newState) {
+          var state = newState.form && newState.form.attr("data-lob-state") || 'untouched';
+          if (state === 'untouched' && newState.enrich) {
+            newState.form.attr("data-lob-state", 'enriched');
+            setTimeout(function () {
+              _LobAddressElements($, cfg, newState);
+            }, 0);
+          } else if (state === 'enriched' && !newState.enrich) {
+            newState.form.attr("data-lob-state", 'untouched');
+          }
+        });
       }
       var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
       if (MutationObserver) {
@@ -152,6 +174,9 @@ import { parseWebPage } from './form-detection';
      * @param {*} state - page state
      */
     function _LobAddressElements($, cfg, state) {
+      if(!state) {
+        state = getFormStates()[0];
+      }
       var config = {
         api_key: cfg.api_key || findValue('key'),
         strictness: state.strictness,
@@ -167,19 +192,19 @@ import { parseWebPage } from './form-detection';
           'suggestion-activebgcolor': '#eeeeee'
         },
         elements: cfg.elements || {
-          errorAnchorElement: findElm('verify-message-anchor'),
-          form: findForm('primary'),
-          message: findElm('verify-message').hide(),
-          primary: findElm('primary'),
-          primaryMsg: findElm('primary-message').hide(),
-          secondary: findElm('secondary'),
-          secondaryMsg: findElm('secondary-message').hide(),
-          city: findElm('city'),
-          cityMsg: findElm('city-message').hide(),
-          state: findElm('state'),
-          stateMsg: findElm('state-message').hide(),
-          zip: findElm('zip'),
-          zipMsg: findElm('zip-message').hide()
+          errorAnchorElement: findElm('verify-message-anchor', state.form),
+          form: state.form,
+          message: findElm('verify-message', state.form).hide(),
+          primary: findElm('primary', state.form),
+          primaryMsg: findElm('primary-message', state.form).hide(),
+          secondary: findElm('secondary', state.form, true),
+          secondaryMsg: findElm('secondary-message', state.form).hide(),
+          city: findElm('city', state.form),
+          cityMsg: findElm('city-message', state.form).hide(),
+          state: findElm('state', state.form),
+          stateMsg: findElm('state-message', state.form).hide(),
+          zip: findElm('zip', state.form),
+          zipMsg: findElm('zip-message', state.form).hide()
         },
         messages: cfg.messages || {
           primary_line: findValue('err-primary-line') || 'Enter the Primary address.',
@@ -198,7 +223,7 @@ import { parseWebPage } from './form-detection';
         },
         do: {
           init: function () {
-            _LobAddressElements($, cfg);
+            _LobAddressElements($, cfg, state);
           }
         }
       };
@@ -467,7 +492,7 @@ import { parseWebPage } from './form-detection';
          * disable fixing to only check if the address needs improvement.
          * @param {object} data - verified address object returned from Lob
          */
-        function fixAndSave(data, fix) {
+        config.do.fixAndSave = function(data, fix) {
           fix = typeof fix === "undefined" ? true : fix;
           var needsImprovement;
           var address = config.address = formatAddressFromResponseData(data);
@@ -479,7 +504,7 @@ import { parseWebPage } from './form-detection';
                 !(p === 'zip' && formInput.length === 5 && address[p].indexOf(formInput) === 0)) {
                 needsImprovement = true;
               }
-              
+
               if (fix) {
                 config.elements[p].val(address[p]);
               }
@@ -514,7 +539,7 @@ import { parseWebPage } from './form-detection';
          * @param {number} status - HTTP status code
          */
         function isVerified(data, config, status) {
-          var addressNeedsImprovement = fixAndSave(data, false /* fix */);
+          var addressNeedsImprovement = config.do.fixAndSave(data, false /* fix */);
           return !status ||
             (data.deliverability === 'deliverable' && !addressNeedsImprovement) ||
             (data.deliverability === 'undeliverable' && config.confirmed && config.strictness === 'relaxed') ||
@@ -576,7 +601,7 @@ import { parseWebPage } from './form-detection';
             if (err.type === 'confirm') {
               config.elements.message.html(err.msg).show('slow');
             } else {
-              config.elements.message.text(err.msg).show('slow');              
+              config.elements.message.text(err.msg).show('slow');
             }
             messageTypes[err.type] && messageTypes[err.type](config.messages[err.type]);
           }
@@ -641,7 +666,6 @@ import { parseWebPage } from './form-detection';
               var data = parseJSON(xhr.responseText);
               var type;
               if ((!this.status || this.status === 200) && (!data.statusCode || data.statusCode === 200)) {
-                debugger;
                 data = data && data.body || data;
                 if (isVerified(data, config, this.status)) {
                   //SUCCESS (time for final submit)
@@ -652,7 +676,7 @@ import { parseWebPage } from './form-detection';
                   var message = createDidYouMeanMessage(data);
                   config.elements.message.click(function () {
                     // Mock format from API response
-                    fixAndSave(data);
+                    config.do.fixAndSave(data);
                     hideMessages();
                     config.elements.message.off('click');
                   });
@@ -719,18 +743,19 @@ import { parseWebPage } from './form-detection';
       return window.LobAddressElements = config;
     }
 
-    var state = getPageState();
-    // Test import functionality
+    //placeholder (replace DOM parsing logic with this)
     parseWebPage();
-    if (state.enrich) {
-      observeDOM('enriched');
-      return _LobAddressElements($, cfg, state);
+
+    //watch for DOM changes
+    observeDOM();
+
+    if(getFormStates().length) {
+      return _LobAddressElements($, cfg);
     } else {
-      observeDOM('untouched');
       return {
         do: {
           init: function () {
-            _LobAddressElements($, cfg, state);
+            _LobAddressElements($, cfg);
           }
         }
       };

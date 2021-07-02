@@ -4,6 +4,7 @@ The Lob Address Elements library simplifies client side integration of Lob's *US
 ## Table of Contents
 - [Registration](#registration)
 - [Usage](#usage)
+- [Multiform Usage](#multiform-usage)
 - [Preconfigured Usage](#preconfigured-usage)
 - [Component Styles](#component-styles)
   - [In-line Declarations](#in-line-declarations)
@@ -79,7 +80,7 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
     </div>
     <input type="submit" value="Submit">
   </form>
-  <script src="https://cdn.lob.com/lob-address-elements/1.3.0/lob-address-elements.min.js"
+  <script src="https://cdn.lob.com/lob-address-elements/1.3.2/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx" 
     data-lob-verify-value="strict"
     data-lob-primary-id="address1"
@@ -111,11 +112,28 @@ Embed the Lob Address Elements library immediately before the closing &lt;body&g
 | data-lob-state-message-id     | `<field id>`          | This optional attribute identifies the field-level error message for the state input. Only include this attribute if the state input has an associated error message. Lob will update the text content for this element and toggle its display.           |
 | data-lob-zip-message-id       | `<field id>`         | This optional attribute identifies the field-level error message for the zip input. Only include this attribute if the zip input has an associated error message. Lob will update the text content for this element and toggle its display.           |
 
+## Multiform Usage
+Address elements can enrich multiple address forms at the same time, within the same Web page. Each address must be contained within a different HTML &lt;form&gt; parent for verification to function properly.
+```
+<!DOCTYPE html>
+<html>
+<body>
+  <form>
+    ...
+  </form>
+
+  <form>
+    ...
+  </form>
+</body>
+</html>
+```
+
 ## Preconfigured Usage
 E-commerce platforms like Shopify use predictable element names making them easy to extend. Paste the following preconfigured script into your top-level Shopify Plus template to add address verification to your checkout form. *Remember to replace `live_pub_xxx` with your Lob public key.*
 
 ```
-<script src="https://cdn.lob.com/lob-address-elements/1.3.0/lob-address-elements.min.merged.js"
+<script src="https://cdn.lob.com/lob-address-elements/1.3.2/lob-address-elements.min.merged.js"
   data-lob-key="live_pub_xxx"
   data-lob-verify-value="strict"
   data-lob-primary-value="false"
@@ -128,7 +146,7 @@ E-commerce platforms like Shopify use predictable element names making them easy
   data-lob-err-color="#ffffff"></script>
 
 # Here's another example that places the verification message above the submit/continue button at checkout.
-<script src="https://cdn.lob.com/lob-address-elements/1.3.0/lob-address-elements.min.merged.js"
+<script src="https://cdn.lob.com/lob-address-elements/1.3.2/lob-address-elements.min.merged.js"
   data-lob-key="live_pub_xxx"
   data-lob-verify-value="strict"
   data-lob-primary-value="false"
@@ -178,7 +196,7 @@ In-line configuration uses attribute values to configure element colors. Hex, RG
     </div>
     <input type="submit" value="Submit">
   </form>
-  <script src="https://cdn.lob.com/lob-address-elements/1.3.0/lob-address-elements.min.js"
+  <script src="https://cdn.lob.com/lob-address-elements/1.3.2/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx" 
     data-lob-verify-value="strict"
     data-lob-primary-id="address1"
@@ -318,7 +336,7 @@ When authoring a custom stylesheet, Lob's default stylesheet should be suppresse
     </div>
     <input type="submit" value="Submit">
   </form>
-  <script src="https://cdn.lob.com/lob-address-elements/1.3.0/lob-address-elements.min.js"
+  <script src="https://cdn.lob.com/lob-address-elements/1.3.2/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx"
     data-lob-suggestion-stylesheet="false"
     data-lob-verify-value="strict"
@@ -369,7 +387,7 @@ Verification error messages can be localized and customized. Use the pattern, `d
     </div>
     <input type="submit" value="Submit">
   </form>
-  <script src="https://cdn.lob.com/lob-address-elements/1.3.0/lob-address-elements.min.js"
+  <script src="https://cdn.lob.com/lob-address-elements/1.3.2/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx" 
     data-lob-verify-value="strict"
     data-lob-primary-id="address1"
@@ -413,7 +431,12 @@ npm run build
 
 [Minified builds](https://github.com/lob/lob-address-elements/tree/master/lib) map to the releases listed below.
 
-### 1.3.0 (CURRENT / LATEST)
+### 1.3.2 (CURRENT / LATEST)
+| Release Notes |
+| :---          |
+| Adds support for targeting more than one address form at a time |
+
+### 1.3.0
 | Release Notes |
 | :---          |
 | Replaces default standardization with Did You Mean? functionality |

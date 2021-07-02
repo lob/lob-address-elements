@@ -12,7 +12,12 @@ describe('Address Elements', function () {
             XMLHttpRequest: global.XMLHttpRequest,
             btoa: global.btoa
         };
-        global.window = { jQuery: JQMock };
+        global.window = { 
+          jQuery: JQMock,
+          location: {
+            href: 'https://test.lob.com/'
+          }
+        };
         global.btoa = function () { };
         //NOTE: `elements` and `styles` can also be tested by mocking here as well
         global.window.LobAddressElementsConfig = {
@@ -55,7 +60,7 @@ describe('Address Elements', function () {
             var xhr_config = { responseText: JSON.stringify(APIMock.suggestions) };
             global.XMLHttpRequest = XHRMock(xhr_config);
             LobAddressElements.do.autocomplete('185 Berry', function (suggestions) {
-                assert.equal(suggestions.length, 1);
+                assert.strictEqual(suggestions.length, 1);
             });
         });
 
@@ -63,7 +68,7 @@ describe('Address Elements', function () {
             var xhr_config = { responseText: JSON.stringify(APIMock.suggestions) };
             global.XMLHttpRequest = XHRMock(xhr_config);
             LobAddressElements.do.autocomplete('185', function (suggestions) {
-                assert.equal(suggestions.length, 1);
+                assert.strictEqual(suggestions.length, 1);
             });
         });
 
@@ -71,13 +76,13 @@ describe('Address Elements', function () {
             var xhr_config = { responseText: JSON.stringify(APIMock.suggestions) };
             global.XMLHttpRequest = XHRMock(xhr_config);
             LobAddressElements.do.autocomplete('Berry', function (suggestions) {
-                assert.equal(suggestions.length, 1);
+                assert.strictEqual(suggestions.length, 1);
             });
         });
 
         it('should return no suggestions for empty entries', function () {
             LobAddressElements.do.autocomplete('', function (suggestions) {
-                assert.equal(suggestions, null);
+                assert.strictEqual(suggestions, null);
             });
         });
 
@@ -85,7 +90,7 @@ describe('Address Elements', function () {
             var xhr_config = { status: 401 };
             global.XMLHttpRequest = XHRMock(xhr_config);
             LobAddressElements.do.autocomplete('185 Berry', function (suggestions) {
-                assert.equal(suggestions, null);
+                assert.strictEqual(suggestions, null);
             });
         });
 
@@ -98,10 +103,10 @@ describe('Address Elements', function () {
                 zip_code: 'zip_code_response'
             }
             LobAddressElements.do.apply(suggestion);
-            assert.equal(LobAddressElements.elements.primary.val(), 'primary_line_response');
-            assert.equal(LobAddressElements.elements.city.val(), 'city_response');
-            assert.equal(LobAddressElements.elements.state.val(), 'state_response');
-            assert.equal(LobAddressElements.elements.zip.val(), 'zip_code_response');
+            assert.strictEqual(LobAddressElements.elements.primary.val(), 'primary_line_response');
+            assert.strictEqual(LobAddressElements.elements.city.val(), 'city_response');
+            assert.strictEqual(LobAddressElements.elements.state.val(), 'state_response');
+            assert.strictEqual(LobAddressElements.elements.zip.val(), 'zip_code_response');
         });
 
         it('should clear the secondary field when applying the suggestion', function () {
@@ -113,9 +118,9 @@ describe('Address Elements', function () {
                 zip_code: 'zip_code_response'
             }
             LobAddressElements.elements.secondary.val("STALE VALUE");
-            assert.equal(LobAddressElements.elements.secondary.val(), 'STALE VALUE');
+            assert.strictEqual(LobAddressElements.elements.secondary.val(), 'STALE VALUE');
             LobAddressElements.do.apply(suggestion);
-            assert.equal(LobAddressElements.elements.secondary.val(), '');
+            assert.strictEqual(LobAddressElements.elements.secondary.val(), '');
         });
     });
 
@@ -131,8 +136,8 @@ describe('Address Elements', function () {
           LobAddressElements.elements.state.val('CA');
           LobAddressElements.elements.zip.val('94107-1741');
           LobAddressElements.do.verify(function (err, success) {
-            assert.equal(err, null);
-            assert.equal(success, true);
+            assert.strictEqual(err, null);
+            assert.strictEqual(success, true);
           });
         });
 
@@ -145,8 +150,8 @@ describe('Address Elements', function () {
             LobAddressElements.elements.state.val('CA');
             LobAddressElements.elements.zip.val('94107-1741');
             LobAddressElements.do.verify(function (err, success) {
-                assert.equal(err, null);
-                assert.equal(success, true);
+                assert.strictEqual(err, null);
+                assert.strictEqual(success, true);
             });
         });
 
@@ -159,8 +164,8 @@ describe('Address Elements', function () {
             LobAddressElements.elements.state.val('CA');
             LobAddressElements.elements.zip.val('94107');
             LobAddressElements.do.verify(function (err, success) {
-                assert.equal(err, null);
-                assert.equal(success, true);
+                assert.strictEqual(err, null);
+                assert.strictEqual(success, true);
             });
         });
 
@@ -173,8 +178,8 @@ describe('Address Elements', function () {
             LobAddressElements.elements.state.val('CA');
             LobAddressElements.elements.zip.val('94106'); //this will be changed to 94107-1741
             LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'confirm');
+                assert.strictEqual(success, undefined);
+                assert.strictEqual(err.type, 'confirm');
             });
         });
 
@@ -187,11 +192,12 @@ describe('Address Elements', function () {
             LobAddressElements.elements.state.val('CA');
             LobAddressElements.elements.zip.val('94106'); //this will be changed to 94107-1741
             LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'confirm');
+                assert.strictEqual(success, undefined);
+                assert.strictEqual(err.type, 'confirm');
+                LobAddressElements.elements.message.click();
                 LobAddressElements.do.verify(function (err, success) {
-                    assert.equal(err, null);
-                    assert.equal(success, true);
+                    assert.strictEqual(err, null);
+                    assert.strictEqual(success, true);
                 });
             });
         });
@@ -203,10 +209,11 @@ describe('Address Elements', function () {
             LobAddressElements.elements.city.val(''); //this will change to San Francisco
             LobAddressElements.elements.state.val(''); //this will change to CA
             LobAddressElements.elements.zip.val('94106'); //this will change to 94107-5705
+            LobAddressElements.do.fixAndSave(APIMock.deliverable_missing_unit);
             LobAddressElements.do.verify(function (err, success) {
-                assert.equal(LobAddressElements.elements.zip.val(), APIMock.deliverable_missing_unit.components.zip_code + "-" + APIMock.deliverable_missing_unit.components.zip_code_plus_4);
-                assert.equal(LobAddressElements.elements.city.val(), APIMock.deliverable_missing_unit.components.city);
-                assert.equal(LobAddressElements.elements.state.val(), APIMock.deliverable_missing_unit.components.state);
+                assert.strictEqual(LobAddressElements.elements.zip.val(), APIMock.deliverable_missing_unit.components.zip_code + "-" + APIMock.deliverable_missing_unit.components.zip_code_plus_4);
+                assert.strictEqual(LobAddressElements.elements.city.val(), APIMock.deliverable_missing_unit.components.city);
+                assert.strictEqual(LobAddressElements.elements.state.val(), APIMock.deliverable_missing_unit.components.state);
             });
         });
     });
@@ -227,21 +234,21 @@ describe('Address Elements', function () {
             //verify
             LobAddressElements.do.verify(function (err, success) {
                 //error
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'undeliverable');
+                assert.strictEqual(success, undefined);
+                assert.strictEqual(err.type, 'undeliverable');
                 //warn
                 LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'undeliverable');
+                assert.strictEqual(LobAddressElements.elements.message.text(), 'undeliverable');
                 //verify once more
                 LobAddressElements.do.verify(function (err, success) {
                     //still error
-                    assert.equal(success, undefined);
-                    assert.equal(err.type, 'undeliverable');
+                    assert.strictEqual(success, undefined);
+                    assert.strictEqual(err.type, 'undeliverable');
                     //try one last time
                     LobAddressElements.do.verify(function (err, success) {
                         //still error
-                        assert.equal(success, undefined);
-                        assert.equal(err.type, 'undeliverable');
+                        assert.strictEqual(success, undefined);
+                        assert.strictEqual(err.type, 'undeliverable');
                     });
                 });
             });
@@ -260,21 +267,21 @@ describe('Address Elements', function () {
             //verify
             LobAddressElements.do.verify(function (err, success) {
                 //error
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'deliverable_missing_unit');
+                assert.strictEqual(success, undefined);
+                assert.strictEqual(err.type, 'deliverable_missing_unit');
                 //warn
                 LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_missing_unit');
+                assert.strictEqual(LobAddressElements.elements.message.text(), 'deliverable_missing_unit');
                 //verify once more
                 LobAddressElements.do.verify(function (err, success) {
                     //still error
-                    assert.equal(success, undefined);
-                    assert.equal(err.type, 'deliverable_missing_unit');
+                    assert.strictEqual(success, undefined);
+                    assert.strictEqual(err.type, 'deliverable_missing_unit');
                     //try one last time
                     LobAddressElements.do.verify(function (err, success) {
                         //still error
-                        assert.equal(success, undefined);
-                        assert.equal(err.type, 'deliverable_missing_unit');
+                        assert.strictEqual(success, undefined);
+                        assert.strictEqual(err.type, 'deliverable_missing_unit');
                     });
                 });
             });
@@ -293,21 +300,21 @@ describe('Address Elements', function () {
             //verify
             LobAddressElements.do.verify(function (err, success) {
                 //error
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'deliverable_incorrect_unit');
+                assert.strictEqual(success, undefined);
+                assert.strictEqual(err.type, 'deliverable_incorrect_unit');
                 //warn
                 LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_incorrect_unit');
+                assert.strictEqual(LobAddressElements.elements.message.text(), 'deliverable_incorrect_unit');
                 //verify once more
                 LobAddressElements.do.verify(function (err, success) {
                     //still error
-                    assert.equal(success, undefined);
-                    assert.equal(err.type, 'deliverable_incorrect_unit');
+                    assert.strictEqual(success, undefined);
+                    assert.strictEqual(err.type, 'deliverable_incorrect_unit');
                     //try one last time
                     LobAddressElements.do.verify(function (err, success) {
                         //still error
-                        assert.equal(success, undefined);
-                        assert.equal(err.type, 'deliverable_incorrect_unit');
+                        assert.strictEqual(success, undefined);
+                        assert.strictEqual(err.type, 'deliverable_incorrect_unit');
                     });
                 });
             });
@@ -326,21 +333,21 @@ describe('Address Elements', function () {
             //verify
             LobAddressElements.do.verify(function (err, success) {
                 //error
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'deliverable_unnecessary_unit');
+                assert.strictEqual(success, undefined);
+                assert.strictEqual(err.type, 'deliverable_unnecessary_unit');
                 //warn
                 LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_unnecessary_unit');
+                assert.strictEqual(LobAddressElements.elements.message.text(), 'deliverable_unnecessary_unit');
                 //verify once more
                 LobAddressElements.do.verify(function (err, success) {
                     //still error
-                    assert.equal(success, undefined);
-                    assert.equal(err.type, 'deliverable_unnecessary_unit');
+                    assert.strictEqual(success, undefined);
+                    assert.strictEqual(err.type, 'deliverable_unnecessary_unit');
                     //try one last time
                     LobAddressElements.do.verify(function (err, success) {
                         //still error
-                        assert.equal(success, undefined);
-                        assert.equal(err.type, 'deliverable_unnecessary_unit');
+                        assert.strictEqual(success, undefined);
+                        assert.strictEqual(err.type, 'deliverable_unnecessary_unit');
                     });
                 });
             });
@@ -363,21 +370,21 @@ describe('Address Elements', function () {
             //verify
             LobAddressElements.do.verify(function (err, success) {
                 //error
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'undeliverable');
+                assert.strictEqual(success, undefined);
+                assert.strictEqual(err.type, 'undeliverable');
                 //warn
                 LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'undeliverable');
+                assert.strictEqual(LobAddressElements.elements.message.text(), 'undeliverable');
                 //verify once more
                 LobAddressElements.do.verify(function (err, success) {
                     //still error
-                    assert.equal(success, undefined);
-                    assert.equal(err.type, 'undeliverable');
+                    assert.strictEqual(success, undefined);
+                    assert.strictEqual(err.type, 'undeliverable');
                     //try one last time
                     LobAddressElements.do.verify(function (err, success) {
                         //still error
-                        assert.equal(success, undefined);
-                        assert.equal(err.type, 'undeliverable');
+                        assert.strictEqual(success, undefined);
+                        assert.strictEqual(err.type, 'undeliverable');
                     });
                 });
             });
@@ -395,16 +402,17 @@ describe('Address Elements', function () {
             LobAddressElements.elements.zip.val('94107');
             //verify
             LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'deliverable_missing_unit');
+                assert.strictEqual(success, undefined);
+                assert.strictEqual(err.type, 'deliverable_missing_unit');
                 //warn
                 LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_missing_unit');
-                //verify once more
+                assert.strictEqual(LobAddressElements.elements.message.text(), 'deliverable_missing_unit');
+                //simulate the user click and verify once more
+                LobAddressElements.elements.message.click();
                 LobAddressElements.do.verify(function (err, success) {
                     //success
-                    assert.equal(success, true);
-                    assert.equal(err, null);
+                    assert.strictEqual(success, true);
+                    assert.strictEqual(err, null);
                 });
             });
         });
@@ -421,16 +429,17 @@ describe('Address Elements', function () {
             LobAddressElements.elements.zip.val('94107');
             //verify
             LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'deliverable_incorrect_unit');
+                assert.strictEqual(success, undefined);
+                assert.strictEqual(err.type, 'deliverable_incorrect_unit');
                 //warn
                 LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_incorrect_unit');
-                //verify once more
+                assert.strictEqual(LobAddressElements.elements.message.text(), 'deliverable_incorrect_unit');
+                //simulate the user click and verify once more
+                LobAddressElements.elements.message.click();
                 LobAddressElements.do.verify(function (err, success) {
                     //success
-                    assert.equal(success, true);
-                    assert.equal(err, null);
+                    assert.strictEqual(success, true);
+                    assert.strictEqual(err, null);
                 });
             });
         });
@@ -447,16 +456,17 @@ describe('Address Elements', function () {
             LobAddressElements.elements.zip.val('20007');
             //verify
             LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'deliverable_unnecessary_unit');
+                assert.strictEqual(success, undefined);
+                assert.strictEqual(err.type, 'deliverable_unnecessary_unit');
                 //warn
                 LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_unnecessary_unit');
-                //verify once more
+                assert.strictEqual(LobAddressElements.elements.message.text(), 'deliverable_unnecessary_unit');
+                //simulate the user click and verify once more
+                LobAddressElements.elements.message.click();
                 LobAddressElements.do.verify(function (err, success) {
                     //success
-                    assert.equal(success, true);
-                    assert.equal(err, null);
+                    assert.strictEqual(success, true);
+                    assert.strictEqual(err, null);
                 });
             });
         });
@@ -476,16 +486,16 @@ describe('Address Elements', function () {
             LobAddressElements.elements.zip.val('94107');
             //verify
             LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'undeliverable');
+                assert.strictEqual(success, undefined);
+                assert.strictEqual(err.type, 'undeliverable');
                 //warn
                 LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'undeliverable');
+                assert.strictEqual(LobAddressElements.elements.message.text(), 'undeliverable');
                 //verify once more
                 LobAddressElements.do.verify(function (err, success) {
                     //success
-                    assert.equal(success, true);
-                    assert.equal(err, null);
+                    assert.strictEqual(success, true);
+                    assert.strictEqual(err, null);
                 });
             });
         });
@@ -502,16 +512,17 @@ describe('Address Elements', function () {
             LobAddressElements.elements.zip.val('94107');
             //verify
             LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'deliverable_missing_unit');
+                assert.strictEqual(success, undefined);
+                assert.strictEqual(err.type, 'deliverable_missing_unit');
                 //warn
                 LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_missing_unit');
-                //verify once more
+                assert.strictEqual(LobAddressElements.elements.message.text(), 'deliverable_missing_unit');
+                //simulate the user click and verify once more
+                LobAddressElements.elements.message.click();
                 LobAddressElements.do.verify(function (err, success) {
                     //success
-                    assert.equal(success, true);
-                    assert.equal(err, null);
+                    assert.strictEqual(success, true);
+                    assert.strictEqual(err, null);
                 });
             });
         });
@@ -528,16 +539,17 @@ describe('Address Elements', function () {
             LobAddressElements.elements.zip.val('94107');
             //verify
             LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'deliverable_incorrect_unit');
+                assert.strictEqual(success, undefined);
+                assert.strictEqual(err.type, 'deliverable_incorrect_unit');
                 //warn
                 LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_incorrect_unit');
-                //verify once more
+                assert.strictEqual(LobAddressElements.elements.message.text(), 'deliverable_incorrect_unit');
+                //simulate the user click and verify once more
+                LobAddressElements.elements.message.click();
                 LobAddressElements.do.verify(function (err, success) {
                     //success
-                    assert.equal(success, true);
-                    assert.equal(err, null);
+                    assert.strictEqual(success, true);
+                    assert.strictEqual(err, null);
                 });
             });
         });
@@ -554,16 +566,17 @@ describe('Address Elements', function () {
             LobAddressElements.elements.zip.val('20007');
             //verify
             LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'deliverable_unnecessary_unit');
+                assert.strictEqual(success, undefined);
+                assert.strictEqual(err.type, 'deliverable_unnecessary_unit');
                 //warn
                 LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_unnecessary_unit');
-                //verify once more
+                assert.strictEqual(LobAddressElements.elements.message.text(), 'deliverable_unnecessary_unit');
+                //simulate the user click and verify once more
+                LobAddressElements.elements.message.click();
                 LobAddressElements.do.verify(function (err, success) {
                     //success
-                    assert.equal(success, true);
-                    assert.equal(err, null);
+                    assert.strictEqual(success, true);
+                    assert.strictEqual(err, null);
                 });
             });
         });
@@ -583,13 +596,13 @@ describe('Address Elements', function () {
             LobAddressElements.elements.zip.val('94107');
             //verify
             LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'undeliverable');
+                assert.strictEqual(success, undefined);
+                assert.strictEqual(err.type, 'undeliverable');
                 //warn
                 LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'undeliverable');
+                assert.strictEqual(LobAddressElements.elements.message.text(), 'undeliverable');
                 //submit
-                assert.equal(LobAddressElements.submit, true);
+                assert.strictEqual(LobAddressElements.submit, true);
             });
         });
 
@@ -605,13 +618,13 @@ describe('Address Elements', function () {
             LobAddressElements.elements.zip.val('94107');
             //verify
             LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'deliverable_missing_unit');
+                assert.strictEqual(success, undefined);
+                assert.strictEqual(err.type, 'deliverable_missing_unit');
                 //warn
                 LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_missing_unit');
+                assert.strictEqual(LobAddressElements.elements.message.text(), 'deliverable_missing_unit');
                 //submit
-                assert.equal(LobAddressElements.submit, true);
+                assert.strictEqual(LobAddressElements.submit, true);
             });
         });
  
@@ -627,13 +640,13 @@ describe('Address Elements', function () {
             LobAddressElements.elements.zip.val('94107');
             //verify
             LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'deliverable_incorrect_unit');
+                assert.strictEqual(success, undefined);
+                assert.strictEqual(err.type, 'deliverable_incorrect_unit');
                 //warn
                 LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_incorrect_unit');
+                assert.strictEqual(LobAddressElements.elements.message.text(), 'deliverable_incorrect_unit');
                 //submit
-                assert.equal(LobAddressElements.submit, true);
+                assert.strictEqual(LobAddressElements.submit, true);
             });
         });
  
@@ -649,13 +662,13 @@ describe('Address Elements', function () {
             LobAddressElements.elements.zip.val('20007');
             //verify
             LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'deliverable_unnecessary_unit');
+                assert.strictEqual(success, undefined);
+                assert.strictEqual(err.type, 'deliverable_unnecessary_unit');
                 //warn
                 LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'deliverable_unnecessary_unit');
+                assert.strictEqual(LobAddressElements.elements.message.text(), 'deliverable_unnecessary_unit');
                 //submit
-                assert.equal(LobAddressElements.submit, true);
+                assert.strictEqual(LobAddressElements.submit, true);
             });
         });
     });
@@ -674,8 +687,8 @@ describe('Address Elements', function () {
             LobAddressElements.elements.zip.val('94107-1702');
             //verify
             LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, true);
-                assert.equal(err, null);
+                assert.strictEqual(success, true);
+                assert.strictEqual(err, null);
             });
         });
 
@@ -692,11 +705,11 @@ describe('Address Elements', function () {
             LobAddressElements.elements.zip.val('');
             //verify
             LobAddressElements.do.verify(function (err, success) {
-                assert.equal(success, undefined);
-                assert.equal(err.type, 'city_state_zip');
+                assert.strictEqual(success, undefined);
+                assert.strictEqual(err.type, 'city_state_zip');
                 //warn
                 LobAddressElements.do.message(err);
-                assert.equal(LobAddressElements.elements.message.text(), 'city_state_zip');
+                assert.strictEqual(LobAddressElements.elements.message.text(), 'city_state_zip');
             });
         });
     });
