@@ -31,7 +31,7 @@ const { parseWebPage } = require('./form-detection');
       var elms;
       var pid = $('*[data-lob-' + type + '-id]').attr('data-lob-' + type + '-id');
       if (pid) {
-        elms = $('#' + pid);
+        elms = $('*[id=' + pid + ']');
       } else {
         var pnm = $('*[data-lob-' + type + '-name]').attr('data-lob-' + type + '-name');
         var pc = $('*[data-lob-' + type + '-class]').attr('data-lob-' + type + '-class');
