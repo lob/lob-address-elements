@@ -29,12 +29,30 @@ function JQMock(type, should_exist) {
         return this;
     }
 
+    JQElm.prototype.each = function (fn) {
+      fn(0, this);
+    };
+    JQElm.prototype.closest = function (fn) {
+      return new JQElm('form', true);
+    };
+    JQElm.prototype.is = function (elm) {
+      return true;
+    };
+    JQElm.prototype.click = function (fn) {
+      if(arguments.length == 0) {
+        this.clickfn && this.clickfn();
+      } else {
+        this.clickfn = fn;
+      }
+    };
     JQElm.prototype.on = function (evt, fn) {
         this.state.events[evt] = fn;
         return this;
     };
     JQElm.prototype.off = function (evt) {
-        delete this.events[evt];
+        if(evt && this.events && evt in this.events) {
+          delete this.events[evt];
+        }
         return this;
     };
     JQElm.prototype.val = function () {
