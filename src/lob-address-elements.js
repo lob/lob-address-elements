@@ -1,6 +1,7 @@
 import { countryCodes, isInternational } from './international-utils.js';
-import { findElm, findValue, parseWebPage } from './form-detection.js';
+import { findElm, findPrimaryAddressInput, findValue, parseWebPage } from './form-detection.js';
 import { createAutocompleteStyles, createVerifyMessageStyles } from './stylesheets.js';
+import { getFormStates } from './main.js'
 
 const resolveStyleStrategy = cfg =>
   typeof (cfg) !== 'undefined' ?
@@ -24,10 +25,11 @@ let verification_configured = false;
 export class LobAddressElements {
 
   constructor($, cfg, pageState) {
-    this.pageState = pageState;
+
+    this.pageState = pageState || getFormStates()[0];
     this.config = {
       api_key: cfg.api_key || findValue('key'),
-      strictness: pageState.strictness,
+      strictness: this.pageState.strictness,
       denormalize: findValue('secondary') !== 'false',
       suppress_stylesheet: resolveStyleStrategy(cfg),
       styles: cfg.styles || {
@@ -39,7 +41,7 @@ export class LobAddressElements {
         'suggestion-activecolor': '#117ab8',
         'suggestion-activebgcolor': '#eeeeee'
       },
-      elements: cfg.elements || parseWebPage(),
+      elements: cfg.elements || parseWebPage(this.pageState.form),
       messages: cfg.messages || {
         primary_line: findValue('err-primary-line') || 'Enter the Primary address.',
         city_state_zip: findValue('err-city-state-zip') || 'Enter City and State (or Zip).',
@@ -59,16 +61,16 @@ export class LobAddressElements {
       },
       do: {
         init: function () {
-          LobAddressElements($, cfg);
+          LobAddressElements($, cfg, this.pageState);
         }
       }
     };
 
-    if (pageState.autocomplete) {
+    if (this.pageState.autocomplete) {
       this.configureAutocompletion();
     }
 
-    if (pageState.verify) {
+    if (this.pageState.verify) {
       this.configureVerification();
     }
 

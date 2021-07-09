@@ -1,8 +1,46 @@
 'use strict';
 
-import { findElm, findForm, findValue, findPrimaryAddressInput } from './form-detection.js';
-import { createFormErrorMessageStyles } from './stylesheets.js';
+import { findElm, findPrimaryAddressInput, findValue } from './form-detection.js';
 import { LobAddressElements } from './lob-address-elements.js';
+
+
+const resolveStrictness = (cfg, form) => {
+  const values = ['false', 'strict', 'normal', 'relaxed', 'passthrough'];
+  if (cfg && values.indexOf(cfg) > -1) {
+    return cfg;
+  } else {
+    const attr = findValue('verify', form);
+    return attr && values.indexOf(attr) > -1 ? attr : 'normal';
+  }
+}
+
+/**
+ * Determine the presence of address-related fields and settings
+ */
+export const getFormStates = cfg => {
+  //everything pivots around the primary address field
+  const primaries = findPrimaryAddressInput();
+  const responses = [];
+  primaries.each((idx, primary) => {
+    primary = $(primary);
+    const form = primary.closest("form");
+    const strictness = resolveStrictness(cfg ? cfg.strictness : null, form);
+    const create_message = findValue('verify-message', form) === 'true' || (form.length && !findElm('verify-message', form).length);
+    const autocomplete = primary.length && findValue('primary', form) !== 'false';
+    const verify = strictness !== 'false' && form.length && (strictness === 'passthrough' || findElm('verify-message', form).length || create_message);
+    responses.push({
+      primary,
+      form,
+      autocomplete: autocomplete,
+      verify: verify,
+      enrich: verify || autocomplete,
+      create_message: create_message,
+      strictness: strictness
+    });
+  });
+
+  return responses;
+}
 
 (function () {
   /**
@@ -17,70 +55,24 @@ import { LobAddressElements } from './lob-address-elements.js';
    */
   const enrichWebPage = ($, cfg) => {
 
-    const resolveStrictness = cfg => {
-      const values = ['false', 'strict', 'normal', 'relaxed', 'passthrough'];
-      if (cfg && values.indexOf(cfg) > -1) {
-        return cfg;
-      } else {
-        const attr = findValue('verify');
-        return attr && values.indexOf(attr) > -1 ? attr : 'normal';
+    const updateFormState = newState => {
+      const { enrich, form } = newState;
+      const state = form && form.attr("data-lob-state") || 'untouched';
+      if (state === 'untouched' && enrich) {
+        form.attr("data-lob-state", 'enriched');
+        setTimeout(() => new LobAddressElements($, cfg, newState), 0);
+      } else if (state === 'enriched' && !enrich) {
+        form.attr("data-lob-state", 'untouched');
       }
-    }
-
-    /**
-     * Determine the presence of address-related fields and settings
-     */
-    const getPageState = () => {
-      try {
-        // Propagate error with our message before something else breaks with a more confusing message
-        const { primary, error: inputError } = findPrimaryAddressInput();
-        if (inputError) {
-          throw new Error(inputError);
-        }
-
-        const { form, error: formError } = findForm('primary');
-        if (formError) {
-          throw new Error(formError);
-        }
-
-        const strictness = resolveStrictness(cfg.strictness);
-        const create_message = findValue('verify-message') === 'true' || (form.length && !findElm('verify-message').length);
-        const autocomplete = primary.length && findValue('primary') !== 'false';
-        const verify = strictness !== 'false' && form.length && (strictness === 'passthrough' || findElm('verify-message').length || create_message);
-
-        return {
-          autocomplete: autocomplete,
-          verify: verify,
-          enrich: verify || autocomplete,
-          create_message: create_message,
-          strictness: strictness,
-          error: inputError || formError || ''
-        };
-      } catch (error) {
-        return {
-          autocomplete: false,
-          verify: false,
-          enrich: false,
-          create_message: false,
-          strictness: false,
-          error: error.message
-        };
-      }
-    }
+    };
 
     /**
      * Observe the DOM. Trigger enrichment when state changes to 'enrich'
-     * @param {string} state - The current state. One of: enriched, untouched
      */
     const observeDOM = state => {
       const didChange = () => {
-        const newState = getPageState();
-        if (state === 'untouched' && newState.enrich) {
-          state = 'enriched';
-          setTimeout(() => new LobAddressElements($, cfg, newState), 0);
-        } else if (state === 'enriched' && !newState.enrich) {
-          state = 'untouched';
-        }
+        const newStates = getFormStates(cfg);
+        newStates.forEach(updateFormState);
       }
       const MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
       if (MutationObserver) {
@@ -93,24 +85,16 @@ import { LobAddressElements } from './lob-address-elements.js';
       }
     }
 
-    const state = getPageState();
-    if (state.error !== '') {
-      // Form cannot be found so we add error to the top of page
-      const message = $(`<div class="lob-form-error-message">${state.error}</div>`);
-      $('<style>')
-        .prop('type', 'text/css')
-        .html(createFormErrorMessageStyles())
-        .appendTo('head');
-      $("body").prepend(message);
-      return null;
-    } else if (state.enrich) {
-      observeDOM('enriched');
-      return new LobAddressElements($, cfg, state);
+    //watch for DOM changes
+    observeDOM();
+
+    if(getFormStates().length) {
+      console.log('init lae');
+      return new LobAddressElements($, cfg);
     } else {
-      observeDOM('untouched');
       return {
         do: {
-          init: () => new LobAddressElements($, cfg, state),
+          init: () => new LobAddressElements($, cfg),
         }
       };
     }
