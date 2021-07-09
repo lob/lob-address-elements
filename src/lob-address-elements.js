@@ -1,11 +1,13 @@
 import { countryCodes, isInternational } from './international-utils.js';
-import { findElm, findPrimaryAddressInput, findValue, parseWebPage } from './form-detection.js';
+import { findElm, findValue, parseWebPage } from './form-detection.js';
 import { createAutocompleteStyles, createVerifyMessageStyles } from './stylesheets.js';
 import { getFormStates } from './main.js'
 
-const resolveStyleStrategy = cfg =>
-  typeof (cfg) !== 'undefined' ?
-    !!cfg : findElm('suggestion-stylesheet').length > 0;
+const resolveStyleStrategy = (cfg, form) => {
+  const isEmptyObject = Object.keys(cfg).length === 0 && cfg.constructor === Object; 
+  return typeof (cfg) !== 'undefined' && !isEmptyObject ?
+    !!cfg : findElm('suggestion-stylesheet', form).length > 0;
+};
 
 let autocompletion_configured = false;
 let verification_configured = false;
