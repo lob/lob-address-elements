@@ -10,7 +10,8 @@ The Lob Address Elements library simplifies client side integration of Lob's *US
 - [Vue Usage](#vue)
 - [Configuration and Customization](#configuration-and-customization)
 - [Component Styles](#component-styles)
-- [International](#international-verification)
+- [International Verification](#international-verification)
+- [Page Events](#page-events)
 - [Examples](#examples)
 - [Contributing](#contributing)
 - [Building](#building)
@@ -132,6 +133,37 @@ See our [Script Attribute Reference Sheet wiki](https://github.com/lob/lob-addre
 
 ## Form Detection
 With v2.0.0, users no longer have to provide the IDs of their address form inputs in the AV elements script tag. We now detect these inputs on start up by search for inputs and labels with address-related key words. Any errors that may arise are displayed in the web page and the browser's console. The quickest solution is to provide the ID of the problem input back in the AV elements script tag.
+
+## Page Events
+Address Elements publishes address-related events as the user interacts with an enriched form. These include:
+* elements.enriched | Address Form Enriched
+* elements.us_autocompletion.suggestion | US Autocompletion Suggested
+* elements.us_autocompletion.selection | US Autocompletion Selected
+* elements.us_autocompletion.error | US Autocompletion Errored
+* elements.us_verification.alert | US Verification Alerted
+* elements.us_verification.improvement | US Verification Improved
+* elements.us_verification.verification | US Verification Succeeded
+* elements.us_verification.error | US Verification Errored
+
+Subscribe to relevant events once the Address Elements library has loaded. Use the `#` wildcard to subscribe to any event.
+
+```
+LobAddressElements.on('elements.#', function (payload, event) {
+  console.log(event.topic, Object.keys(payload));
+});
+```
+
+Unsubscribe by maintaining a reference to the subscription response. In this example, the `elements.enriched` event will only execute only once.
+
+```
+const off = LobAddressElements.on('elements.initialized', function (payload, event) {
+  console.log(event.topic, payload.form);
+  off();
+});
+```
+
+The target address `form` is returned in the event `payload`, providing additional context when multiple address forms are present.
+
 
 ## Component Styles
 For an in-depth guide to modifying the styles injected by Address Elements, please refer to our [styling guide wiki](https://github.com/lob/lob-address-elements/wiki/Styling-Guide).

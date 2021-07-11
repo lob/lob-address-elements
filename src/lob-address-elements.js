@@ -4,7 +4,7 @@ import { createAutocompleteStyles, createVerifyMessageStyles } from './styleshee
 import { getFormStates } from './main.js'
 
 const resolveStyleStrategy = (cfg, form) => {
-  const isEmptyObject = Object.keys(cfg).length === 0 && cfg.constructor === Object; 
+  const isEmptyObject = Object.keys(cfg).length <= 1 && cfg.constructor === Object; 
   return typeof (cfg) !== 'undefined' && !isEmptyObject ?
     !!cfg : findElm('suggestion-stylesheet', form).length > 0;
 };
@@ -30,6 +30,7 @@ export class LobAddressElements {
 
     this.pageState = pageState || getFormStates()[0];
     this.config = {
+      channel: cfg.channel,
       api_key: cfg.api_key || findValue('key'),
       strictness: this.pageState.strictness,
       denormalize: findValue('secondary') !== 'false',
@@ -68,6 +69,12 @@ export class LobAddressElements {
       }
     };
 
+    //alias event-bus subscription method
+    //USAGE:
+    // const off = this.on('a.b', function() { ... });
+    // off();
+    this.on = this.config.channel.on;
+
     if (this.pageState.autocomplete) {
       this.configureAutocompletion();
     }
@@ -78,6 +85,8 @@ export class LobAddressElements {
 
     //bind the state to the global element
     window.LobAddressElements = this;
+
+    this.config.channel.emit('elements.enriched', { config: this.config, form: this.config.elements.form[0] });
   }
 
 
@@ -101,13 +110,15 @@ export class LobAddressElements {
    */
   showMessage(err) {
     const {
+      channel,
       elements: {
         message,
         primaryMsg,
         secondaryMsg,
         cityMsg,
         stateMsg,
-        zipMsg
+        zipMsg,
+        form
       },
       messages,
       denormalize,
@@ -150,6 +161,7 @@ export class LobAddressElements {
         message.text(err.msg).show('slow');              
       }
       messageTypes[err.type] && messageTypes[err.type](messages[err.type]);
+      channel.emit('elements.us_verification.alert', { error: err, type: err.type, form: form[0] });
     }
   }
 
@@ -162,7 +174,7 @@ export class LobAddressElements {
    * @param {function} cb - callback
    */
   autocomplete(query, cb) {
-    const { apis, api_key, elements } = this.config;
+    const { apis, api_key, channel, elements } = this.config;
   
     this.config.international = isInternational(elements.country);
 
@@ -184,6 +196,7 @@ export class LobAddressElements {
           if (this.status === 200) {
             try {
               const data = JSON.parse(xhr.responseText);
+              channel.emit('elements.us_autocompletion.suggestion', { suggestions: data.suggestions, form: elements.form[0] });
               cb(data.suggestions);
             } catch (e) {
               cb(null);
@@ -191,8 +204,10 @@ export class LobAddressElements {
           } else if (this.status === 401) {
             //INVALID API KEY; allow default submission
             console.log('Please sign up on lob.com to get a valid api key.');
+            channel.emit('elements.us_autocompletion.error', { code: 401, message: 'Please sign up on lob.com to get a valid api key.', form: elements.form[0] });
             cb(null);
           } else {
+            channel.emit('elements.us_autocompletion.error', { code: 500, message: 'Unknown error.', form: elements.form[0] });
             cb(null);
           }
         }
@@ -235,7 +250,8 @@ export class LobAddressElements {
   configureAutocompletion() {
     const {
       elements,
-      suppress_stylesheet,
+      channel,
+      suppress_stylesheet
     } = this.config;
 
     /**
@@ -269,6 +285,7 @@ export class LobAddressElements {
           cache: false
         }).on('autocomplete:selected', (event, suggestion) => {
           this.applySuggestion(suggestion);
+          channel.emit('elements.us_autocompletion.selection', { selection: suggestion, form: elements.form[0] });
         });
       }
   }
@@ -452,7 +469,8 @@ export class LobAddressElements {
     const {
       apis,
       api_key,
-      elements: { primary, secondary, city, state, zip, country, message },
+      channel,
+      elements: { primary, secondary, city, state, zip, country, message, form },
       messages
     } = this.config;
   
@@ -495,6 +513,7 @@ export class LobAddressElements {
           data = data && data.body || data;
           if (av.isVerified(data, this.status)) {
             //SUCCESS (time for final submit)
+            channel.emit('elements.us_verification.verification', { code: 200, data, form: form[0] });
             cb(null, true);
           } else if (data.deliverability === 'deliverable') {
             // Address verifired as deliverable but the address needs improvement.
@@ -505,21 +524,25 @@ export class LobAddressElements {
               av.fixAndSave(data);
               av.hideMessages();
               message.off('click');
+              channel.emit('elements.us_verification.improvement', { data: data, form: form[0] });
             });
             cb({ msg: messageHtml, type: 'confirm' });
           } else {
             //KNOWN VERIFICATION ERROR (e.g., undeliverable)
             type = av.resolveErrorType(data.deliverability);
+            channel.emit('elements.us_verification.error', { code: 200, type: 'verification', data, form: form[0] });
             cb({ msg: messages[type], type: type });
           }
         } else if (this.status === 401) {
           //INVALID API KEY; allow default submission
           console.log('Please sign up on lob.com to get a valid api key.');
+          channel.emit('elements.us_verification.error', { code: 401, type: 'authorization', data, form: form[0] });
           cb(null, true);
         } else {
           data = data && data.body || data;
           //KNOWN SYSTEM ERROR (e.g., rate limit exceeded, primary line missing)
           type = av.resolveErrorType(data.error.message);
+          channel.emit('elements.us_verification.error', { code: data.error.code || 0, type, data, form: form[0] });
           cb({ msg: messages[type], type: type });
         }
       }

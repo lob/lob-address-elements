@@ -2,7 +2,7 @@
 
 import { findElm, findPrimaryAddressInput, findValue } from './form-detection.js';
 import { LobAddressElements } from './lob-address-elements.js';
-
+import Bus from 'client-side-event-bus';
 
 const resolveStrictness = (cfg, form) => {
   const values = ['false', 'strict', 'normal', 'relaxed', 'passthrough'];
@@ -54,6 +54,7 @@ export const getFormStates = cfg => {
    * @returns {object}
    */
   const enrichWebPage = ($, cfg) => {
+    cfg.channel = new Bus('lob-address-elements');
 
     const updateFormState = newState => {
       const { enrich, form } = newState;
@@ -93,6 +94,7 @@ export const getFormStates = cfg => {
       return new LobAddressElements($, cfg);
     } else {
       return {
+        on: cfg.channel.on,
         do: {
           init: () => new LobAddressElements($, cfg),
         }
