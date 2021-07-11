@@ -153,7 +153,7 @@ LobAddressElements.on('elements.#', function (payload, event) {
 });
 ```
 
-Unsubscribe by maintaining a reference to the subscription response. In this example, the `elements.enriched` event will only execute only once.
+Unsubscribe by maintaining a reference to the subscription response. In this example, the `elements.enriched` event will execute only once.
 
 ```
 const off = LobAddressElements.on('elements.enriched', function (payload, event) {
