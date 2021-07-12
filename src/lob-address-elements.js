@@ -590,7 +590,7 @@ export class LobAddressElements {
   }
 
   preFlight = (e) => {
-    e.stopImmediatePropagation();
+    e.stopPropagation();
     e.preventDefault();
 
     this.hideMessages();
