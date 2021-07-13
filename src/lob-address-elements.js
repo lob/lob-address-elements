@@ -579,12 +579,11 @@ export class LobAddressElements {
         elements.form.unbind().submit();
       } else {
         this.showMessage(err);
-
         // Allow user to bypass known warnings after they see our warning message with the
         // exemption of undeliverable addresses in which case we check strictness
-        this.config.override = err.type === 'undeliverable'
+        this.config.override =  strictness === 'passthrough' || (err.type === 'undeliverable'
           ? strictness === 'relaxed'
-          : err.type !== 'DEFAULT' && this.config.strictness !== 'strict';
+          : err.type !== 'DEFAULT' && this.config.strictness !== 'strict');
       }
     }
   }

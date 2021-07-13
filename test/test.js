@@ -225,38 +225,47 @@ describe('Address Elements', () => {
         });
     });
 
+    /**
+     * 
+     * @param {String} errorCode - the value returned from the API for an invalid address
+     */
+    const assertWarningPresentedAndAllAttemptsBlocked = errorCode => {
+        // submit form - triggering verification process
+        LobAddressElements.config.elements.form.submit();
+        expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
+        // confirm warning was presented
+        expect(LobAddressElements.config.elements.message.text()).equals(errorCode);
+        // verify once more
+        LobAddressElements.config.elements.form.submit();
+        // confirm there is still an error
+        expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
+        // try verifiing one last time
+        LobAddressElements.config.elements.form.submit();
+        // still error
+        expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
+
+        expect(LobAddressElements.config.submitted).equals(undefined);
+    };
+
+    const assertWarningPresentedAndFirstAttemptBlocked = (errorCode, testOverride = true) => {
+        // submit form - triggering verification process
+        LobAddressElements.config.elements.form.submit();
+        expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
+        // confirm warning was presented
+        expect(LobAddressElements.config.elements.message.text()).equals(errorCode);
+
+        if (testOverride) {
+            expect(LobAddressElements.config.override).to.be.true;
+        }
+        // verify once more
+        LobAddressElements.config.elements.form.submit();
+        expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
+        // confirm submission came to completion
+        expect(LobAddressElements.config.submitted).to.be.true;
+    };
+
 
     describe('#US Verification | Strict Mode', () => {
-
-        it('should never allow an undeliverable address to be submitted', () => {
-            const errorCode = 'undeliverable';
-            const xhr_config = { responseText: JSON.stringify(APIMock.undeliverable) };
-            global.XMLHttpRequest = XHRMock(xhr_config);
-            LobAddressElements.config.strictness = 'strict';
-            //configure an undeliverable address
-            LobAddressElements.config.elements.primary.val('55XXX AVE');
-            LobAddressElements.config.elements.secondary.val('');
-            LobAddressElements.config.elements.city.val('San Francisco');
-            LobAddressElements.config.elements.state.val('CA');
-            LobAddressElements.config.elements.zip.val('94107');
-
-            //verify
-            LobAddressElements.config.elements.form.submit();
-            expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
-            //confirm warning was presented
-            expect(LobAddressElements.config.elements.message.text()).equals(errorCode);
-            //verify once more
-            LobAddressElements.config.elements.form.submit();
-            // still error
-            expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
-            // try one last time
-            LobAddressElements.config.elements.form.submit();
-            // still error
-            expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
-
-            expect(LobAddressElements.config.submitted).equals(undefined);
-        });
-
         it('should never allow a deliverable address with a missing unit to be submitted', () => {
             const errorCode = 'deliverable_missing_unit';
             const xhr_config = { responseText: JSON.stringify(APIMock.deliverable_missing_unit) };
@@ -269,23 +278,9 @@ describe('Address Elements', () => {
             LobAddressElements.config.elements.state.val('CA');
             LobAddressElements.config.elements.zip.val('94107');
             
-            //verify
-            LobAddressElements.config.elements.form.submit();
-            expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
-            //confirm warning was presented
-            expect(LobAddressElements.config.elements.message.text()).equals(errorCode);
-            //verify once more
-            LobAddressElements.config.elements.form.submit();
-            // still error
-            expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
-            // try one last time
-            LobAddressElements.config.elements.form.submit();
-            // still error
-            expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
-
-            expect(LobAddressElements.config.submitted).equals(undefined);
+            assertWarningPresentedAndAllAttemptsBlocked(errorCode);
         });
-
+    
         it('should never allow a deliverable address with an incorrect unit to be submitted', () => {
             const errorCode = 'deliverable_incorrect_unit';
             const xhr_config = { responseText: JSON.stringify(APIMock.deliverable_incorrect_unit) };
@@ -297,24 +292,10 @@ describe('Address Elements', () => {
             LobAddressElements.config.elements.city.val('San Francisco');
             LobAddressElements.config.elements.state.val('CA');
             LobAddressElements.config.elements.zip.val('94107');
-
-            //verify
-            LobAddressElements.config.elements.form.submit();
-            expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
-            //confirm warning was presented
-            expect(LobAddressElements.config.elements.message.text()).equals(errorCode);
-            //verify once more
-            LobAddressElements.config.elements.form.submit();
-            // still error
-            expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
-            // try one last time
-            LobAddressElements.config.elements.form.submit();
-            // still error
-            expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
-
-            expect(LobAddressElements.config.submitted).equals(undefined);
+    
+            assertWarningPresentedAndAllAttemptsBlocked(errorCode);
         });
-
+    
         it('should never allow a deliverable address with an unnecessary unit to be submitted', () => {
             const errorCode = 'deliverable_unnecessary_unit';
             const xhr_config = { responseText: JSON.stringify(APIMock.deliverable_unnecessary_unit) };
@@ -326,24 +307,64 @@ describe('Address Elements', () => {
             LobAddressElements.config.elements.city.val('Washington');
             LobAddressElements.config.elements.state.val('DC');
             LobAddressElements.config.elements.zip.val('20007');
-
-            //verify
-            LobAddressElements.config.elements.form.submit();
-            expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
-            //confirm warning was presented
-            expect(LobAddressElements.config.elements.message.text()).equals(errorCode);
-            //verify once more
-            LobAddressElements.config.elements.form.submit();
-            // still error
-            expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
-            // try one last time
-            LobAddressElements.config.elements.form.submit();
-            // still error
-            expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
-
-            expect(LobAddressElements.config.submitted).equals(undefined);
+    
+            assertWarningPresentedAndAllAttemptsBlocked(errorCode);
         });
     });
+
+
+    /**
+     * These are common API responses where the address needs a small modification to be deliverable
+     * @param {string} strictnessMode - Lob's degree of acceptance for a given address
+     */
+    const testAlmostDeliverableCases = strictnessMode => {
+        // In passthrough mode, the verification response will always be a success so there is
+        // nothing to override. We disable the check of the override flag.
+        const testOverride = strictnessMode !== 'passthrough';
+
+        it('should warn then allow a deliverable address with a missing unit to be submitted', () => {
+            const errorCode = 'deliverable_missing_unit';
+            const xhr_config = { responseText: JSON.stringify(APIMock.deliverable_missing_unit) };
+            global.XMLHttpRequest = XHRMock(xhr_config);
+            LobAddressElements.config.strictness = strictnessMode;
+            //configure a deliverable address with a missing unit
+            LobAddressElements.config.elements.primary.val('185 Berry St');
+            LobAddressElements.config.elements.secondary.val('');
+            LobAddressElements.config.elements.city.val('San Francisco');
+            LobAddressElements.config.elements.state.val('CA');
+            LobAddressElements.config.elements.zip.val('94107');
+            assertWarningPresentedAndFirstAttemptBlocked(errorCode, testOverride);
+        });
+ 
+        it('should warn then allow a deliverable address with an incorrect unit to be submitted', () => {
+            const errorCode = 'deliverable_incorrect_unit';
+            const xhr_config = { responseText: JSON.stringify(APIMock.deliverable_incorrect_unit) };
+            global.XMLHttpRequest = XHRMock(xhr_config);
+            LobAddressElements.config.strictness = strictnessMode;
+            //configure a deliverable address with an incorrect unit
+            LobAddressElements.config.elements.primary.val('185 Berry St');
+            LobAddressElements.config.elements.secondary.val('Apt 1');
+            LobAddressElements.config.elements.city.val('San Francisco');
+            LobAddressElements.config.elements.state.val('CA');
+            LobAddressElements.config.elements.zip.val('94107');
+            assertWarningPresentedAndFirstAttemptBlocked(errorCode, testOverride);
+        });
+ 
+        it('should warn then allow a deliverable address with an unnecessary unit to be submitted', () => {
+            const errorCode = 'deliverable_unnecessary_unit';
+            const xhr_config = { responseText: JSON.stringify(APIMock.deliverable_unnecessary_unit) };
+            global.XMLHttpRequest = XHRMock(xhr_config);
+            LobAddressElements.config.strictness = strictnessMode;
+            //configure a deliverable address with an unnecessary unit
+            LobAddressElements.config.elements.primary.val('3230 P ST NW');
+            LobAddressElements.config.elements.secondary.val('APT 2');
+            LobAddressElements.config.elements.city.val('Washington');
+            LobAddressElements.config.elements.state.val('DC');
+            LobAddressElements.config.elements.zip.val('20007');
+            assertWarningPresentedAndFirstAttemptBlocked(errorCode, testOverride);
+        });
+    } 
+
 
     describe('#US Verification | Normal Mode', () => {
 
@@ -359,98 +380,14 @@ describe('Address Elements', () => {
             LobAddressElements.config.elements.state.val('CA');
             LobAddressElements.config.elements.zip.val('94107');
 
-            //verify
-            LobAddressElements.config.elements.form.submit();
-            expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
-            //confirm warning was presented
-            expect(LobAddressElements.config.elements.message.text()).equals(errorCode);
-            //verify once more
-            LobAddressElements.config.elements.form.submit();
-            // still error
-            expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
-            // try one last time
-            LobAddressElements.config.elements.form.submit();
-            // still error
-            expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
-
-            expect(LobAddressElements.config.submitted).equals(undefined);
+            assertWarningPresentedAndAllAttemptsBlocked(errorCode);
         });
 
-        it('should warn then allow a deliverable address with a missing unit to be submitted', () => {
-            const errorCode = 'deliverable_missing_unit';
-            const xhr_config = { responseText: JSON.stringify(APIMock.deliverable_missing_unit) };
-            global.XMLHttpRequest = XHRMock(xhr_config);
-            LobAddressElements.config.strictness = 'normal';
-            //configure a deliverable address with a missing unit
-            LobAddressElements.config.elements.primary.val('185 Berry St');
-            LobAddressElements.config.elements.secondary.val('');
-            LobAddressElements.config.elements.city.val('San Francisco');
-            LobAddressElements.config.elements.state.val('CA');
-            LobAddressElements.config.elements.zip.val('94107');
-
-            //verify
-            LobAddressElements.config.elements.form.submit();
-            expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
-            //confirm warning was presented
-            expect(LobAddressElements.config.elements.message.text()).equals(errorCode);
-            expect(LobAddressElements.config.override).to.be.true;
-            //verify once more
-            LobAddressElements.config.elements.form.submit();
-            expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
-            //confirm submission
-            expect(LobAddressElements.config.submitted).to.be.true;
-        });
- 
-        it('should warn then allow a deliverable address with an incorrect unit to be submitted', () => {
-            const errorCode = 'deliverable_incorrect_unit';
-            const xhr_config = { responseText: JSON.stringify(APIMock.deliverable_incorrect_unit) };
-            global.XMLHttpRequest = XHRMock(xhr_config);
-            LobAddressElements.config.strictness = 'normal';
-            //configure a deliverable address with an incorrect unit
-            LobAddressElements.config.elements.primary.val('185 Berry St');
-            LobAddressElements.config.elements.secondary.val('Apt 1');
-            LobAddressElements.config.elements.city.val('San Francisco');
-            LobAddressElements.config.elements.state.val('CA');
-            LobAddressElements.config.elements.zip.val('94107');
-
-            //verify
-            LobAddressElements.config.elements.form.submit();
-            expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
-            //confirm warning was presented
-            expect(LobAddressElements.config.elements.message.text()).equals(errorCode);
-            expect(LobAddressElements.config.override).to.be.true;
-            //verify once more
-            LobAddressElements.config.elements.form.submit();
-            expect(LobAddressElements.config.submitted).to.be.true;
-        });
- 
-        it('should warn then allow a deliverable address with an unnecessary unit to be submitted', () => {
-            const errorCode = 'deliverable_unnecessary_unit';
-            const xhr_config = { responseText: JSON.stringify(APIMock.deliverable_unnecessary_unit) };
-            global.XMLHttpRequest = XHRMock(xhr_config);
-            LobAddressElements.config.strictness = 'normal'; //(default)
-            //configure a deliverable address with an unnecessary unit
-            LobAddressElements.config.elements.primary.val('3230 P ST NW');
-            LobAddressElements.config.elements.secondary.val('APT 2');
-            LobAddressElements.config.elements.city.val('Washington');
-            LobAddressElements.config.elements.state.val('DC');
-            LobAddressElements.config.elements.zip.val('20007');
-
-            //verify
-            LobAddressElements.config.elements.form.submit();
-            expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
-            //confirm warning was presented
-            expect(LobAddressElements.config.elements.message.text()).equals(errorCode);
-            expect(LobAddressElements.config.override).to.be.true;
-            //verify once more
-            LobAddressElements.config.elements.form.submit();
-            expect(LobAddressElements.config.submitted).to.be.true;
-        });
+        testAlmostDeliverableCases('normal');
     });
 
 
     describe('#US Verification | Relaxed Mode', () => {
-
         it('should warn then allow an undeliverable address to be submitted', () => {
             const errorCode = 'undeliverable';
             const xhr_config = { responseText: JSON.stringify(APIMock.undeliverable) };
@@ -461,86 +398,15 @@ describe('Address Elements', () => {
             LobAddressElements.config.elements.city.val('San Francisco');
             LobAddressElements.config.elements.state.val('CA');
             LobAddressElements.config.elements.zip.val('94107');
-
-            //verify
-            LobAddressElements.config.elements.form.submit();
-            expect(spy).to.have.been.called.with({ type: errorCode, msg: errorCode });
-            //confirm warning was presented
-            expect(LobAddressElements.config.elements.message.text()).equals(errorCode);
-            expect(LobAddressElements.config.override).to.be.true;
-            //verify once more
-            LobAddressElements.config.elements.form.submit();
-            expect(LobAddressElements.config.submitted).to.be.true;
+            assertWarningPresentedAndFirstAttemptBlocked(errorCode);
         });
 
-        it('should warn then allow a deliverable address with a missing unit to be submitted', () => {
-            const errorCode = 'deliverable_missing_unit';
-            const xhr_config = { responseText: JSON.stringify(APIMock.deliverable_missing_unit) };
-            global.XMLHttpRequest = XHRMock(xhr_config);
-            LobAddressElements.config.strictness = 'relaxed';
-            //configure a deliverable address with a missing unit
-            LobAddressElements.config.elements.primary.val('185 Berry St');
-            LobAddressElements.config.elements.secondary.val('');
-            LobAddressElements.config.elements.city.val('San Francisco');
-            LobAddressElements.config.elements.state.val('CA');
-            LobAddressElements.config.elements.zip.val('94107');
-
-            //verify
-            LobAddressElements.config.elements.form.submit();
-            //confirm warning was presented
-            expect(LobAddressElements.config.elements.message.text()).equals(errorCode);
-            //verify once more
-            LobAddressElements.config.elements.form.submit();
-            expect(LobAddressElements.config.submitted).to.be.true;
-        });
- 
-        it('should warn then allow a deliverable address with an incorrect unit to be submitted', () => {
-            const errorCode = 'deliverable_incorrect_unit';
-            const xhr_config = { responseText: JSON.stringify(APIMock.deliverable_incorrect_unit) };
-            global.XMLHttpRequest = XHRMock(xhr_config);
-            LobAddressElements.config.strictness = 'relaxed';
-            //configure a deliverable address with an incorrect unit
-            LobAddressElements.config.elements.primary.val('185 Berry St');
-            LobAddressElements.config.elements.secondary.val('Apt 1');
-            LobAddressElements.config.elements.city.val('San Francisco');
-            LobAddressElements.config.elements.state.val('CA');
-            LobAddressElements.config.elements.zip.val('94107');
-
-            //verify
-            LobAddressElements.config.elements.form.submit();
-            //confirm warning was presented
-            expect(LobAddressElements.config.elements.message.text()).equals(errorCode);
-            //verify once more
-            LobAddressElements.config.elements.form.submit();
-            expect(LobAddressElements.config.submitted).to.be.true;
-        });
- 
-        it('should warn then allow a deliverable address with an unnecessary unit to be submitted', () => {
-            const errorCode = 'deliverable_unnecessary_unit';
-            const xhr_config = { responseText: JSON.stringify(APIMock.deliverable_unnecessary_unit) };
-            global.XMLHttpRequest = XHRMock(xhr_config);
-            LobAddressElements.config.strictness = 'relaxed';
-            //configure a deliverable address with an unnecessary unit
-            LobAddressElements.config.elements.primary.val('3230 P ST NW');
-            LobAddressElements.config.elements.secondary.val('APT 2');
-            LobAddressElements.config.elements.city.val('Washington');
-            LobAddressElements.config.elements.state.val('DC');
-            LobAddressElements.config.elements.zip.val('20007');
-
-            //verify
-            LobAddressElements.config.elements.form.submit();
-            //confirm warning was presented
-            expect(LobAddressElements.config.elements.message.text()).equals(errorCode);
-            //verify once more
-            LobAddressElements.config.elements.form.submit();
-            expect(LobAddressElements.config.submitted).to.be.true;
-        });
+        testAlmostDeliverableCases('relaxed');
     });
 
 
     describe('#US Verification | Passthrough Mode', () => {
-
-        it('should warn and immediately submit an undeliverable address', () => {
+        it('should warn then allow an undeliverable address to be submitted', () => {
             const errorCode = 'undeliverable';
             const xhr_config = { responseText: JSON.stringify(APIMock.undeliverable) };
             global.XMLHttpRequest = XHRMock(xhr_config);
@@ -550,78 +416,10 @@ describe('Address Elements', () => {
             LobAddressElements.config.elements.city.val('San Francisco');
             LobAddressElements.config.elements.state.val('CA');
             LobAddressElements.config.elements.zip.val('94107');
-            
-            //verify
-            LobAddressElements.config.elements.form.submit();
-            //confirm warning was presented
-            expect(LobAddressElements.config.elements.message.text()).equals(errorCode);
-            //verify once more
-            LobAddressElements.config.elements.form.submit();
-            expect(LobAddressElements.config.submitted).to.be.true;
+            assertWarningPresentedAndFirstAttemptBlocked(errorCode, false /* testOverride */);
         });
 
-        it('should warn and immediately submit a deliverable address with a missing unit', () => {
-            const errorCode = 'deliverable_missing_unit';
-            const xhr_config = { responseText: JSON.stringify(APIMock.deliverable_missing_unit) };
-            global.XMLHttpRequest = XHRMock(xhr_config);
-            LobAddressElements.config.strictness = 'passthrough';
-            //configure a deliverable address with a missing unit
-            LobAddressElements.config.elements.primary.val('185 Berry St');
-            LobAddressElements.config.elements.secondary.val('');
-            LobAddressElements.config.elements.city.val('San Francisco');
-            LobAddressElements.config.elements.state.val('CA');
-            LobAddressElements.config.elements.zip.val('94107');
-            
-            //verify
-            LobAddressElements.config.elements.form.submit();
-            //confirm warning was presented
-            expect(LobAddressElements.config.elements.message.text()).equals(errorCode);
-            //verify once more
-            LobAddressElements.config.elements.form.submit();
-            expect(LobAddressElements.config.submitted).to.be.true;
-        });
- 
-        it('should warn and immediately submit a deliverable address with an incorrect unit', () => {
-            const errorCode = 'deliverable_incorrect_unit';
-            const xhr_config = { responseText: JSON.stringify(APIMock.deliverable_incorrect_unit) };
-            global.XMLHttpRequest = XHRMock(xhr_config);
-            LobAddressElements.config.strictness = 'passthrough';
-            //configure a deliverable address with an incorrect unit
-            LobAddressElements.config.elements.primary.val('185 Berry St');
-            LobAddressElements.config.elements.secondary.val('Apt 1');
-            LobAddressElements.config.elements.city.val('San Francisco');
-            LobAddressElements.config.elements.state.val('CA');
-            LobAddressElements.config.elements.zip.val('94107');
-            
-            //verify
-            LobAddressElements.config.elements.form.submit();
-            //confirm warning was presented
-            expect(LobAddressElements.config.elements.message.text()).equals(errorCode);
-            //verify once more
-            LobAddressElements.config.elements.form.submit();
-            expect(LobAddressElements.config.submitted).to.be.true;
-        });
- 
-        it('should warn and immediately submit a deliverable address with an unnecessary unit', () => {
-            const errorCode = 'deliverable_unnecessary_unit';
-            const xhr_config = { responseText: JSON.stringify(APIMock.deliverable_unnecessary_unit) };
-            global.XMLHttpRequest = XHRMock(xhr_config);
-            LobAddressElements.config.strictness = 'passthrough';
-            //configure a deliverable address with an unnecessary unit
-            LobAddressElements.config.elements.primary.val('3230 P ST NW');
-            LobAddressElements.config.elements.secondary.val('APT 2');
-            LobAddressElements.config.elements.city.val('Washington');
-            LobAddressElements.config.elements.state.val('DC');
-            LobAddressElements.config.elements.zip.val('20007');
-            
-            //verify
-            LobAddressElements.config.elements.form.submit();
-            //confirm warning was presented
-            expect(LobAddressElements.config.elements.message.text()).equals(errorCode);
-            //verify once more
-            LobAddressElements.config.elements.form.submit();
-            expect(LobAddressElements.config.submitted).to.be.true;
-        });
+        testAlmostDeliverableCases('passthrough');
     });
 
 
