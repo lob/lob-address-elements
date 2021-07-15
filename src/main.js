@@ -61,7 +61,10 @@ export const getFormStates = cfg => {
       const state = form && form.attr("data-lob-state") || 'untouched';
       if (state === 'untouched' && enrich) {
         form.attr("data-lob-state", 'enriched');
-        setTimeout(() => new LobAddressElements($, cfg, newState), 0);
+        setTimeout(() => {
+          const av = new LobAddressElements($, cfg, newState)
+          window.LobAddressElements = window.LobAddressElements ? [ ...window.LobAddressElements, av] : [av];
+        }, 0);
       } else if (state === 'enriched' && !enrich) {
         form.attr("data-lob-state", 'untouched');
       }
@@ -89,10 +92,8 @@ export const getFormStates = cfg => {
     //watch for DOM changes
     observeDOM();
 
-    if(getFormStates().length) {
-      console.log('init lae');
-      return new LobAddressElements($, cfg);
-    } else {
+    // If no forms are found, give user a way to manually initialize LobAddressElements
+    if(!getFormStates().length) {
       return {
         on: cfg.channel.on,
         do: {
@@ -148,7 +149,13 @@ export const getFormStates = cfg => {
     address_elements: function () {
       if (!window.LobAddressElements) {
         const config = window.LobAddressElementsConfig || {};
-        window.LobAddressElements = enrichWebPage(window.jQuery, config);
+
+        // enrichWebPage only returns something when no forms are found. Otherwise
+        const enrichResult = enrichWebPage(window.jQuery, config)
+        if (enrichResult) {
+          window.LobAddressElements = [enrichWebPage(window.jQuery, config)];
+        }
+
         BootStrapper.load(arguments);
       } else {
         BootStrapper.load(arguments);

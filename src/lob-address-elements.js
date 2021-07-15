@@ -83,8 +83,6 @@ export class LobAddressElements {
       this.configureVerification();
     }
 
-    //bind the state to the global element
-    window.LobAddressElements = this;
 
     this.config.channel.emit('elements.enriched', { config: this.config, form: this.config.elements.form[0] });
   }
@@ -436,7 +434,7 @@ export class LobAddressElements {
     const addressNeedsImprovement = this.fixAndSave(data, false /* fix */);
     return !status ||
       (data.deliverability === 'deliverable' && !addressNeedsImprovement) ||
-      (data.deliverability === 'undeliverable' && confirmed && strictness === 'relaxed') ||
+      (data.deliverability === 'undeliverable' && confirmed && strictness === 'passthrough') ||
       (data.deliverability === 'deliverable_missing_unit' && confirmed && strictness !== 'strict') ||
       (data.deliverability === 'deliverable_unnecessary_unit' && confirmed && strictness !== 'strict') ||
       (data.deliverability === 'deliverable_incorrect_unit' && confirmed && strictness !== 'strict')
@@ -559,7 +557,7 @@ export class LobAddressElements {
    * @param {*} event_type 
    */
   prioritizeHandler(jqElm, event_type) {
-    const eventList = $._data(jqElm[0], 'events');
+    const eventList = $._data(jqElm.get(0), 'events');
     eventList[event_type].unshift(eventList[event_type].pop());
   }
 
@@ -567,16 +565,23 @@ export class LobAddressElements {
     const { elements, override, strictness, submit } = this.config;
     if (submit || override) {
       this.showMessage(err);
-      elements.form.off('submit', this.preFlight);
       this.config.submitted = true;
       this.config.override = false;
-      elements.form.unbind().submit();
-      elements.form.on('submit', this.preFlight);
+
+      elements.form.off('.avSubmit', this.preFlight.bind(this));
+      elements.form.unbind('.avSubmit');
+      elements.form.get(0).submit();
+
+      elements.form.on('submit.avSubmit', this.preFlight.bind(this));
       this.prioritizeHandler(elements.form, 'submit');
     } else {
       if (success) {
-        elements.form.off('submit', this.preFlight);
-        elements.form.unbind().submit();
+        this.config.submitted = true;
+        this.config.override = false;
+
+        elements.form.off('.avSubmit', this.preFlight.bind(this));
+        elements.form.unbind('.avSubmit');
+        elements.form.get(0).submit();
       } else {
         this.showMessage(err);
         // Allow user to bypass known warnings after they see our warning message with the
@@ -635,7 +640,7 @@ export class LobAddressElements {
       this.showMessage({ type: 'form_detection', msg: elements.parseResultError });
     }
 
-    elements.form.on('submit', this.preFlight.bind(this));
+    elements.form.on('submit.avSubmit', this.preFlight.bind(this));
   
     this.prioritizeHandler(elements.form, 'submit');
   }
