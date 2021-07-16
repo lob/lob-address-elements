@@ -1,6 +1,7 @@
 const chai = require('chai');
 const jsdom = require('jsdom');
 const spies = require('chai-spies');
+const sinon = require('sinon');
 const { expect } = require('chai');
 const XHRMock = require('./mock/XHR.js');
 const APIMock = require('./mock/LobAPIs.js');
@@ -8,7 +9,7 @@ const APIMock = require('./mock/LobAPIs.js');
 chai.use(spies);
 
 describe('Address Elements', () => {
-    let emit, refs, LobAddressElements, spy;
+    let emit, refs, LobAddressElements, spy, clock;
 
     before(() => {
         const { JSDOM } = jsdom;
@@ -17,6 +18,7 @@ describe('Address Elements', () => {
             XMLHttpRequest: global.XMLHttpRequest,
             btoa: global.btoa
         };
+        clock = sinon.useFakeTimers();
         return JSDOM.fromFile('examples/vanilla_css_styles.html', { url: 'http://localhost'}).then(dom => {
             global.window = { ...dom.window };
             global.document = dom.window.document;
@@ -25,6 +27,14 @@ describe('Address Elements', () => {
             global.$ = global.jQuery = require('jquery');
             global.window.jQuery = global.jQuery;
             global.window.jQuery.fn.autocomplete = require('jquery-ui');
+
+            // This fake observer will mock a change event which will kick off the Address Elements script
+            global.window.MutationObserver = didChange => {
+                didChange();
+                return {
+                    observe: () => {},
+                };
+            }
 
             //NOTE: `elements` and `styles` can also be tested by mocking here as well
             global.window.LobAddressElementsConfig = {
@@ -41,7 +51,11 @@ describe('Address Elements', () => {
                 }
             }
             require('../src/main.js');
-            LobAddressElements = global.window.LobAddressElements;
+
+            // Gives script time to detect forms and create LobAddressElements
+            clock.tick(100);
+
+            LobAddressElements = global.window.LobAddressElements[0];
 
             ({ emit } = window._virtualConsole);
         });
@@ -64,7 +78,6 @@ describe('Address Elements', () => {
     afterEach(() => {
         delete LobAddressElements.confirmed;
         delete LobAddressElements.address;
-        LobAddressElements.config.strictness = 'normal';
         LobAddressElements.config.elements.primary.val('');
         LobAddressElements.config.elements.secondary.val('');
         LobAddressElements.config.elements.city.val('');
