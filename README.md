@@ -196,12 +196,12 @@ npm run build
 ## Latest Release
 
 
-### 2.0.0 (CURRENT / LATEST)
+### 2.1.0 (CURRENT / LATEST)
 | Current Improvements |
 | :---          |
-| Implements form detection strategies to simplify script usage |
-| Adds support for international verifications |
-| Modularizes our main script with webpack as our bundler |
+| Supports multiple forms on the page |
+| Adds ability to subscribe to AV events |
+
 
 [See release notes for previous versions](https://github.com/lob/lob-address-elements/wiki/Release-Notes)
 
