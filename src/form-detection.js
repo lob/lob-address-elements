@@ -1,70 +1,61 @@
 import { isInternational } from './international-utils.js';
 
 /**
+ * filters elms, returning only descendnt elms
+ * @param {*} elms - jquery elements
+ * @param {*} [form] - if present, filter for descendnt elms
+ * @returns 
+ */
+const closest = (elms, form) => {
+  if (form && form.length && elms && elms.length) {
+    let elm;
+    elms.each(function (idx, _elm) {
+      if (form.is(_elm.closest("form"))) {
+        elm = $(_elm);
+      }
+    });
+    return elm || elms;
+  }
+  return elms;
+};
+
+/**
  * Returns a jquery element to which to add behavior, locating
  * the element using one of three methods: id, name, attribute.
  * @param {string} type - For example: primary, secondary, city
  * @returns {object}
  */
-export const findElm = type => {
+export const findElm = (type, form = null) => {
+  let elms;
   const pid = $('*[data-lob-' + type + '-id]').attr('data-lob-' + type + '-id');
+
   if (pid) {
-    return $('#' + pid);
+    elms = $('*[id=' + pid + ']');
   } else {
     const pnm = $('*[data-lob-' + type + '-name]').attr('data-lob-' + type + '-name');
     const pc = $('*[data-lob-' + type + '-class]').attr('data-lob-' + type + '-class');
     if (pnm) {
-      return $('*[name=' + pnm + ']');
+      elms = $('*[name=' + pnm + ']');
     } else if (pc) {
-      return $('.' + pc);
+      elms = $('.' + pc);
     } else {
-      return $('*[data-lob-' + type + ']');
+      elms = $('*[data-lob-' + type + ']');
     }
   }
+
+  return closest(elms, form);
 };
 
 /**
  * Returns the configuration value for a given @type
  * @param {string} type - One of: verify, secondary, primary, verify-message
+ * @param {object} form - The container to restrict our search in
  * @returns {object}
  */
-export const findValue = type => {
-  const target = findElm(type);
+export const findValue = (type, form) => {
+  const target = findElm(type, form);
   const target_val = target.length && target.attr('data-lob-' + type);
   return target_val || $('*[data-lob-' + type + '-value]').attr('data-lob-' + type + '-value');
-};
-
-/**
- * Returns the form parent for a target element, @type, 
- * unless the user explicitly identifies the form to use via the
- * 'verify' label
- * @param {string} type - For example: primary, secondary, zip, etc
- * @returns {object}
- */
-export const findForm = type => {
-  const form = findElm('verify');
-  const element = findElm(type);
-
-  const formElement = form.length ? form
-    : element.length ? findElm(type).closest('form')
-    : findAddressElementByLabel(type).closest('form');
-
-  let error = '';
-  if (!formElement.length) {
-    const consoleError =
-      "[Lob AV Elements Error]:\tForm element not found\n" +
-      "Could not find form on page. Please ensure that your address form is enclosed by a form tag\n" +
-      "For more information visit: https://www.lob.com/guides#av-elements-troubleshooting";
-    error =
-      "<p>" +
-      "[Lob AV Elements Error]:\tForm element not found<br/>" +
-      "Could not find form on page. Please ensure that your address form is enclosed by a form tag.<br/>" +
-      "For more information visit <a href=\"https://www.lob.com/guides#av-elements-troubleshooting\">https://www.lob.com/guides#av-elements-troubleshooting</a>" +
-      "</p>";
-    console.error(consoleError);
-  }
-
-  return { form: formElement, error };
 };
 
 /**
@@ -88,19 +79,21 @@ const addressKeyWords = {
  * Checks if a form attribute was provided for us in the AV Elements script tag. If so, we locate
  * the element directly.
  * @param {string} type - For example: primary, secondary, city
+ * @param {object} form - The container to restrict our search in
  * @returns {null || object} - a jQuery object
  */
-const findAddressElementById = type => {
-  const elementFromID = findElm(type);
+const findAddressElementById = (type, form) => {
+  const elementFromID = findElm(type, form);
   return elementFromID.length ? elementFromID : null;
 };
 
 /**
  * Performs a localized search relative to an address component's label
  * @param {string} type - For example: primary, secondary, city
+ * @param {object} form - When multiple elements are found, the one closest to form is selected
  * @returns {null || object} - a jQuery object
  */
-const findAddressElementByLabel = type => {
+const findAddressElementByLabel = (type, form) => {
   // Chain together the query selectors for every variation of a given label.
   const selector = addressKeyWords[type].map(currentLabel => `:contains('${currentLabel}')`).join(', ');
 
@@ -122,39 +115,39 @@ const findAddressElementByLabel = type => {
 
   const labels = selections.filter("label");
 
-  // Raise an error on multiple matching labels for the user to resolve 
-  if (labels.length > 1) {
-    return labels;
+  const getInputSelections = label => {
+    const inputId = label.htmlFor;
+    if (inputId) {
+      const inputSelections = $(`*[id=${inputId}]`);
+      return inputSelections;
+    }
+
+    const siblingSelections = label.siblings("input");
+    if (siblingSelections.length) {
+      return siblingSelections;
+    }
+
+    const childSelections = label.children("input");
+    if (childSelections.length) {
+      return childSelections;
+    }
+
+    const parentSelections = label.parentsUntil("form", "input");
+    if (parentSelections.length) {
+      return parentSelections;
+    }
+  
+    return $();
   }
 
-  if (labels.length !== 1) {
-    return null;
-  }
-  // Selections are ordered from furthest to closest, so the last element most likely contains
-  // the label text itself
-  const label = labels[0];
-  const inputId = label.htmlFor;
-  if (inputId) {
-    const inputSelections = $(`#${inputId}`);
-    return inputSelections;
-  }
+  let inputSelections = $();
+  
+  labels.each((idx, label) => {
+    const selections = getInputSelections(label);
+    inputSelections = inputSelections.add(selections);
+  });
 
-  const siblingSelections = label.siblings("input");
-  if (siblingSelections.length) {
-    return siblingSelections;
-  }
-
-  const childSelections = label.children("input");
-  if (childSelections.length) {
-    return childSelections;
-  }
-
-  const parentSelections = label.parentsUntil("form", "input");
-  if (parentSelections.length) {
-    return parentSelections;
-  }
-
-  return null;
+  return inputSelections.length ? closest(inputSelections, form) : null;
 };
 
 /**
@@ -162,7 +155,7 @@ const findAddressElementByLabel = type => {
  * @param {string} type - For example: primary, secondary, city
  * @returns {null || object} - a jQuery object
  */
-const findAddressElementsByInput = (type) => {
+const findAddressElementByInput = type => {
   const modifiedAddressKeyWords = { ...addressKeyWords };
 
   // Include 'address' because attribute values typically don't have spaces so 'address 2' would not show up
@@ -264,36 +257,38 @@ const resolveParsingResults = addressElements => {
   return parseResultError;
 };
 
+
 // Helper function to confirm presence of an address form
 export const findPrimaryAddressInput = () => {
-  const primary = findAddressElementById('primary') || findAddressElementByLabel('primary') || findAddressElementsByInput('primary');
-  const error = resolveParsingResults({ primary });
-  return { primary, error };
+  const elementsById = findAddressElementById('primary') ||  $();
+  const elementsByLabel = findAddressElementByLabel('primary') || $();
+  const elementsByInput = findAddressElementByInput('primary') || $();
+  return elementsById.add(elementsByLabel).add(elementsByInput);
 };
 
-export const parseWebPage = () => {
+export const parseWebPage = form => {
   const errorMessageElements = {
-    errorAnchorElement: findElm('verify-message-anchor'),
-    primaryMsg: findElm('primary-message').hide(),
-    secondaryMsg: findElm('secondary-message').hide(),
-    cityMsg: findElm('city-message').hide(),
-    stateMsg: findElm('state-message').hide(),
-    zipMsg: findElm('zip-message').hide(),
-    countryMsg: findElm('country-message').hide(),
-    message: findElm('verify-message').hide()
+    errorAnchorElement: findElm('verify-message-anchor', form),
+    primaryMsg: findElm('primary-message', form).hide(),
+    secondaryMsg: findElm('secondary-message', form).hide(),
+    cityMsg: findElm('city-message', form).hide(),
+    stateMsg: findElm('state-message', form).hide(),
+    zipMsg: findElm('zip-message', form).hide(),
+    countryMsg: findElm('country-message', form).hide(),
+    message: findElm('verify-message', form).hide()
   };
 
   // Walk through detection strategies for each address component
   const addressElements = {};
   ['primary', 'secondary', 'city', 'state', 'zip', 'country'].forEach(type => {
-    addressElements[type] = findAddressElementById(type);
+    addressElements[type] = findAddressElementById(type, form);
 
     if (!addressElements[type]) {
-      addressElements[type] = findAddressElementByLabel(type);
+      addressElements[type] = findAddressElementByLabel(type, form);
     }
 
     if (!addressElements[type] || (addressElements[type] && addressElements[type].length > 1)) {
-      addressElements[type] = findAddressElementsByInput(type);
+      addressElements[type] = findAddressElementByInput(type);
     }
   });
 
@@ -301,6 +296,6 @@ export const parseWebPage = () => {
     ...errorMessageElements,
     ...addressElements,
     parseResultError: resolveParsingResults(addressElements),
-    form: findForm('primary').form,
+    form,
   };
 };

@@ -70,17 +70,3 @@ export const createVerifyMessageStyles = config => `
     transform: translate(-50%, 0%);
     width: 100%;
   }`;
-
-export const createFormErrorMessageStyles = () => `
-  .lob-form-error-message {
-    width: 100%;
-    border-radius: .25rem;
-    max-width: 100%;
-    text-align: left;
-    padding: .5rem;
-    margin-top: 1.5rem;
-    margin-bottom: 1.5rem;
-    color: #117ab8;
-    background-color: #eeeeee;
-  }'
-`;
