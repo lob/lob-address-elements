@@ -570,6 +570,7 @@ export class LobAddressElements {
 
       elements.form.off('.avSubmit', this.preFlight.bind(this));
       elements.form.unbind('.avSubmit');
+      elements.form.trigger('submit');
       elements.form.get(0).submit();
 
       elements.form.on('submit.avSubmit', this.preFlight.bind(this));
@@ -581,6 +582,7 @@ export class LobAddressElements {
 
         elements.form.off('.avSubmit', this.preFlight.bind(this));
         elements.form.unbind('.avSubmit');
+        elements.form.trigger('submit');
         elements.form.get(0).submit();
       } else {
         this.showMessage(err);
@@ -594,7 +596,7 @@ export class LobAddressElements {
   }
 
   preFlight = (e) => {
-    e.stopPropagation();
+    e.stopImmediatePropagation();
     e.preventDefault();
 
     this.hideMessages();
