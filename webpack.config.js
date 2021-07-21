@@ -4,6 +4,7 @@ const path = require('path');
 const package = require('./package.json');
 
 module.exports = {
+  mode: 'production',
   devtool: "nosources-source-map",
   entry: './src/main.js',
   optimization: {
