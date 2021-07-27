@@ -196,11 +196,10 @@ npm run build
 ## Latest Release
 
 
-### 2.1.0 (CURRENT / LATEST)
+### 2.1.1 (CURRENT / LATEST)
 | Current Improvements |
 | :---          |
-| Supports multiple forms on the page |
-| Adds ability to subscribe to AV events |
+| Updates global LobAddressElements instance manager to share event bus between instances |
 
 
 [See release notes for previous versions](https://github.com/lob/lob-address-elements/wiki/Release-Notes)
