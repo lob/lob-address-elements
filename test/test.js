@@ -55,7 +55,7 @@ describe('Address Elements', () => {
             // Gives script time to detect forms and create LobAddressElements
             clock.tick(100);
 
-            LobAddressElements = global.window.LobAddressElements[0];
+            LobAddressElements = global.window.LobAddressElements.instances[0];
 
             ({ emit } = window._virtualConsole);
         });

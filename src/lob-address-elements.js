@@ -69,12 +69,6 @@ export class LobAddressElements {
       }
     };
 
-    //alias event-bus subscription method
-    //USAGE:
-    // const off = this.on('a.b', function() { ... });
-    // off();
-    this.on = this.config.channel.on;
-
     if (this.pageState.autocomplete) {
       this.configureAutocompletion();
     }

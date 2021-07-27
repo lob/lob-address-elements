@@ -14,6 +14,15 @@ const resolveStrictness = (cfg, form) => {
   }
 }
 
+const initLobAddressElementsManager = () => {
+  const channel = new Bus('lob-address-elements');
+  return {
+    channel,
+    instances: [],
+    on: channel.on
+  };
+};
+
 /**
  * Determine the presence of address-related fields and settings
  */
@@ -54,7 +63,14 @@ export const getFormStates = cfg => {
    * @returns {object}
    */
   const enrichWebPage = ($, cfg) => {
-    cfg.channel = new Bus('lob-address-elements');
+    // Create our AV Elements manager if this is the first form we're enriching. If so we create
+    // a global object to manage events and address forms we've enriched. All instances of
+    // LobAddressElements will share the same event bus.
+    if (!window.LobAddressElements) {
+      window.LobAddressElements = initLobAddressElementsManager();
+    }
+
+    cfg.channel = window.LobAddressElements.channel;
 
     const updateFormState = newState => {
       const { enrich, form } = newState;
@@ -63,7 +79,13 @@ export const getFormStates = cfg => {
         form.attr("data-lob-state", 'enriched');
         setTimeout(() => {
           const av = new LobAddressElements($, cfg, newState)
-          window.LobAddressElements = window.LobAddressElements ? [ ...window.LobAddressElements, av] : [av];
+
+          // Create our AV Elements manager if this is the first form we've enriched
+          if (!window.LobAddressElements) {
+            window.LobAddressElements = initLobAddressElementsManager();
+          }
+
+          window.LobAddressElements.instances.push(av);
         }, 0);
       } else if (state === 'enriched' && !enrich) {
         form.attr("data-lob-state", 'untouched');
@@ -95,7 +117,6 @@ export const getFormStates = cfg => {
     // If no forms are found, give user a way to manually initialize LobAddressElements
     if(!getFormStates().length) {
       return {
-        on: cfg.channel.on,
         do: {
           init: () => new LobAddressElements($, cfg),
         }
@@ -150,10 +171,12 @@ export const getFormStates = cfg => {
       if (!window.LobAddressElements) {
         const config = window.LobAddressElementsConfig || {};
 
-        // enrichWebPage only returns something when no forms are found. Otherwise
+        // enrichWebPage only returns something when no forms are found.
+        // When forms are found, instances are added in observeDOM
         const enrichResult = enrichWebPage(window.jQuery, config)
         if (enrichResult) {
-          window.LobAddressElements = [enrichWebPage(window.jQuery, config)];
+          window.LobAddressElements = initLobAddressElementsManager();
+          window.LobAddressElements.instances.push(enrichResult);
         }
 
         BootStrapper.load(arguments);
