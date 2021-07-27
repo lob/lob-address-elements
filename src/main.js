@@ -17,6 +17,7 @@ const resolveStrictness = (cfg, form) => {
 }
 
 const initLobAddressElementsManager = () => {
+  const channel = new Bus('lob-address-elements');
   return {
     channel,
     instances: [],
