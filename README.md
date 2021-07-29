@@ -196,7 +196,7 @@ npm run build
 ## Latest Release
 
 
-### 2.1.1 (CURRENT / LATEST)
+### 2.1.2 (CURRENT / LATEST)
 | Current Improvements |
 | :---          |
 | Updates global LobAddressElements instance manager to share event bus between instances |
