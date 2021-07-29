@@ -110,6 +110,7 @@ export const getFormStates = cfg => {
           childList: true
         });
       }
+      didChange();
     }
 
     //watch for DOM changes
