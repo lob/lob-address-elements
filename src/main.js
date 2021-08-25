@@ -4,8 +4,6 @@ import { findElm, findPrimaryAddressInput, findValue } from './form-detection.js
 import { LobAddressElements } from './lob-address-elements.js';
 import Bus from 'client-side-event-bus';
 
-const channel = new Bus('lob-address-elements');
-
 const resolveStrictness = (cfg, form) => {
   const values = ['false', 'strict', 'normal', 'relaxed', 'passthrough'];
   if (cfg && values.indexOf(cfg) > -1) {
@@ -17,6 +15,7 @@ const resolveStrictness = (cfg, form) => {
 }
 
 const initLobAddressElementsManager = () => {
+  const channel = new Bus('lob-address-elements');
   return {
     channel,
     instances: [],
@@ -173,11 +172,11 @@ export const getFormStates = cfg => {
       if (!window.LobAddressElements) {
         const config = window.LobAddressElementsConfig || {};
 
+        window.LobAddressElements = initLobAddressElementsManager();
         // enrichWebPage only returns something when no forms are found.
         // When forms are found, instances are added in observeDOM
         const enrichResult = enrichWebPage(window.jQuery, config)
         if (enrichResult) {
-          window.LobAddressElements = initLobAddressElementsManager();
           window.LobAddressElements.instances.push(enrichResult);
         }
 
