@@ -1,3 +1,6 @@
+## ⚠️ This verion is deprecated ⚠️
+Please check out [Lob Address Elements v2](https://github.com/lob/lob-address-elements/)
+
 # lob-address-elements
 The Lob Address Elements library simplifies client side integration of Lob's *US Address Autocompletion* and *US Address Verification* APIs. Use it to enrich any standard HTML page to include both autocompletion and pre-verification behaviors.
 
