@@ -27,9 +27,10 @@ Embed the Lob Address Elements script immediately before the closing &lt;body&gt
   <script src="https://cdn.lob.com/lob-address-elements/2.1.2/lob-address-elements.min.js"
     data-lob-key="live_pub_xxx"></script>
 ```
+To view more configuration option see the [cheat sheet wiki](https://github.com/lob/lob-address-elements/wiki/Script-Attribute-Reference-Sheet)
 
 ## Preconfigured Usage
-E-commerce platforms like Shopify use predictable element names making them easy to extend. Paste the following preconfigured script into your top-level Shopify Plus template to add address verification to your checkout form. *Remember to replace `live_pub_xxx` with your Lob public key.*
+E-commerce platforms like Shopify use predictable element names making them easy to extend. Paste the following preconfigured script into your top-level Shopify Plus template to add address verification to your checkout form. *Remember to replace `live_pub_xxx` with your Lob public key.* 
 
 ```html
 <script src="https://cdn.lob.com/lob-address-elements/2.1.2/lob-address-elements.min.merged.js"
