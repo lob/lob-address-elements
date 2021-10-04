@@ -197,10 +197,10 @@ npm run build
 ## Latest Release
 
 
-### 2.1.2 (CURRENT / LATEST)
+### 2.1.3 (CURRENT / LATEST)
 | Current Improvements |
 | :---          |
-| Updates global LobAddressElements instance manager to share event bus between instances |
+| Fixes an issue where jquery traverse functions are not present in form detection |
 
 
 [See release notes for previous versions](https://github.com/lob/lob-address-elements/wiki/Release-Notes)

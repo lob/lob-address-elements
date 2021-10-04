@@ -122,26 +122,26 @@ const findAddressElementByLabel = (type, form) => {
       return inputSelections;
     }
 
-    const siblingSelections = label.siblings("input");
+    const siblingSelections = $(label).siblings("input");
     if (siblingSelections.length) {
       return siblingSelections;
     }
 
-    const childSelections = label.children("input");
+    const childSelections = $(label).children("input");
     if (childSelections.length) {
       return childSelections;
     }
 
-    const parentSelections = label.parentsUntil("form", "input");
+    const parentSelections = $(label).parentsUntil("form", "input");
     if (parentSelections.length) {
       return parentSelections;
     }
-  
+
     return $();
   }
 
   let inputSelections = $();
-  
+
   labels.each((idx, label) => {
     const selections = getInputSelections(label);
     inputSelections = inputSelections.add(selections);
