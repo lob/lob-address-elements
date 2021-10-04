@@ -137,7 +137,7 @@ See our [Script Attribute Reference Sheet wiki](https://github.com/lob/lob-addre
 ## Form Detection
 With v2.0.0, when a script gets added to a page we search for inputs and labels with address-related key words. Any errors that may arise are displayed in the web page and the browser's console. 
 
-** In order to disable form detection you must provide the IDs to the address inputs in the AV elements script tag. Here is an example:**
+**In order to disable form detection you must provide the IDs to the address inputs in the AV elements script tag. Here is an example:**
 
 ```html
 <script src="https://cdn.lob.com/lob-address-elements/2.1.3/lob-address-elements.min.merged.js"
