@@ -10,7 +10,7 @@ const resolveStrictness = (cfg, form) => {
     return cfg;
   } else {
     const attr = findValue('verify', form);
-    return attr && values.indexOf(attr) > -1 ? attr : 'normal';
+    return attr && values.indexOf(attr) > -1 ? attr : 'relaxed';
   }
 }
 
