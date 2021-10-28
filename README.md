@@ -211,10 +211,11 @@ npm run build
 ## Latest Release
 
 
-### 2.1.3 (CURRENT / LATEST)
+### 2.1.4 (CURRENT / LATEST)
 | Current Improvements |
 | :---          |
-| Fixes an issue where jquery traverse functions are not present in form detection |
+| Adds new parameter `autosubmit` to control form submission after verification |
+
 
 
 [See release notes for previous versions](https://github.com/lob/lob-address-elements/wiki/Release-Notes)
