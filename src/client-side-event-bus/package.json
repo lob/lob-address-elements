@@ -1,0 +1,88 @@
+{
+  "_from": "client-side-event-bus@0.4.3",
+  "_id": "client-side-event-bus@0.4.3",
+  "_inBundle": false,
+  "_integrity": "sha512-mGB0noufZPVI00tAr/Uo846KtgHjLsaPkCVN191+dHxTRsK5tdh2eS3rX/6Os3ZAp7RUP6RjPRUNnZoV7arpuQ==",
+  "_location": "/client-side-event-bus",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "client-side-event-bus@0.4.3",
+    "name": "client-side-event-bus",
+    "escapedName": "client-side-event-bus",
+    "rawSpec": "0.4.3",
+    "saveSpec": null,
+    "fetchSpec": "0.4.3"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/client-side-event-bus/-/client-side-event-bus-0.4.3.tgz",
+  "_shasum": "803c1bed5555a9cebd03524c1b398243ac8f0bee",
+  "_spec": "client-side-event-bus@0.4.3",
+  "_where": "/Users/mo/Code/lob-address-elements",
+  "author": {
+    "name": "Dane Stuckel"
+  },
+  "browserslist": [
+    "last 4 years"
+  ],
+  "bugs": {
+    "url": "https://github.com/TakenPilot/client-side-event-bus/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {},
+  "deprecated": false,
+  "description": "A tiny and fast event bus with AMQP and Postal.js-like functionality",
+  "devDependencies": {
+    "@types/chai": "^4.2.3",
+    "@types/mocha": "^5.2.7",
+    "@types/sinon": "^7.5.0",
+    "chai": "^4.2.0",
+    "eslint": "^6.5.1",
+    "eslint-plugin-compat": "^3.3.0",
+    "eslint-plugin-import": "^2.18.2",
+    "karma": "^4.3.0",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-mocha": "^1.3.0",
+    "karma-phantomjs-launcher": "^1.0.4",
+    "karma-sinon": "^1.0.5",
+    "mocha": "^6.2.1",
+    "puppeteer": "^1.20.0",
+    "sinon": "^7.5.0",
+    "typescript": "^3.6.4",
+    "uglify-js": "^3.6.1"
+  },
+  "files": [
+    "src/index.d.ts",
+    "index.min.js"
+  ],
+  "homepage": "https://github.com/TakenPilot/client-side-event-bus#readme",
+  "keywords": [
+    "postal",
+    "amqp",
+    "event bus",
+    "event broker",
+    "broker",
+    "events"
+  ],
+  "license": "LICENSE IN LICENSE",
+  "main": "index.min.js",
+  "name": "client-side-event-bus",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TakenPilot/client-side-event-bus.git"
+  },
+  "scripts": {
+    "build": "uglifyjs --compress --mangle --output index.min.js -- src/index.js",
+    "karma": "karma start",
+    "karma-once": "karma start --single-run",
+    "lint": "tsc -p tsconfig.json && eslint .",
+    "prepublish": "npm run lint && npm test -- --single-run && npm run build",
+    "test": "npm run lint && npm run karma-once"
+  },
+  "types": "src/index.d.ts",
+  "version": "0.4.3"
+}

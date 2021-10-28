@@ -36,15 +36,17 @@ export const getFormStates = cfg => {
     const strictness = resolveStrictness(cfg ? cfg.strictness : null, form);
     const create_message = findValue('verify-message', form) === 'true' || (form.length && !findElm('verify-message', form).length);
     const autocomplete = primary.length && findValue('primary', form) !== 'false';
+    const autosubmit = findValue('autosubmit', form) || true;
     const verify = strictness !== 'false' && form.length && (strictness === 'passthrough' || findElm('verify-message', form).length || create_message);
     responses.push({
-      primary,
-      form,
-      autocomplete: autocomplete,
-      verify: verify,
+      autocomplete,
+      autosubmit,
+      create_message,
       enrich: verify || autocomplete,
-      create_message: create_message,
-      strictness: strictness
+      form,
+      primary,
+      strictness,
+      verify
     });
   });
 

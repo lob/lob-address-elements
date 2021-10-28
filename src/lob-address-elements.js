@@ -4,7 +4,7 @@ import { createAutocompleteStyles, createVerifyMessageStyles } from './styleshee
 import { getFormStates } from './main.js'
 
 const resolveStyleStrategy = (cfg, form) => {
-  const isEmptyObject = Object.keys(cfg).length <= 1 && cfg.constructor === Object; 
+  const isEmptyObject = Object.keys(cfg).length <= 1 && cfg.constructor === Object;
   return typeof (cfg) !== 'undefined' && !isEmptyObject ?
     !!cfg : findElm('suggestion-stylesheet', form).length > 0;
 };
@@ -15,11 +15,11 @@ let verification_configured = false;
 /**
  * Private inner function that enriches page elements
  * with advanced address functionality. Only called when
- * the page transitions from NOT having elements to 
+ * the page transitions from NOT having elements to
  * having elements. Typically called on page load for
  * static pages where the form already exists and when
  * the DOM changes and the target address fields are added.
- * 
+ *
  * @param {object} $ - jQuery
  * @param {*} cfg - configuration
  * @param {*} pageState - page state
@@ -32,6 +32,7 @@ export class LobAddressElements {
     this.config = {
       channel: cfg.channel,
       api_key: cfg.api_key || findValue('key'),
+      autosubmit: pageState.autosubmit,
       strictness: this.pageState.strictness,
       denormalize: findValue('secondary') !== 'false',
       suppress_stylesheet: resolveStyleStrategy(cfg),
@@ -59,7 +60,7 @@ export class LobAddressElements {
       },
       apis: cfg.apis || {
         autocomplete: 'https://api.lob.com/v1/us_autocompletions',
-        intl_verify: 'https://api.lob.com/v1/intl_verifications', 
+        intl_verify: 'https://api.lob.com/v1/intl_verifications',
         us_verify: 'https://api.lob.com/v1/us_verifications'
       },
       do: {
@@ -150,7 +151,7 @@ export class LobAddressElements {
       if (err.type === 'confirm' || err.type === 'form_detection') {
         message.html(err.msg).show('slow');
       } else {
-        message.text(err.msg).show('slow');              
+        message.text(err.msg).show('slow');
       }
       messageTypes[err.type] && messageTypes[err.type](messages[err.type]);
       channel.emit('elements.us_verification.alert', { error: err, type: err.type, form: form[0] });
@@ -167,7 +168,7 @@ export class LobAddressElements {
    */
   autocomplete(query, cb) {
     const { apis, api_key, channel, elements } = this.config;
-  
+
     this.config.international = isInternational(elements.country);
 
     if (this.config.international) {
@@ -306,11 +307,11 @@ export class LobAddressElements {
   }
 
   /**
-   * Lob uses the official USPS structure for parsed addresses, but 
+   * Lob uses the official USPS structure for parsed addresses, but
    * it is common for most Websites in the US to not adhere to this
-   * standard. This returns a hybrid that binds the suite to the 
+   * standard. This returns a hybrid that binds the suite to the
    * secondary line if the user entered it originally in the secondary
-   * line. 
+   * line.
    * @param {object} data - US verification response
    * @param {boolean} bSecondary - user typed in the secondary field?
    */
@@ -372,7 +373,7 @@ export class LobAddressElements {
         if (dataDoesNotMatchFormInput && (!international && zipMismatch)) {
           needsImprovement = true;
         }
-        
+
         if (fix) {
           elements[p].val(address[p]);
         }
@@ -453,11 +454,12 @@ export class LobAddressElements {
   }
 
   /**
-   * Calls the Lob.com US Verification API. If successful, the user's form will be submitted by 
+   * Calls the Lob.com US Verification API. If successful, the user's form will be submitted by
    * the cb handler to its original endpoint. If unsuccessful, an error message will be shown.
    * @param {function} cb - process the response (submit the form or show an error message)
    */
   verify(cb) {
+    // Preparing payload for API request
     const {
       apis,
       api_key,
@@ -465,7 +467,7 @@ export class LobAddressElements {
       elements: { primary, secondary, city, state, zip, country, message, form },
       messages
     } = this.config;
-  
+
     this.config.international = isInternational(country);
     this.config.submit = this.config.strictness === 'passthrough';
     this.config.confirmed = this.isConfirmation();
@@ -496,20 +498,27 @@ export class LobAddressElements {
       xhr.setRequestHeader('Authorization', 'Basic ' + btoa(api_key + ':'));
     }
 
+    // Setting instructions based on API request result. We duplicate a copy of this object so
+    // that it can be accessed inside these callback functions.
     const av = this;
     xhr.onreadystatechange = function () {
       if (this.readyState === XMLHttpRequest.DONE) {
         let data = av.parseJSON(xhr.responseText);
         let type;
+
+        // API COMMUNICATION SUCCESSFUL: proceed with parsing response
         if ((!this.status || this.status === 200) && (!data.statusCode || data.statusCode === 200)) {
           data = data && data.body || data;
+
+          // TOTAL SUCCESS: Address has verified and the result is considered "good" meaning the address
+          // is deliverable or undeliverable but the user has confirmed submission anyway
           if (av.isVerified(data, this.status)) {
-            //SUCCESS (time for final submit)
             channel.emit('elements.us_verification.verification', { code: 200, data, form: form[0] });
             cb(null, true);
-          } else if (data.deliverability === 'deliverable') {
-            // Address verifired as deliverable but the address needs improvement.
-            // Prompt user to confirm Lob's improvements)
+          }
+          // PARTIAL SUCCESS: Address verifired as deliverable but needs improvement. Let's ask the
+          // user to confirm our suggested changes.
+          else if (data.deliverability === 'deliverable') {
             const messageHtml = av.createDidYouMeanMessage(data);
             message.click(() => {
               // Mock format from API response
@@ -519,20 +528,25 @@ export class LobAddressElements {
               channel.emit('elements.us_verification.improvement', { data: data, form: form[0] });
             });
             cb({ msg: messageHtml, type: 'confirm' });
-          } else {
-            //KNOWN VERIFICATION ERROR (e.g., undeliverable)
+          }
+          // KNOWN VERIFICATION ERROR (e.g., undeliverable): Show error message
+          else {
             type = av.resolveErrorType(data.deliverability);
             channel.emit('elements.us_verification.error', { code: 200, type: 'verification', data, form: form[0] });
             cb({ msg: messages[type], type: type });
           }
-        } else if (this.status === 401) {
-          //INVALID API KEY; allow default submission
+        }
+        // INVALID API KEY: allow form submission because we can't check the deliverability of the
+        // address
+        else if (this.status === 401) {
           console.log('Please sign up on lob.com to get a valid api key.');
           channel.emit('elements.us_verification.error', { code: 401, type: 'authorization', data, form: form[0] });
           cb(null, true);
-        } else {
+        }
+        // KNOWN SYSTEM ERROR (e.g., rate limit exceeded, primary line missing): Grab our pretty
+        // error message to display to user.
+        else {
           data = data && data.body || data;
-          //KNOWN SYSTEM ERROR (e.g., rate limit exceeded, primary line missing)
           type = av.resolveErrorType(data.error.message);
           channel.emit('elements.us_verification.error', { code: data.error.code || 0, type, data, form: form[0] });
           cb({ msg: messages[type], type: type });
@@ -545,18 +559,28 @@ export class LobAddressElements {
   }
 
   /**
-   * jQuery event handlers execute in binding order. 
+   * jQuery event handlers execute in binding order.
    * This prioritizes the most-recent (Lob)
-   * @param {object} jqElm 
-   * @param {*} event_type 
+   * @param {object} jqElm
+   * @param {*} event_type
    */
   prioritizeHandler(jqElm, event_type) {
     const eventList = $._data(jqElm.get(0), 'events');
     eventList[event_type].unshift(eventList[event_type].pop());
   }
 
+  /**
+   * Called after Lob has verified an address. Based on the result we decide whether to proceed
+   * submitting the address form or displaying an error to the user.
+   * @param {Object?} err - Explains why an address is not ready for submission as well as how the
+   *  error message should be presented. If null then the address is successful
+   * @param {boolean} success - Whether the address is good for submission or not
+   */
   verifyCallback(err, success) {
-    const { elements, override, strictness, submit } = this.config;
+    const { autosubmit, elements, override, strictness, submit } = this.config;
+
+    // submit means Lob strictness has been set to "passthrough". override means the user has
+    // acknowledge the problem with their address but would like to submit anyway.
     if (submit || override) {
       this.showMessage(err);
       this.config.submitted = true;
@@ -564,29 +588,39 @@ export class LobAddressElements {
 
       elements.form.off('.avSubmit', this.preFlight.bind(this));
       elements.form.unbind('.avSubmit');
-      elements.form.trigger('submit');
-      elements.form.get(0).submit();
+      if (autosubmit) {
+        elements.form.trigger('submit');
+        elements.form.get(0).submit();
+      }
 
       elements.form.on('submit.avSubmit', this.preFlight.bind(this));
       this.prioritizeHandler(elements.form, 'submit');
-    } else {
-      if (success) {
-        this.config.submitted = true;
-        this.config.override = false;
+      return;
+    }
 
-        elements.form.off('.avSubmit', this.preFlight.bind(this));
-        elements.form.unbind('.avSubmit');
+    // Verification result is good so let's submit the address form
+    if (success) {
+      this.config.submitted = true;
+      this.config.override = false;
+
+      elements.form.off('.avSubmit', this.preFlight.bind(this));
+      elements.form.unbind('.avSubmit');
+      if (autosubmit) {
         elements.form.trigger('submit');
         elements.form.get(0).submit();
-      } else {
-        this.showMessage(err);
-        // Allow user to bypass known warnings after they see our warning message with the
-        // exemption of undeliverable addresses in which case we check strictness
-        this.config.override =  strictness === 'passthrough' || (err.type === 'undeliverable'
-          ? strictness === 'relaxed'
-          : err.type !== 'DEFAULT' && this.config.strictness !== 'strict');
       }
+
+      return;
     }
+
+    // Verification result is bad so present a message to the user
+    this.showMessage(err);
+
+    // Allow user to bypass known warnings after they see our warning message. For undeliverable
+    // addresses we check strictness.
+    this.config.override = strictness === 'passthrough' || (err.type === 'undeliverable'
+      ? strictness === 'relaxed'
+      : err.type !== 'DEFAULT' && this.config.strictness !== 'strict');
   }
 
   preFlight = (e) => {
@@ -637,7 +671,7 @@ export class LobAddressElements {
     }
 
     elements.form.on('submit.avSubmit', this.preFlight.bind(this));
-  
+
     this.prioritizeHandler(elements.form, 'submit');
   }
 }
