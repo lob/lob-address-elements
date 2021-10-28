@@ -514,7 +514,7 @@ export class LobAddressElements {
           // is deliverable or undeliverable but the user has confirmed submission anyway
           if (av.isVerified(data, this.status)) {
             channel.emit('elements.us_verification.verification', { code: 200, data, form: form[0] });
-            cb(null, true);
+            cb(null, true, data);
           }
           // PARTIAL SUCCESS: Address verifired as deliverable but needs improvement. Let's ask the
           // user to confirm our suggested changes.
@@ -575,14 +575,16 @@ export class LobAddressElements {
    * @param {Object?} err - Explains why an address is not ready for submission as well as how the
    *  error message should be presented. If null then the address is successful
    * @param {boolean} success - Whether the address is good for submission or not
+   * @param {Object} data - API response data
    */
-  verifyCallback(err, success) {
-    const { autosubmit, elements, override, strictness, submit } = this.config;
+  verifyCallback(err, success, data = {}) {
+    const { autosubmit, channel, elements, override, strictness, submit } = this.config;
 
     // submit means Lob strictness has been set to "passthrough". override means the user has
     // acknowledge the problem with their address but would like to submit anyway.
     if (submit || override) {
       this.showMessage(err);
+      channel.emit('elements.us_verification.verification', { code: 200, data, form: elements.form[0] });
       this.config.submitted = true;
       this.config.override = false;
 
