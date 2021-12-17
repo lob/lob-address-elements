@@ -1,3 +1,8 @@
+# ⚠️ Deprecated ⚠️ 
+We've moved our repo! Please check out [lob/address-elements](https://github.com/lob/address-elements) for any new updates and features. In addition, please update your script src to this new location:
+https://cdn.lob.com/lob/address-elements/2.2.0/address-elements.min.js
+
+
 # lob-address-elements
 The Lob Address Elements library simplifies client side integration of Lob's *US Address Autocompletion* and *US Address Verification* APIs. Use it to enrich any standard HTML page to include both autocompletion and pre-verification behaviors.
 
